@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-IctInventoryManagementApplication<ict-inventory-management>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "tz.go.nactvet.ict_inventory_management.IctInventoryManagementApplication",
+            "projectName": "ict-inventory-management",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

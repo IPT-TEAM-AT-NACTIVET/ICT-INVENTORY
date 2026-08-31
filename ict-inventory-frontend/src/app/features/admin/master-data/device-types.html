@@ -1,0 +1,70 @@
+<app-page-header title="Device Types" subtitle="Manage categories of ICT devices" />
+
+<div class="toolbar">
+  <button type="button" class="btn btn-primary" (click)="openCreate()">Add Device Type</button>
+  <span class="muted">{{ items().length }} device types</span>
+</div>
+
+@if (error()) {
+  <div class="alert alert-error" role="alert">{{ error() }}</div>
+}
+@if (success()) {
+  <div class="alert alert-success" role="alert">{{ success() }}</div>
+}
+
+@if (showForm) {
+  <div class="card">
+    <h3>{{ editing ? 'Edit Device Type' : 'New Device Type' }}</h3>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="name">Name *</label>
+          <input id="name" type="text" formControlName="name" />
+          @if (form.controls.name.touched && form.controls.name.invalid) {
+            <div class="field-error">Name is required.</div>
+          }
+        </div>
+        <div class="form-field">
+          <label for="description">Description</label>
+          <input id="description" type="text" formControlName="description" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save' }}
+        </button>
+        <button type="button" class="btn" (click)="cancelForm()">Cancel</button>
+      </div>
+    </form>
+  </div>
+}
+
+@if (loading()) {
+  <div class="loading">Loading…</div>
+} @else if (items().length === 0) {
+  <div class="empty">No device types found.</div>
+} @else {
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track item.id) {
+          <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.description ?? '—' }}</td>
+            <td>
+              <button type="button" class="btn btn-sm" (click)="openEdit(item)">Edit</button>
+              <button type="button" class="btn btn-sm btn-danger" (click)="remove(item)">Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

@@ -1,0 +1,272 @@
+<app-page-header title="Inventory" subtitle="All registered ICT assets" />
+
+<div class="toolbar">
+  <div>
+    <button type="button" class="btn btn-primary" (click)="openCreateForm()">Register Asset</button>
+    <button type="button" class="btn" (click)="downloadCsv()">Export CSV</button>
+  </div>
+  <span class="muted">{{ totalElements() }} assets</span>
+</div>
+
+@if (error()) {
+  <div class="alert alert-error" role="alert">{{ error() }}</div>
+}
+@if (success()) {
+  <div class="alert alert-success" role="alert">{{ success() }}</div>
+}
+
+<div class="card">
+  <h3>Filters</h3>
+  <form [formGroup]="filters" (ngSubmit)="applyFilters()">
+    <div class="filter-bar">
+      <div class="form-field">
+        <label for="assetNumber">Asset Number</label>
+        <input id="assetNumber" type="text" formControlName="assetNumber" />
+      </div>
+      <div class="form-field">
+        <label for="serialNumber">Serial Number</label>
+        <input id="serialNumber" type="text" formControlName="serialNumber" />
+      </div>
+      <div class="form-field">
+        <label for="deviceName">Device Name</label>
+        <input id="deviceName" type="text" formControlName="deviceName" />
+      </div>
+      <div class="form-field">
+        <label for="employeeId">Employee ID</label>
+        <input id="employeeId" type="text" formControlName="employeeId" />
+      </div>
+      <div class="form-field">
+        <label for="deviceType">Device Type</label>
+        <select id="deviceType" formControlName="deviceTypeId">
+          <option value="">All</option>
+@for (item of deviceTypes(); track item.id) {
+              <option [ngValue]="item.id">{{ item.name }}</option>
+            }
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="directorate">Directorate</label>
+        <select id="directorate" formControlName="directorateId">
+          <option value="">All</option>
+          @for (item of directorates(); track item.id) {
+            <option [value]="item.id">{{ item.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="section">Section</label>
+        <select id="section" formControlName="sectionId">
+          <option value="">All</option>
+          @for (item of sections(); track item.id) {
+            <option [value]="item.id">{{ item.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="unit">Unit</label>
+        <select id="unit" formControlName="unitId">
+          <option value="">All</option>
+          @for (item of units(); track item.id) {
+            <option [value]="item.id">{{ item.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="zone">Zone</label>
+        <select id="zone" formControlName="zoneId">
+          <option value="">All</option>
+          @for (item of zones(); track item.id) {
+            <option [value]="item.id">{{ item.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="office">Office</label>
+        <select id="office" formControlName="officeId">
+          <option value="">All</option>
+          @for (item of offices(); track item.id) {
+            <option [value]="item.id">{{ item.officeCode }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="ownership">Ownership</label>
+        <select id="ownership" formControlName="ownershipType">
+          <option value="">All</option>
+          @for (opt of ownershipOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="deviceStatus">Device Status</label>
+        <select id="deviceStatus" formControlName="deviceStatus">
+          <option value="">All</option>
+          @for (opt of deviceStatusOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="verificationStatus">Verification</label>
+        <select id="verificationStatus" formControlName="verificationStatus">
+          <option value="">All</option>
+          @for (opt of verificationOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+        <button type="button" class="btn btn-sm" (click)="resetFilters()">Reset</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+@if (showAssetForm) {
+  <div class="card">
+    <h3>{{ editing ? 'Edit Asset' : 'Register Asset' }}</h3>
+    <form [formGroup]="assetForm" (ngSubmit)="submitAssetForm()">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="assetNumber">Asset Number</label>
+          <input id="assetNumber" type="text" formControlName="assetNumber" />
+        </div>
+        <div class="form-field">
+          <label for="serialNumber">Serial Number</label>
+          <input id="serialNumber" type="text" formControlName="serialNumber" />
+        </div>
+        <div class="form-field">
+          <label for="deviceName">Device Name *</label>
+          <input id="deviceName" type="text" formControlName="deviceName" />
+          @if (assetForm.controls.deviceName.touched && assetForm.controls.deviceName.invalid) {
+            <div class="field-error">Device name is required.</div>
+          }
+        </div>
+        <div class="form-field">
+          <label for="deviceTypeId">Device Type *</label>
+          <select id="deviceTypeId" formControlName="deviceTypeId">
+            <option [ngValue]="0" disabled>Select type</option>
+@for (item of deviceTypes(); track item.id) {
+              <option [ngValue]="item.id">{{ item.name }}</option>
+            }
+          </select>
+          @if (assetForm.controls.deviceTypeId.touched && assetForm.controls.deviceTypeId.invalid) {
+            <div class="field-error">Device type is required.</div>
+          }
+        </div>
+        <div class="form-field">
+          <label for="userId">Assigned User *</label>
+          <select id="userId" formControlName="userId">
+            <option [ngValue]="0" disabled>Select user</option>
+            @for (item of staff(); track item.id) {
+              <option [ngValue]="item.id">{{ item.fullName }} ({{ item.employeeId }})</option>
+            }
+          </select>
+          @if (assetForm.controls.userId.touched && assetForm.controls.userId.invalid) {
+            <div class="field-error">User is required.</div>
+          }
+        </div>
+        <div class="form-field">
+          <label for="ownershipType">Ownership *</label>
+          <select id="ownershipType" formControlName="ownershipType">
+            <option value="" disabled>Select ownership</option>
+            @for (opt of ownershipOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+          @if (assetForm.controls.ownershipType.touched && assetForm.controls.ownershipType.invalid) {
+            <div class="field-error">Ownership is required.</div>
+          }
+        </div>
+        <div class="form-field">
+          <label for="deviceStatus">Device Status *</label>
+          <select id="deviceStatus" formControlName="deviceStatus">
+            <option value="" disabled>Select status</option>
+            @for (opt of deviceStatusOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+          @if (assetForm.controls.deviceStatus.touched && assetForm.controls.deviceStatus.invalid) {
+            <div class="field-error">Device status is required.</div>
+          }
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">{{ editing ? 'Save Changes' : 'Register' }}</button>
+        <button type="button" class="btn" (click)="cancelAssetForm()">Cancel</button>
+      </div>
+    </form>
+  </div>
+}
+
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Asset #</th>
+        <th>Serial</th>
+        <th>Device</th>
+        <th>Type</th>
+        <th>User</th>
+        <th>Employee ID</th>
+        <th>Directorate</th>
+        <th>Section</th>
+        <th>Unit</th>
+        <th>Zone</th>
+        <th>Office</th>
+        <th>Ownership</th>
+        <th>Device Status</th>
+        <th>Verification</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr>
+          <td colspan="15" class="loading">Loading…</td>
+        </tr>
+      } @else if (assets().length === 0) {
+        <tr>
+          <td colspan="15" class="empty">No assets match the current filters.</td>
+        </tr>
+      } @else {
+        @for (item of assets(); track item.id) {
+          <tr>
+            <td>{{ item.assetNumber ?? '—' }}</td>
+            <td>{{ item.serialNumber ?? '—' }}</td>
+            <td>{{ item.deviceName }}</td>
+            <td>{{ item.deviceTypeName }}</td>
+            <td>{{ item.userFullName }}</td>
+            <td>{{ item.userEmployeeId ?? '—' }}</td>
+            <td>{{ item.directorateName ?? '—' }}</td>
+            <td>{{ item.sectionName ?? '—' }}</td>
+            <td>{{ item.unitName ?? '—' }}</td>
+            <td>{{ item.zoneName ?? '—' }}</td>
+            <td>{{ item.officeCode ?? '—' }}</td>
+            <td>{{ ownershipLabels[item.ownershipType] }}</td>
+            <td>
+              <app-status-badge [label]="deviceStatusLabels[item.deviceStatus]" [tone]="deviceTone(item.deviceStatus)" />
+            </td>
+            <td>
+              <app-status-badge [label]="verificationLabels[item.verificationStatus]" [tone]="tone(item.verificationStatus)" />
+            </td>
+            <td>
+              <button type="button" class="btn btn-sm" (click)="openEditForm(item)">Edit</button>
+              <button type="button" class="btn btn-sm btn-danger" (click)="remove(item)">Delete</button>
+            </td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (totalPages() > 1) {
+  <div class="pagination">
+    <button type="button" class="btn btn-sm" [disabled]="page === 0" (click)="goToPage(page - 1)">Prev</button>
+    <span>Page {{ page + 1 }} of {{ totalPages() }} ({{ totalElements() }} total)</span>
+    <button type="button" class="btn btn-sm" [disabled]="page >= totalPages() - 1" (click)="goToPage(page + 1)">Next</button>
+  </div>
+}

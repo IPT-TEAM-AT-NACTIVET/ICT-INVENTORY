@@ -1,0 +1,156 @@
+<app-page-header [title]="t('profile.title')" subtitle="View and update your account information" />
+
+@if (loading()) {
+  <div class="loading">Loading profile…</div>
+}
+
+@if (error()) {
+  <div class="alert alert-error" role="alert">{{ error() }}</div>
+}
+
+@if (needsSetup) {
+  <div class="alert alert-warning">
+    Your profile is not complete yet.
+    <a class="btn btn-sm btn-primary" routerLink="/staff/setup">Complete your setup</a>
+  </div>
+}
+
+@if (profile()) {
+  <div class="card">
+    <dl class="detail-list">
+      <div class="detail-item">
+        <dt>{{ t('profile.fullName') }}</dt>
+        <dd>{{ profile()!.fullName }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>{{ t('profile.employeeId') }}</dt>
+        <dd>{{ profile()!.employeeId }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Username</dt>
+        <dd>{{ profile()!.username }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>{{ t('profile.email') }}</dt>
+        <dd>{{ profile()!.email ?? '—' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>{{ t('profile.phone') }}</dt>
+        <dd>{{ profile()!.phoneNumber ?? '—' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>{{ t('profile.role') }}</dt>
+        <dd>{{ profile()!.role }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>{{ t('profile.status') }}</dt>
+        <dd>
+          <span class="role-badge" [class.tone-success]="profile()!.enabled" [class.tone-info]="!profile()!.enabled">
+            {{ profile()!.enabled ? t('profile.active') : t('profile.inactive') }}
+          </span>
+        </dd>
+      </div>
+      <div class="detail-item">
+        <dt>Directorate</dt>
+        <dd>{{ profile()!.directorateName ?? '—' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Section</dt>
+        <dd>{{ profile()!.sectionName ?? '—' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Unit</dt>
+        <dd>{{ profile()!.unitName ?? '—' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Zone</dt>
+        <dd>{{ profile()!.zoneName ?? '—' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>{{ t('profile.office') }}</dt>
+        <dd>{{ profile()!.officeCode ?? '—' }}</dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3>Edit Account Details</h3>
+
+    @if (success()) {
+      <div class="alert alert-success" role="alert">{{ success() }}</div>
+    }
+    @if (error()) {
+      <div class="alert alert-error" role="alert">{{ error() }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="fullName">{{ t('profile.fullName') }}</label>
+          <input id="fullName" type="text" formControlName="fullName" />
+          @if (form.controls.fullName.touched && form.controls.fullName.invalid) {
+            <div class="field-error">Full name is required.</div>
+          }
+        </div>
+        <div class="form-field">
+          <label for="email">{{ t('profile.email') }}</label>
+          <input id="email" type="email" formControlName="email" />
+        </div>
+        <div class="form-field">
+          <label for="phoneNumber">{{ t('profile.phone') }}</label>
+          <input id="phoneNumber" type="text" formControlName="phoneNumber" />
+        </div>
+        <div class="form-field">
+          <label for="directorate">Directorate</label>
+          <select id="directorate" formControlName="directorateId">
+            <option [ngValue]="0">— None —</option>
+            @for (dir of directorates(); track dir.id) {
+              <option [ngValue]="dir.id">{{ dir.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="section">Section</label>
+          <select id="section" formControlName="sectionId">
+            <option [ngValue]="0">— None —</option>
+            @for (section of sections(); track section.id) {
+              <option [ngValue]="section.id">{{ section.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="unit">Unit</label>
+          <select id="unit" formControlName="unitId">
+            <option [ngValue]="0">— None —</option>
+            @for (unit of units(); track unit.id) {
+              <option [ngValue]="unit.id">{{ unit.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="zone">Zone</label>
+          <select id="zone" formControlName="zoneId">
+            <option [ngValue]="0">— None —</option>
+            @for (zone of zones(); track zone.id) {
+              <option [ngValue]="zone.id">{{ zone.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="office">Office</label>
+          <select id="office" formControlName="officeId">
+            <option [ngValue]="0">— None —</option>
+            @for (office of offices(); track office.id) {
+              <option [ngValue]="office.id">{{ office.officeCode }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save Changes' }}
+        </button>
+      </div>
+    </form>
+  </div>
+}

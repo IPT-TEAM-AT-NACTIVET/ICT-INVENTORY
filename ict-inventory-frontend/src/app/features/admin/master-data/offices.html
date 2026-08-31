@@ -1,0 +1,96 @@
+<app-page-header title="Offices" subtitle="Manage NACTVET offices (code-based, per zone)" />
+
+<div class="toolbar">
+  <button type="button" class="btn btn-primary" (click)="openCreate()">Add Office</button>
+  <span class="muted">{{ items().length }} offices</span>
+</div>
+
+<div class="alert alert-info">
+  Offices are identified by an office code (for example 101, A, A1 or 101A). A code only has
+  to be unique within its zone — the same code may be used in different zones. Codes must come
+  from the real NACTVET office list.
+</div>
+
+@if (error()) {
+  <div class="alert alert-error" role="alert">{{ error() }}</div>
+}
+@if (success()) {
+  <div class="alert alert-success" role="alert">{{ success() }}</div>
+}
+
+@if (showForm) {
+  <div class="card">
+    <h3>{{ editing ? 'Edit Office' : 'New Office' }}</h3>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="zone">Zone *</label>
+          <select id="zone" formControlName="zoneId">
+            <option [ngValue]="0" disabled>Select zone</option>
+            @for (zone of zones(); track zone.id) {
+              <option [ngValue]="zone.id">{{ zone.name }}</option>
+            }
+          </select>
+          @if (form.controls.zoneId.touched && form.controls.zoneId.invalid) {
+            <div class="field-error">Zone is required.</div>
+          }
+        </div>
+        <div class="form-field">
+          <label for="officeCode">Office Code *</label>
+          <input id="officeCode" type="text" formControlName="officeCode" />
+          @if (form.controls.officeCode.touched && form.controls.officeCode.invalid) {
+            <div class="field-error">Office code is required.</div>
+          }
+        </div>
+        <div class="form-field">
+          <label for="status">Status</label>
+          <select id="status" formControlName="status">
+            @for (opt of statusOptions; track opt) {
+              <option [ngValue]="opt">{{ opt }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save' }}
+        </button>
+        <button type="button" class="btn" (click)="cancelForm()">Cancel</button>
+      </div>
+    </form>
+  </div>
+}
+
+@if (loading()) {
+  <div class="loading">Loading…</div>
+} @else if (items().length === 0) {
+  <div class="empty">No offices found. Add the NACTVET office codes to get started.</div>
+} @else {
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Office Code</th>
+          <th>Zone</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track item.id) {
+          <tr>
+            <td><strong>{{ item.officeCode }}</strong></td>
+            <td>{{ item.zoneName }}</td>
+            <td>{{ item.status }}</td>
+            <td>{{ item.createdAt | date: 'medium' }}</td>
+            <td>
+              <button type="button" class="btn btn-sm" (click)="openEdit(item)">Edit</button>
+              <button type="button" class="btn btn-sm btn-danger" (click)="remove(item)">Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

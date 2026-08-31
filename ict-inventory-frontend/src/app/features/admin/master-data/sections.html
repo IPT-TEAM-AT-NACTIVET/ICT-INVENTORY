@@ -1,0 +1,90 @@
+<app-page-header title="Sections" subtitle="Manage sections within directorates" />
+
+<div class="toolbar">
+  <button type="button" class="btn btn-primary" (click)="openCreate()">Add Section</button>
+  <span class="muted">{{ items().length }} sections</span>
+</div>
+
+@if (error()) {
+  <div class="alert alert-error" role="alert">{{ error() }}</div>
+}
+@if (success()) {
+  <div class="alert alert-success" role="alert">{{ success() }}</div>
+}
+
+@if (showForm) {
+  <div class="card">
+    <h3>{{ editing ? 'Edit Section' : 'New Section' }}</h3>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="name">Name *</label>
+          <input id="name" type="text" formControlName="name" />
+          @if (form.controls.name.touched && form.controls.name.invalid) {
+            <div class="field-error">Name is required.</div>
+          }
+        </div>
+        <div class="form-field">
+          <label for="code">Code</label>
+          <input id="code" type="text" formControlName="code" />
+        </div>
+        <div class="form-field">
+          <label for="directorate">Directorate *</label>
+          <select id="directorate" formControlName="directorateId">
+            <option [ngValue]="0" disabled>Select directorate</option>
+            @for (dir of directorates(); track dir.id) {
+              <option [ngValue]="dir.id">{{ dir.name }}</option>
+            }
+          </select>
+          @if (form.controls.directorateId.touched && form.controls.directorateId.invalid) {
+            <div class="field-error">Directorate is required.</div>
+          }
+        </div>
+        <div class="form-field">
+          <label for="description">Description</label>
+          <input id="description" type="text" formControlName="description" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save' }}
+        </button>
+        <button type="button" class="btn" (click)="cancelForm()">Cancel</button>
+      </div>
+    </form>
+  </div>
+}
+
+@if (loading()) {
+  <div class="loading">Loading…</div>
+} @else if (items().length === 0) {
+  <div class="empty">No sections found.</div>
+} @else {
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Code</th>
+          <th>Directorate</th>
+          <th>Description</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track item.id) {
+          <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.code ?? '—' }}</td>
+            <td>{{ item.directorateName }}</td>
+            <td>{{ item.description ?? '—' }}</td>
+            <td>
+              <button type="button" class="btn btn-sm" (click)="openEdit(item)">Edit</button>
+              <button type="button" class="btn btn-sm btn-danger" (click)="remove(item)">Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

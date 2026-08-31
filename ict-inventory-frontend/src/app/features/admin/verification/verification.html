@@ -1,0 +1,94 @@
+<app-page-header title="Verification" subtitle="Review and verify staff-registered assets" />
+
+<div class="tabs">
+  <button type="button" class="tab" [class.active]="tab === 'PENDING'" (click)="setTab('PENDING')">Pending</button>
+  <button type="button" class="tab" [class.active]="tab === 'VERIFIED'" (click)="setTab('VERIFIED')">Verified</button>
+  <button type="button" class="tab" [class.active]="tab === 'REJECTED'" (click)="setTab('REJECTED')">Rejected</button>
+</div>
+
+@if (error()) {
+  <div class="alert alert-error" role="alert">{{ error() }}</div>
+}
+@if (success()) {
+  <div class="alert alert-success" role="alert">{{ success() }}</div>
+}
+
+@if (rejectTarget(); as target) {
+  <div class="card">
+    <h3>Reject Asset &quot;{{ target.deviceName }}&quot;</h3>
+    <div class="form-field">
+      <label for="rejectReason">Rejection Reason *</label>
+      <textarea id="rejectReason" [(ngModel)]="rejectReason" rows="3"></textarea>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-danger" [disabled]="!rejectReason.trim()" (click)="reject()">Confirm Rejection</button>
+      <button type="button" class="btn" (click)="cancelReject()">Cancel</button>
+    </div>
+  </div>
+}
+
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Asset #</th>
+        <th>Serial</th>
+        <th>Device</th>
+        <th>Type</th>
+        <th>User</th>
+        <th>Directorate</th>
+        <th>Ownership</th>
+        <th>Device Status</th>
+        @if (tab === 'REJECTED') {
+          <th>Rejection Reason</th>
+        }
+        @if (tab === 'PENDING') {
+          <th>Actions</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr>
+          <td [attr.colspan]="tab === 'VERIFIED' ? 8 : 9" class="loading">Loading…</td>
+        </tr>
+      } @else if (items().length === 0) {
+        <tr>
+          <td [attr.colspan]="tab === 'VERIFIED' ? 8 : 9" class="empty">No {{ verificationLabels[tab] }} assets.</td>
+        </tr>
+      } @else {
+        @for (item of items(); track item.id) {
+          <tr>
+            <td>{{ item.assetNumber ?? '—' }}</td>
+            <td>{{ item.serialNumber ?? '—' }}</td>
+            <td>{{ item.deviceName }}</td>
+            <td>{{ item.deviceTypeName }}</td>
+            <td>{{ item.userFullName }}</td>
+            <td>{{ item.directorateName ?? '—' }}</td>
+            <td>{{ ownershipLabels[item.ownershipType] }}</td>
+            <td>
+              <app-status-badge [label]="deviceStatusLabels[item.deviceStatus]" [tone]="deviceTone(item.deviceStatus)" />
+            </td>
+            @if (tab === 'REJECTED') {
+              <td>{{ item.rejectionReason ?? '—' }}</td>
+            }
+            @if (tab === 'PENDING') {
+              <td>
+                <button type="button" class="btn btn-sm btn-success" (click)="verify(item)">Verify</button>
+                <button type="button" class="btn btn-sm btn-danger" (click)="openReject(item)">Reject</button>
+              </td>
+            }
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (totalPages() > 1) {
+  <div class="pagination">
+    <button type="button" class="btn btn-sm" [disabled]="page === 0" (click)="goToPage(page - 1)">Prev</button>
+    <span>Page {{ page + 1 }} of {{ totalPages() }} ({{ totalElements() }} total)</span>
+    <button type="button" class="btn btn-sm" [disabled]="page >= totalPages() - 1" (click)="goToPage(page + 1)">Next</button>
+  </div>
+}

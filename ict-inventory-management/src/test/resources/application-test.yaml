@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:icttest;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+  sql:
+    init:
+      mode: never
+
+app:
+  jwt:
+    secret: ict-inventory-test-secret-key-which-is-long-enough-for-hmac-sha-256
+    expiration-ms: 86400000
+
+  cors:
+    allowed-origins: http://localhost:4200
+
+  admin:
+    username: admin
+    password: admin123
+    email: admin@nactvet.go.tz
+    employee-id: EMP001
+    full-name: System Administrator

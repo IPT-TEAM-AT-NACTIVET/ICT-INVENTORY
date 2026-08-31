@@ -1,0 +1,64 @@
+.login-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+  padding: 4.5rem 1rem 1rem;
+}
+
+.login-topbar {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 2rem;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+}
+
+.login-brand {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.login-brand .brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.85rem;
+}
+
+.login-brand .brand-mark img {
+  width: auto;
+  height: 56px;
+  object-fit: contain;
+  display: block;
+}
+
+.login-brand h1 {
+  font-size: 1.25rem;
+  margin: 0 0 0.25rem;
+}
+
+.login-brand .muted {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 576px) {
+  .login-brand .brand-mark img {
+    height: 44px;
+  }
+}
