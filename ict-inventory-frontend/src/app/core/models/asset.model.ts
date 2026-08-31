@@ -10,7 +10,6 @@ export interface Asset {
   userId: number;
   userFullName: string;
   userEmployeeId: string;
-  userUsername: string;
   userEmail: string | null;
   userPhoneNumber: string | null;
   directorateId: number | null;
@@ -47,6 +46,8 @@ export interface AssetRequest {
   userId: number;
   ownershipType: OwnershipType;
   deviceStatus: DeviceStatus;
+  zoneId: number;
+  officeId: number;
 }
 
 export interface StaffAssetRequest {
@@ -56,6 +57,8 @@ export interface StaffAssetRequest {
   deviceTypeId: number;
   ownershipType: OwnershipType;
   deviceStatus: DeviceStatus;
+  zoneId: number;
+  officeId: number;
 }
 
 export interface AssetUpdateRequest {
@@ -65,6 +68,8 @@ export interface AssetUpdateRequest {
   deviceTypeId?: number;
   deviceStatus?: DeviceStatus;
   ownershipType?: OwnershipType;
+  zoneId?: number;
+  officeId?: number;
 }
 
 export interface RejectRequest {

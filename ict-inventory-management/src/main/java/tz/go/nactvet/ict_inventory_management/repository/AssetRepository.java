@@ -60,6 +60,10 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
 
     long countByUserId(Long userId);
 
+    long countByZoneId(Long zoneId);
+
+    long countByOfficeId(Long officeId);
+
     long countByUserIdAndVerificationStatus(Long userId, VerificationStatus status);
 
     long countByUserIdAndDeviceStatus(Long userId, DeviceStatus status);

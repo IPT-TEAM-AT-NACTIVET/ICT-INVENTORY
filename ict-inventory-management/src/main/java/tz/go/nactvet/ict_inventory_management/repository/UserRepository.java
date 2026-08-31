@@ -38,10 +38,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.unit.id = :unitId")
     long countByRoleAndUnitId(Role role, Long unitId);
-
-    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.zone.id = :zoneId")
-    long countByRoleAndZoneId(Role role, Long zoneId);
-
-    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.office.id = :officeId")
-    long countByRoleAndOfficeId(Role role, Long officeId);
 }

@@ -15,7 +15,6 @@ const loginResponse: LoginResponse = {
     id: 1,
     employeeId: 'EMP001',
     fullName: 'System Admin',
-    username: 'admin',
     email: 'admin@ict.go.tz',
     role: 'ADMIN',
   },
@@ -67,7 +66,7 @@ describe('AuthService', () => {
     expect(service.isAuthenticated()).toBe(true);
     expect(service.isAdmin()).toBe(true);
     expect(store.getToken()).toBe('jwt-token');
-    expect(store.getUser()?.username).toBe('admin');
+    expect(store.getUser()?.email).toBe('admin@ict.go.tz');
   });
 
   it('should restore a session from storage', () => {

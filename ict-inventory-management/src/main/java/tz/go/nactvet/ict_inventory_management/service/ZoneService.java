@@ -9,10 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 import tz.go.nactvet.ict_inventory_management.dto.ZoneRequest;
 import tz.go.nactvet.ict_inventory_management.dto.ZoneResponse;
 import tz.go.nactvet.ict_inventory_management.entity.Zone;
-import tz.go.nactvet.ict_inventory_management.enums.Role;
 import tz.go.nactvet.ict_inventory_management.exception.ConflictException;
 import tz.go.nactvet.ict_inventory_management.exception.ResourceNotFoundException;
-import tz.go.nactvet.ict_inventory_management.repository.UserRepository;
+import tz.go.nactvet.ict_inventory_management.repository.AssetRepository;
 import tz.go.nactvet.ict_inventory_management.repository.ZoneRepository;
 
 @Service
@@ -20,14 +19,14 @@ import tz.go.nactvet.ict_inventory_management.repository.ZoneRepository;
 public class ZoneService {
 
     private final ZoneRepository zoneRepository;
-    private final UserRepository userRepository;
+    private final AssetRepository assetRepository;
     private final AuditLogService auditLogService;
 
     public ZoneService(ZoneRepository zoneRepository,
-                       UserRepository userRepository,
+                       AssetRepository assetRepository,
                        AuditLogService auditLogService) {
         this.zoneRepository = zoneRepository;
-        this.userRepository = userRepository;
+        this.assetRepository = assetRepository;
         this.auditLogService = auditLogService;
     }
 
@@ -92,9 +91,9 @@ public class ZoneService {
         Zone zone = zoneRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Zone not found with id: " + id));
 
-        long userCount = userRepository.countByRoleAndZoneId(Role.STAFF, id);
-        if (userCount > 0) {
-            throw new ConflictException("Cannot delete zone: " + userCount + " staff members are assigned to it");
+        long assetCount = assetRepository.countByZoneId(id);
+        if (assetCount > 0) {
+            throw new ConflictException("Cannot delete zone: " + assetCount + " assets are located in it");
         }
 
         long officeCount = zone.getOffices().size();

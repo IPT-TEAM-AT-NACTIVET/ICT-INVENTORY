@@ -5,7 +5,7 @@ import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { ProfileService } from '../../../core/services/profile.service';
 import { ReferenceService } from '../../../shared/services/reference.service';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
-import { Directorate, Office, Section, Unit, Zone } from '../../../core/models/master-data.model';
+import { Directorate, Office, Section, Unit } from '../../../core/models/master-data.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { delay, finalize, retry } from 'rxjs';
 
@@ -28,15 +28,11 @@ export class Setup implements OnInit {
     directorateId: [0, Validators.required],
     sectionId: [0],
     unitId: [0],
-    zoneId: [0, Validators.required],
-    officeId: [0],
   });
 
   readonly directorates = signal<Directorate[]>([]);
   readonly sections = signal<Section[]>([]);
   readonly units = signal<Unit[]>([]);
-  readonly zones = signal<Zone[]>([]);
-  readonly offices = signal<Office[]>([]);
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly error = signal('');
@@ -44,7 +40,6 @@ export class Setup implements OnInit {
   ngOnInit(): void {
     this.reference.getDirectorates().subscribe((directorates) => this.directorates.set(directorates));
     this.reference.getUnits().subscribe((units) => this.units.set(units));
-    this.reference.getZones().subscribe((zones) => this.zones.set(zones));
 
     this.form.controls.directorateId.valueChanges.subscribe((value) => {
       const directorateId = Number(value);
@@ -52,15 +47,6 @@ export class Setup implements OnInit {
       this.form.controls.sectionId.setValue(0, { emitEvent: false });
       if (directorateId) {
         this.reference.getSections(directorateId).subscribe((sections) => this.sections.set(sections));
-      }
-    });
-
-    this.form.controls.zoneId.valueChanges.subscribe((value) => {
-      const zoneId = Number(value);
-      this.offices.set([]);
-      this.form.controls.officeId.setValue(0, { emitEvent: false });
-      if (zoneId) {
-        this.reference.getOffices(zoneId).subscribe((offices) => this.offices.set(offices));
       }
     });
 
@@ -83,14 +69,9 @@ export class Setup implements OnInit {
             directorateId: profile.directorateId ?? 0,
             sectionId: profile.sectionId ?? 0,
             unitId: profile.unitId ?? 0,
-            zoneId: profile.zoneId ?? 0,
-            officeId: profile.officeId ?? 0,
           });
           if (profile.directorateId) {
             this.reference.getSections(profile.directorateId).subscribe((sections) => this.sections.set(sections));
-          }
-          if (profile.zoneId && profile.officeId) {
-            this.reference.getOffices(profile.zoneId).subscribe((offices) => this.offices.set(offices));
           }
         },
         error: (err) => {
@@ -114,8 +95,6 @@ export class Setup implements OnInit {
         directorateId: Number(raw.directorateId),
         sectionId: raw.sectionId ? Number(raw.sectionId) : null,
         unitId: raw.unitId ? Number(raw.unitId) : null,
-        zoneId: Number(raw.zoneId),
-        officeId: raw.officeId ? Number(raw.officeId) : null,
       })
       .subscribe({
         next: (profile) => {
@@ -123,7 +102,6 @@ export class Setup implements OnInit {
             id: profile.id,
             employeeId: profile.employeeId,
             fullName: profile.fullName,
-            username: profile.username,
             email: profile.email,
             phoneNumber: profile.phoneNumber,
             setupCompleted: profile.setupCompleted,

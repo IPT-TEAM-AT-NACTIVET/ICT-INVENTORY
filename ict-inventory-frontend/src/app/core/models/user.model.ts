@@ -4,7 +4,6 @@ export interface User {
   id: number;
   employeeId: string;
   fullName: string;
-  username: string;
   email: string | null;
   phoneNumber?: string | null;
   setupCompleted?: boolean;
@@ -25,8 +24,6 @@ export interface RegisterRequest {
   directorateId?: number;
   sectionId?: number;
   unitId?: number;
-  zoneId?: number;
-  officeId?: number;
 }
 
 export interface LoginResponse {
@@ -38,7 +35,6 @@ export interface RegisterResponse {
   message: string;
   employeeId: string;
   email: string | null;
-  username: string;
   role: Role;
   status: string;
 }

@@ -12,7 +12,6 @@ const loginResponse: LoginResponse = {
     id: 1,
     employeeId: 'EMP001',
     fullName: 'System Admin',
-    username: 'admin',
     email: 'admin@ict.go.tz',
     role: 'ADMIN',
   },

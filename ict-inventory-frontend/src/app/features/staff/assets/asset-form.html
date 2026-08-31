@@ -33,10 +33,6 @@
           <dd>{{ registrar.directorateName ?? '—' }}</dd>
         </div>
         <div class="detail-item">
-          <dt>Zone</dt>
-          <dd>{{ registrar.zoneName ?? '—' }}</dd>
-        </div>
-        <div class="detail-item">
           <dt>Unit</dt>
           <dd>{{ registrar.unitName ?? '—' }}</dd>
         </div>
@@ -102,6 +98,30 @@
         </select>
         @if (form.controls.deviceStatus.touched && form.controls.deviceStatus.invalid) {
           <div class="field-error">Device status is required.</div>
+        }
+      </div>
+      <div class="form-field">
+        <label for="zone">Zone *</label>
+        <select id="zone" formControlName="zoneId">
+          <option [ngValue]="0" disabled>Select zone</option>
+          @for (zone of zones(); track zone.id) {
+            <option [ngValue]="zone.id">{{ zone.name }}</option>
+          }
+        </select>
+        @if (form.controls.zoneId.touched && form.controls.zoneId.invalid) {
+          <div class="field-error">Zone is required.</div>
+        }
+      </div>
+      <div class="form-field">
+        <label for="office">Office *</label>
+        <select id="office" formControlName="officeId">
+          <option [ngValue]="0" disabled>Select office</option>
+          @for (office of offices(); track office.id) {
+            <option [ngValue]="office.id">{{ office.officeCode }}</option>
+          }
+        </select>
+        @if (form.controls.officeId.touched && form.controls.officeId.invalid) {
+          <div class="field-error">Office is required.</div>
         }
       </div>
     </div>

@@ -8,7 +8,7 @@ import { ReferenceService } from '../../../shared/services/reference.service';
 import { TranslationService } from '../../../core/services/translation.service';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
 import { Staff, StaffCreateRequest, StaffUpdateRequest } from '../../../core/models/staff.model';
-import { Directorate, Office, Section, Unit, Zone } from '../../../core/models/master-data.model';
+import { Directorate, Section, Unit } from '../../../core/models/master-data.model';
 import { delay, finalize, retry } from 'rxjs';
 
 @Component({
@@ -26,8 +26,6 @@ export class StaffManagement implements OnInit {
   readonly directorates = signal<Directorate[]>([]);
   readonly sections = signal<Section[]>([]);
   readonly units = signal<Unit[]>([]);
-  readonly zones = signal<Zone[]>([]);
-  readonly offices = signal<Office[]>([]);
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly error = signal('');
@@ -44,8 +42,6 @@ export class StaffManagement implements OnInit {
     directorateId: [0],
     sectionId: [0],
     unitId: [0],
-    zoneId: [0],
-    officeId: [0],
   });
 
   t(key: string): string {
@@ -55,7 +51,6 @@ export class StaffManagement implements OnInit {
   ngOnInit(): void {
     this.reference.getDirectorates().subscribe((directorates) => this.directorates.set(directorates));
     this.reference.getUnits().subscribe((units) => this.units.set(units));
-    this.reference.getZones().subscribe((zones) => this.zones.set(zones));
 
     this.form.controls.directorateId.valueChanges.subscribe((value) => {
       const directorateId = Number(value);
@@ -63,15 +58,6 @@ export class StaffManagement implements OnInit {
       this.form.controls.sectionId.setValue(0, { emitEvent: false });
       if (directorateId) {
         this.reference.getSections(directorateId).subscribe((sections) => this.sections.set(sections));
-      }
-    });
-
-    this.form.controls.zoneId.valueChanges.subscribe((value) => {
-      const zoneId = Number(value);
-      this.offices.set([]);
-      this.form.controls.officeId.setValue(0, { emitEvent: false });
-      if (zoneId) {
-        this.reference.getOffices(zoneId).subscribe((offices) => this.offices.set(offices));
       }
     });
 
@@ -102,7 +88,7 @@ export class StaffManagement implements OnInit {
     this.credentialsPanel.set(null);
     this.success.set('');
     this.showForm = true;
-    this.form.reset({ directorateId: 0, sectionId: 0, unitId: 0, zoneId: 0, officeId: 0 });
+    this.form.reset({ directorateId: 0, sectionId: 0, unitId: 0 });
   }
 
   openEdit(item: Staff): void {
@@ -117,14 +103,9 @@ export class StaffManagement implements OnInit {
       directorateId: item.directorateId ?? 0,
       sectionId: item.sectionId ?? 0,
       unitId: item.unitId ?? 0,
-      zoneId: item.zoneId ?? 0,
-      officeId: item.officeId ?? 0,
     });
     if (item.directorateId) {
       this.reference.getSections(item.directorateId).subscribe((sections) => this.sections.set(sections));
-    }
-    if (item.zoneId && item.officeId) {
-      this.reference.getOffices(item.zoneId).subscribe((offices) => this.offices.set(offices));
     }
   }
 
@@ -182,8 +163,6 @@ export class StaffManagement implements OnInit {
     directorateId: number;
     sectionId: number;
     unitId: number | null;
-    zoneId: number;
-    officeId: number | null;
   }): StaffUpdateRequest {
     return {
       fullName: raw.fullName,
@@ -192,8 +171,6 @@ export class StaffManagement implements OnInit {
       directorateId: raw.directorateId ? Number(raw.directorateId) : null,
       sectionId: raw.sectionId ? Number(raw.sectionId) : null,
       unitId: raw.unitId ? Number(raw.unitId) : null,
-      zoneId: raw.zoneId ? Number(raw.zoneId) : null,
-      officeId: raw.officeId ? Number(raw.officeId) : null,
     };
   }
 

@@ -77,6 +77,8 @@ export class Inventory implements OnInit {
     userId: [0, Validators.required],
     ownershipType: ['', Validators.required],
     deviceStatus: ['', Validators.required],
+    zoneId: [0, Validators.required],
+    officeId: [0, Validators.required],
   });
 
   readonly deviceTypes = signal<DeviceType[]>([]);
@@ -85,6 +87,7 @@ export class Inventory implements OnInit {
   readonly units = signal<Unit[]>([]);
   readonly zones = signal<Zone[]>([]);
   readonly offices = signal<Office[]>([]);
+  readonly assetOffices = signal<Office[]>([]);
   readonly staff = signal<Staff[]>([]);
 
   ngOnInit(): void {
@@ -102,6 +105,14 @@ export class Inventory implements OnInit {
         this.reference.getOffices(zone).subscribe((items) => this.offices.set(items));
       } else {
         this.offices.set([]);
+      }
+    });
+    this.assetForm.controls.zoneId.valueChanges.subscribe((value) => {
+      const zoneId = Number(value);
+      this.assetOffices.set([]);
+      this.assetForm.controls.officeId.setValue(0, { emitEvent: false });
+      if (zoneId) {
+        this.reference.getOffices(zoneId).subscribe((items) => this.assetOffices.set(items));
       }
     });
     this.load();
@@ -163,7 +174,7 @@ export class Inventory implements OnInit {
     this.editing = null;
     this.success.set('');
     this.showAssetForm = true;
-    this.assetForm.reset({ deviceTypeId: 0, userId: 0 });
+    this.assetForm.reset({ deviceTypeId: 0, userId: 0, zoneId: 0, officeId: 0 });
   }
 
   openEditForm(item: Asset): void {
@@ -178,7 +189,12 @@ export class Inventory implements OnInit {
       userId: item.userId,
       ownershipType: item.ownershipType,
       deviceStatus: item.deviceStatus,
+      zoneId: item.zoneId ?? 0,
+      officeId: item.officeId ?? 0,
     });
+    if (item.zoneId) {
+      this.reference.getOffices(item.zoneId).subscribe((items) => this.assetOffices.set(items));
+    }
   }
 
   cancelAssetForm(): void {
@@ -242,6 +258,8 @@ export class Inventory implements OnInit {
     deviceTypeId: number;
     ownershipType: string;
     deviceStatus: string;
+    zoneId: number;
+    officeId: number;
   }): AssetUpdateRequest {
     return {
       assetNumber: raw.assetNumber || undefined,
@@ -250,6 +268,8 @@ export class Inventory implements OnInit {
       deviceTypeId: Number(raw.deviceTypeId),
       ownershipType: raw.ownershipType as OwnershipType,
       deviceStatus: raw.deviceStatus as DeviceStatus,
+      zoneId: Number(raw.zoneId),
+      officeId: Number(raw.officeId),
     };
   }
 
@@ -261,6 +281,8 @@ export class Inventory implements OnInit {
     userId: number;
     ownershipType: string;
     deviceStatus: string;
+    zoneId: number;
+    officeId: number;
   }): AssetRequest {
     return {
       assetNumber: raw.assetNumber || undefined,
@@ -270,6 +292,8 @@ export class Inventory implements OnInit {
       userId: Number(raw.userId),
       ownershipType: raw.ownershipType as OwnershipType,
       deviceStatus: raw.deviceStatus as DeviceStatus,
+      zoneId: Number(raw.zoneId),
+      officeId: Number(raw.officeId),
     };
   }
 

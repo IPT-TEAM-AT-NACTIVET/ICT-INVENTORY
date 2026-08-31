@@ -16,21 +16,13 @@
   <div class="card alert alert-info">
     <h3>{{ panel.staff.fullName }} {{ panel.title }}</h3>
     <p>
-      Share these login credentials with the staff member (username is also displayed on their
-      employee record). They will be prompted to complete their email, phone number, directorate
-      and zone details after their first login.
+      Share these login credentials with the staff member. They will be prompted to complete their
+      email, phone number and directorate details after their first login.
     </p>
     <dl class="detail-list">
       <div class="detail-item">
         <dt>Employee ID</dt>
         <dd>{{ panel.staff.employeeId }}</dd>
-      </div>
-      <div class="detail-item">
-        <dt>Username</dt>
-        <dd>
-          <strong>{{ panel.staff.username }}</strong>
-          <button type="button" class="btn btn-sm" (click)="copy(panel.staff.username, 'Username')">Copy</button>
-        </dd>
       </div>
       <div class="detail-item">
         <dt>Initial Password</dt>
@@ -49,8 +41,8 @@
     <h3>{{ editing ? 'Edit Staff Member' : 'New Staff Member' }}</h3>
     @if (!editing) {
       <p class="muted">
-        Only the full name is required. The system will generate the username, employee ID and an
-        initial password from the name.
+        Only the full name is required. The system will generate the employee ID and an initial
+        password from the name.
       </p>
     }
     <form [formGroup]="form" (ngSubmit)="submit()">
@@ -95,24 +87,6 @@
               <option [ngValue]="0">— None —</option>
               @for (unit of units(); track unit.id) {
                 <option [ngValue]="unit.id">{{ unit.name }}</option>
-              }
-            </select>
-          </div>
-          <div class="form-field">
-            <label for="zone">Zone</label>
-            <select id="zone" formControlName="zoneId">
-              <option [ngValue]="0">— None —</option>
-              @for (zone of zones(); track zone.id) {
-                <option [ngValue]="zone.id">{{ zone.name }}</option>
-              }
-            </select>
-          </div>
-          <div class="form-field">
-            <label for="office">Office</label>
-            <select id="office" formControlName="officeId">
-              <option [ngValue]="0">— None —</option>
-              @for (office of offices(); track office.id) {
-                <option [ngValue]="office.id">{{ office.officeCode }}</option>
               }
             </select>
           </div>
@@ -169,14 +143,6 @@
         <dd>{{ item.unitName ?? '—' }}</dd>
       </div>
       <div class="detail-item">
-        <dt>Zone</dt>
-        <dd>{{ item.zoneName ?? '—' }}</dd>
-      </div>
-      <div class="detail-item">
-        <dt>Office</dt>
-        <dd>{{ item.officeCode ?? '—' }}</dd>
-      </div>
-      <div class="detail-item">
         <dt>Registration Date</dt>
         <dd>{{ item.createdAt ? (item.createdAt | date: 'medium') : '—' }}</dd>
       </div>
@@ -201,8 +167,6 @@
           <th>Directorate</th>
           <th>Section</th>
           <th>Unit</th>
-          <th>Zone</th>
-          <th>Office</th>
           <th>Role</th>
           <th>Status</th>
           <th>Registration Date</th>
@@ -219,8 +183,6 @@
             <td>{{ item.directorateName ?? '—' }}</td>
             <td>{{ item.sectionName ?? '—' }}</td>
             <td>{{ item.unitName ?? '—' }}</td>
-            <td>{{ item.zoneName ?? '—' }}</td>
-            <td>{{ item.officeCode ?? '—' }}</td>
             <td>{{ item.role }}</td>
             <td>
               <app-status-badge [label]="item.enabled ? t('status.active') : t('status.inactive')" [tone]="item.enabled ? 'success' : 'danger'" />

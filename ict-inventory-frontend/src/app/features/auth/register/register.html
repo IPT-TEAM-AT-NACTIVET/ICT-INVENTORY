@@ -21,7 +21,7 @@
           <dd><strong>{{ result.employeeId }}</strong></dd>
         </div>
         <div class="detail-item">
-          <dt>Username / Email</dt>
+          <dt>Email</dt>
           <dd>{{ result.email }}</dd>
         </div>
         <div class="detail-item">
@@ -126,29 +126,6 @@
           <option [ngValue]="0">Select unit</option>
           @for (item of units(); track item.id) {
             <option [ngValue]="item.id">{{ item.name }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="form-field">
-        <label for="zone">Zone *</label>
-        <select id="zone" formControlName="zoneId">
-          <option [ngValue]="0">Select zone</option>
-          @for (item of zones(); track item.id) {
-            <option [ngValue]="item.id">{{ item.name }}</option>
-          }
-        </select>
-        @if (form.controls.zoneId.touched && form.controls.zoneId.invalid) {
-          <div class="field-error">Zone is required.</div>
-        }
-      </div>
-
-      <div class="form-field">
-        <label for="office">Office</label>
-        <select id="office" formControlName="officeId">
-          <option [ngValue]="0">Select office</option>
-          @for (item of offices(); track item.id) {
-            <option [ngValue]="item.id">{{ item.officeCode }}</option>
           }
         </select>
       </div>

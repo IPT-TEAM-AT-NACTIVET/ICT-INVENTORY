@@ -2,7 +2,6 @@ export interface Profile {
   id: number;
   employeeId: string;
   fullName: string;
-  username: string;
   email: string | null;
   phoneNumber: string | null;
   setupCompleted: boolean;
@@ -13,10 +12,6 @@ export interface Profile {
   sectionName: string | null;
   unitId: number | null;
   unitName: string | null;
-  zoneId: number | null;
-  zoneName: string | null;
-  officeId: number | null;
-  officeCode: string | null;
   enabled: boolean;
 }
 
@@ -27,6 +22,4 @@ export interface ProfileUpdateRequest {
   directorateId?: number | null;
   sectionId?: number | null;
   unitId?: number | null;
-  zoneId?: number | null;
-  officeId?: number | null;
 }

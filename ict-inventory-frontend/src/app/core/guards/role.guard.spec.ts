@@ -8,7 +8,6 @@ const staffUser: User = {
   id: 2,
   employeeId: 'EMP002',
   fullName: 'Jane Staff',
-  username: 'jane',
   email: 'jane@ict.go.tz',
   role: 'STAFF',
 };

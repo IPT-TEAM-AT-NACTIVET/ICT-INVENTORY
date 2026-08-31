@@ -4,7 +4,6 @@ export interface Staff {
   id: number;
   employeeId: string;
   fullName: string;
-  username: string;
   email: string | null;
   phoneNumber: string | null;
   setupCompleted: boolean;
@@ -18,10 +17,6 @@ export interface Staff {
   sectionName: string | null;
   unitId: number | null;
   unitName: string | null;
-  zoneId: number | null;
-  zoneName: string | null;
-  officeId: number | null;
-  officeCode: string | null;
 }
 
 export interface StaffCreateRequest {
@@ -35,7 +30,5 @@ export interface StaffUpdateRequest {
   directorateId?: number | null;
   sectionId?: number | null;
   unitId?: number | null;
-  zoneId?: number | null;
-  officeId?: number | null;
   enabled?: boolean;
 }

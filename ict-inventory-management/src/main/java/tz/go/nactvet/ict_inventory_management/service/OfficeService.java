@@ -10,11 +10,10 @@ import tz.go.nactvet.ict_inventory_management.dto.OfficeRequest;
 import tz.go.nactvet.ict_inventory_management.dto.OfficeResponse;
 import tz.go.nactvet.ict_inventory_management.entity.Office;
 import tz.go.nactvet.ict_inventory_management.entity.Zone;
-import tz.go.nactvet.ict_inventory_management.enums.Role;
 import tz.go.nactvet.ict_inventory_management.exception.ConflictException;
 import tz.go.nactvet.ict_inventory_management.exception.ResourceNotFoundException;
+import tz.go.nactvet.ict_inventory_management.repository.AssetRepository;
 import tz.go.nactvet.ict_inventory_management.repository.OfficeRepository;
-import tz.go.nactvet.ict_inventory_management.repository.UserRepository;
 import tz.go.nactvet.ict_inventory_management.repository.ZoneRepository;
 
 @Service
@@ -23,16 +22,16 @@ public class OfficeService {
 
     private final OfficeRepository officeRepository;
     private final ZoneRepository zoneRepository;
-    private final UserRepository userRepository;
+    private final AssetRepository assetRepository;
     private final AuditLogService auditLogService;
 
     public OfficeService(OfficeRepository officeRepository,
                          ZoneRepository zoneRepository,
-                         UserRepository userRepository,
+                         AssetRepository assetRepository,
                          AuditLogService auditLogService) {
         this.officeRepository = officeRepository;
         this.zoneRepository = zoneRepository;
-        this.userRepository = userRepository;
+        this.assetRepository = assetRepository;
         this.auditLogService = auditLogService;
     }
 
@@ -102,9 +101,9 @@ public class OfficeService {
         Office office = officeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Office not found with id: " + id));
 
-        long userCount = userRepository.countByRoleAndOfficeId(Role.STAFF, id);
-        if (userCount > 0) {
-            throw new ConflictException("Cannot delete office: " + userCount + " staff members are assigned to it");
+        long assetCount = assetRepository.countByOfficeId(id);
+        if (assetCount > 0) {
+            throw new ConflictException("Cannot delete office: " + assetCount + " assets are located in it");
         }
 
         officeRepository.deleteById(id);

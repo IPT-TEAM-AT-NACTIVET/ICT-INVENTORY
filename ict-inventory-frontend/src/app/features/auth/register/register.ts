@@ -3,7 +3,7 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ReferenceService } from '../../../shared/services/reference.service';
-import { Directorate, Office, Section, Unit, Zone } from '../../../core/models/master-data.model';
+import { Directorate, Section, Unit } from '../../../core/models/master-data.model';
 import { RegisterResponse } from '../../../core/models/user.model';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
 import { TranslationService } from '../../../core/services/translation.service';
@@ -39,8 +39,6 @@ export class Register implements OnInit {
       directorateId: [0, Validators.required],
       sectionId: [0],
       unitId: [0],
-      zoneId: [0, Validators.required],
-      officeId: [0],
     },
     { validators: matchPasswords },
   );
@@ -48,8 +46,6 @@ export class Register implements OnInit {
   readonly directorates = signal<Directorate[]>([]);
   readonly sections = signal<Section[]>([]);
   readonly units = signal<Unit[]>([]);
-  readonly zones = signal<Zone[]>([]);
-  readonly offices = signal<Office[]>([]);
 
   readonly errorMessage = signal('');
   readonly loading = signal(false);
@@ -62,7 +58,6 @@ export class Register implements OnInit {
   ngOnInit(): void {
     this.reference.getDirectorates().subscribe((items) => this.directorates.set(items));
     this.reference.getUnits().subscribe((items) => this.units.set(items));
-    this.reference.getZones().subscribe((items) => this.zones.set(items));
 
     this.form.controls.directorateId.valueChanges.subscribe((value) => {
       const directorateId = Number(value);
@@ -70,15 +65,6 @@ export class Register implements OnInit {
       this.form.controls.sectionId.setValue(0, { emitEvent: false });
       if (directorateId) {
         this.reference.getSections(directorateId).subscribe((sections) => this.sections.set(sections));
-      }
-    });
-
-    this.form.controls.zoneId.valueChanges.subscribe((value) => {
-      const zoneId = Number(value);
-      this.offices.set([]);
-      this.form.controls.officeId.setValue(0, { emitEvent: false });
-      if (zoneId) {
-        this.reference.getOffices(zoneId).subscribe((offices) => this.offices.set(offices));
       }
     });
   }
@@ -101,8 +87,6 @@ export class Register implements OnInit {
         directorateId: this.num(raw.directorateId),
         sectionId: this.num(raw.sectionId),
         unitId: this.num(raw.unitId),
-        zoneId: this.num(raw.zoneId),
-        officeId: this.num(raw.officeId),
       })
       .subscribe({
         next: (response) => {
