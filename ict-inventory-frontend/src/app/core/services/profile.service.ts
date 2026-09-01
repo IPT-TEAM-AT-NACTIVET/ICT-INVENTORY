@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../env';
-import { Profile, ProfileUpdateRequest } from '../models/profile.model';
+import { Profile, ProfileUpdateRequest, PasswordChangeRequest } from '../models/profile.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
@@ -15,5 +15,9 @@ export class ProfileService {
 
   updateMe(request: ProfileUpdateRequest): Observable<Profile> {
     return this.http.put<Profile>(`${this.base}/me`, request);
+  }
+
+  changePassword(request: PasswordChangeRequest): Observable<void> {
+    return this.http.put<void>(`${this.base}/me/password`, request);
   }
 }

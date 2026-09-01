@@ -29,7 +29,6 @@ export class AdminLayout {
     { path: '/admin/sections', labelKey: 'nav.sections' },
     { path: '/admin/units', labelKey: 'nav.units' },
     { path: '/admin/zones', labelKey: 'nav.zones' },
-    { path: '/admin/offices', labelKey: 'nav.offices' },
     { path: '/admin/device-types', labelKey: 'nav.deviceTypes' },
     { path: '/admin/inventory', labelKey: 'nav.inventory' },
     { path: '/admin/verification', labelKey: 'nav.verification' },

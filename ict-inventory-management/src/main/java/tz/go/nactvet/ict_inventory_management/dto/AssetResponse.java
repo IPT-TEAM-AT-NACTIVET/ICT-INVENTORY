@@ -34,8 +34,7 @@ public class AssetResponse {
     private Long zoneId;
     private String zoneName;
 
-    private Long officeId;
-    private String officeCode;
+    private String office;
 
     private OwnershipType ownershipType;
     private DeviceStatus deviceStatus;
@@ -196,20 +195,12 @@ public class AssetResponse {
         this.zoneName = zoneName;
     }
 
-    public Long getOfficeId() {
-        return officeId;
+    public String getOffice() {
+        return office;
     }
 
-    public void setOfficeId(Long officeId) {
-        this.officeId = officeId;
-    }
-
-    public String getOfficeCode() {
-        return officeCode;
-    }
-
-    public void setOfficeCode(String officeCode) {
-        this.officeCode = officeCode;
+    public void setOffice(String office) {
+        this.office = office;
     }
 
     public OwnershipType getOwnershipType() {

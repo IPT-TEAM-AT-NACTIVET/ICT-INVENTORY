@@ -19,7 +19,6 @@ import tz.go.nactvet.ict_inventory_management.dto.PagedResponse;
 import tz.go.nactvet.ict_inventory_management.dto.StaffAssetRequest;
 import tz.go.nactvet.ict_inventory_management.entity.Asset;
 import tz.go.nactvet.ict_inventory_management.entity.DeviceType;
-import tz.go.nactvet.ict_inventory_management.entity.Office;
 import tz.go.nactvet.ict_inventory_management.entity.User;
 import tz.go.nactvet.ict_inventory_management.entity.Zone;
 import tz.go.nactvet.ict_inventory_management.enums.DeviceStatus;
@@ -30,7 +29,6 @@ import tz.go.nactvet.ict_inventory_management.exception.ConflictException;
 import tz.go.nactvet.ict_inventory_management.exception.ResourceNotFoundException;
 import tz.go.nactvet.ict_inventory_management.repository.AssetRepository;
 import tz.go.nactvet.ict_inventory_management.repository.DeviceTypeRepository;
-import tz.go.nactvet.ict_inventory_management.repository.OfficeRepository;
 import tz.go.nactvet.ict_inventory_management.repository.UserRepository;
 import tz.go.nactvet.ict_inventory_management.repository.ZoneRepository;
 
@@ -44,7 +42,6 @@ public class AssetService {
     private final DeviceTypeRepository deviceTypeRepository;
     private final UserRepository userRepository;
     private final ZoneRepository zoneRepository;
-    private final OfficeRepository officeRepository;
     private final AuditLogService auditLogService;
     private final AssetMapper assetMapper;
 
@@ -52,14 +49,12 @@ public class AssetService {
                         DeviceTypeRepository deviceTypeRepository,
                         UserRepository userRepository,
                         ZoneRepository zoneRepository,
-                        OfficeRepository officeRepository,
                         AuditLogService auditLogService,
                         AssetMapper assetMapper) {
         this.assetRepository = assetRepository;
         this.deviceTypeRepository = deviceTypeRepository;
         this.userRepository = userRepository;
         this.zoneRepository = zoneRepository;
-        this.officeRepository = officeRepository;
         this.auditLogService = auditLogService;
         this.assetMapper = assetMapper;
     }
@@ -76,9 +71,6 @@ public class AssetService {
 
         Zone zone = zoneRepository.findById(request.getZoneId())
                 .orElseThrow(() -> new ResourceNotFoundException("Zone not found with id: " + request.getZoneId()));
-        Office office = officeRepository.findById(request.getOfficeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Office not found with id: " + request.getOfficeId()));
-        validateLocation(zone, office);
 
         Asset asset = new Asset();
         asset.setAssetNumber(request.getAssetNumber());
@@ -87,7 +79,7 @@ public class AssetService {
         asset.setDeviceType(deviceType);
         asset.setUser(user);
         asset.setZone(zone);
-        asset.setOffice(office);
+        asset.setOffice(normalizeOffice(request.getOffice()));
         asset.setOwnershipType(request.getOwnershipType());
         asset.setDeviceStatus(request.getDeviceStatus());
         asset.setVerificationStatus(VerificationStatus.PENDING);
@@ -110,9 +102,6 @@ public class AssetService {
 
         Zone zone = zoneRepository.findById(request.getZoneId())
                 .orElseThrow(() -> new ResourceNotFoundException("Zone not found with id: " + request.getZoneId()));
-        Office office = officeRepository.findById(request.getOfficeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Office not found with id: " + request.getOfficeId()));
-        validateLocation(zone, office);
 
         Asset asset = new Asset();
         asset.setAssetNumber(request.getAssetNumber());
@@ -121,7 +110,7 @@ public class AssetService {
         asset.setDeviceType(deviceType);
         asset.setUser(user);
         asset.setZone(zone);
-        asset.setOffice(office);
+        asset.setOffice(normalizeOffice(request.getOffice()));
         asset.setOwnershipType(request.getOwnershipType());
         asset.setDeviceStatus(request.getDeviceStatus());
         asset.setVerificationStatus(VerificationStatus.PENDING);
@@ -147,12 +136,12 @@ public class AssetService {
     @Transactional(readOnly = true)
     public PagedResponse<AssetResponse> findFiltered(int page, int size, String assetNumber, String serialNumber,
             String deviceName, Long deviceTypeId, String employeeId, String userName, Long userId, Long directorateId,
-            Long sectionId, Long unitId, Long zoneId, Long officeId, OwnershipType ownershipType,
+            Long sectionId, Long unitId, Long zoneId, String office, OwnershipType ownershipType,
             DeviceStatus deviceStatus, VerificationStatus verificationStatus) {
         Page<Asset> assetPage = assetRepository.findByFilters(
                 blankToNull(assetNumber), blankToNull(serialNumber), blankToNull(deviceName),
                 deviceTypeId, blankToNull(employeeId), blankToNull(userName), userId, directorateId, sectionId, unitId,
-                zoneId, officeId, ownershipType, deviceStatus, verificationStatus,
+                zoneId, blankToNull(office), ownershipType, deviceStatus, verificationStatus,
                 PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         List<AssetResponse> content = assetPage.getContent().stream()
                 .map(assetMapper::toResponse)
@@ -282,30 +271,25 @@ public class AssetService {
         if (request.getZoneId() != null) {
             Zone zone = zoneRepository.findById(request.getZoneId())
                     .orElseThrow(() -> new ResourceNotFoundException("Zone not found with id: " + request.getZoneId()));
-            Office office = request.getOfficeId() != null
-                    ? officeRepository.findById(request.getOfficeId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Office not found with id: " + request.getOfficeId()))
-                    : asset.getOffice();
-            validateLocation(zone, office);
             asset.setZone(zone);
-            asset.setOffice(office);
-        } else if (request.getOfficeId() != null) {
-            Office office = officeRepository.findById(request.getOfficeId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Office not found with id: " + request.getOfficeId()));
-            validateLocation(asset.getZone(), office);
-            asset.setOffice(office);
+        }
+        if (request.getOffice() != null) {
+            asset.setOffice(normalizeOffice(request.getOffice()));
         }
         if (admin && request.getOwnershipType() != null) {
             asset.setOwnershipType(request.getOwnershipType());
         }
     }
 
-    private void validateLocation(Zone zone, Office office) {
-        if (office == null || !office.getZone().getId().equals(zone.getId())) {
-            throw new BadRequestException(
-                    "Invalid location: office '" + (office != null ? office.getOfficeCode() : "null")
-                            + "' does not belong to zone '" + zone.getName() + "'");
+    private String normalizeOffice(String office) {
+        if (office == null) {
+            return null;
         }
+        String trimmed = office.trim();
+        if (trimmed.length() > 100) {
+            throw new BadRequestException("Office must not exceed 100 characters");
+        }
+        return trimmed;
     }
 
     private void requireSetupComplete(User user) {

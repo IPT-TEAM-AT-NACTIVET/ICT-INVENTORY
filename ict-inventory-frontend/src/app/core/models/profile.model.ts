@@ -23,3 +23,9 @@ export interface ProfileUpdateRequest {
   sectionId?: number | null;
   unitId?: number | null;
 }
+
+export interface PasswordChangeRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}

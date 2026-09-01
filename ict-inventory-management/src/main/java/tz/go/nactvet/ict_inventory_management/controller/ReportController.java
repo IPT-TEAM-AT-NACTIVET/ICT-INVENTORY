@@ -41,13 +41,13 @@ public class ReportController {
             @RequestParam(required = false) Long sectionId,
             @RequestParam(required = false) Long unitId,
             @RequestParam(required = false) Long zoneId,
-            @RequestParam(required = false) Long officeId,
+            @RequestParam(required = false) String office,
             @RequestParam(required = false) OwnershipType ownershipType,
             @RequestParam(required = false) DeviceStatus deviceStatus,
             @RequestParam(required = false) VerificationStatus verificationStatus) {
         return ResponseEntity.ok(reportService.getInventoryReport(
                 assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId,
+                userId, directorateId, sectionId, unitId, zoneId, office,
                 ownershipType, deviceStatus, verificationStatus));
     }
 
@@ -64,13 +64,13 @@ public class ReportController {
             @RequestParam(required = false) Long sectionId,
             @RequestParam(required = false) Long unitId,
             @RequestParam(required = false) Long zoneId,
-            @RequestParam(required = false) Long officeId,
+            @RequestParam(required = false) String office,
             @RequestParam(required = false) OwnershipType ownershipType,
             @RequestParam(required = false) DeviceStatus deviceStatus,
             @RequestParam(required = false) VerificationStatus verificationStatus) {
         return ResponseEntity.ok(reportService.getReportByDirectorate(
                 assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId,
+                userId, directorateId, sectionId, unitId, zoneId, office,
                 ownershipType, deviceStatus, verificationStatus));
     }
 
@@ -87,13 +87,13 @@ public class ReportController {
             @RequestParam(required = false) Long sectionId,
             @RequestParam(required = false) Long unitId,
             @RequestParam(required = false) Long zoneId,
-            @RequestParam(required = false) Long officeId,
+            @RequestParam(required = false) String office,
             @RequestParam(required = false) OwnershipType ownershipType,
             @RequestParam(required = false) DeviceStatus deviceStatus,
             @RequestParam(required = false) VerificationStatus verificationStatus) {
         return ResponseEntity.ok(reportService.getReportBySection(
                 assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId,
+                userId, directorateId, sectionId, unitId, zoneId, office,
                 ownershipType, deviceStatus, verificationStatus));
     }
 
@@ -110,13 +110,13 @@ public class ReportController {
             @RequestParam(required = false) Long sectionId,
             @RequestParam(required = false) Long unitId,
             @RequestParam(required = false) Long zoneId,
-            @RequestParam(required = false) Long officeId,
+            @RequestParam(required = false) String office,
             @RequestParam(required = false) OwnershipType ownershipType,
             @RequestParam(required = false) DeviceStatus deviceStatus,
             @RequestParam(required = false) VerificationStatus verificationStatus) {
         return ResponseEntity.ok(reportService.getReportByZone(
                 assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId,
+                userId, directorateId, sectionId, unitId, zoneId, office,
                 ownershipType, deviceStatus, verificationStatus));
     }
 
@@ -133,13 +133,13 @@ public class ReportController {
             @RequestParam(required = false) Long sectionId,
             @RequestParam(required = false) Long unitId,
             @RequestParam(required = false) Long zoneId,
-            @RequestParam(required = false) Long officeId,
+            @RequestParam(required = false) String office,
             @RequestParam(required = false) OwnershipType ownershipType,
             @RequestParam(required = false) DeviceStatus deviceStatus,
             @RequestParam(required = false) VerificationStatus verificationStatus) {
         return ResponseEntity.ok(reportService.getReportByUnit(
                 assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId,
+                userId, directorateId, sectionId, unitId, zoneId, office,
                 ownershipType, deviceStatus, verificationStatus));
     }
 
@@ -156,13 +156,13 @@ public class ReportController {
             @RequestParam(required = false) Long sectionId,
             @RequestParam(required = false) Long unitId,
             @RequestParam(required = false) Long zoneId,
-            @RequestParam(required = false) Long officeId,
+            @RequestParam(required = false) String office,
             @RequestParam(required = false) OwnershipType ownershipType,
             @RequestParam(required = false) DeviceStatus deviceStatus,
             @RequestParam(required = false) VerificationStatus verificationStatus) {
         return ResponseEntity.ok(reportService.getReportByOffice(
                 assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId,
+                userId, directorateId, sectionId, unitId, zoneId, office,
                 ownershipType, deviceStatus, verificationStatus));
     }
 
@@ -179,13 +179,13 @@ public class ReportController {
             @RequestParam(required = false) Long sectionId,
             @RequestParam(required = false) Long unitId,
             @RequestParam(required = false) Long zoneId,
-            @RequestParam(required = false) Long officeId,
+            @RequestParam(required = false) String office,
             @RequestParam(required = false) OwnershipType ownershipType,
             @RequestParam(required = false) DeviceStatus deviceStatus,
             @RequestParam(required = false) VerificationStatus verificationStatus) {
         return ResponseEntity.ok(reportService.getReportByDeviceType(
                 assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId,
+                userId, directorateId, sectionId, unitId, zoneId, office,
                 ownershipType, deviceStatus, verificationStatus));
     }
 
@@ -202,13 +202,13 @@ public class ReportController {
             @RequestParam(required = false) Long sectionId,
             @RequestParam(required = false) Long unitId,
             @RequestParam(required = false) Long zoneId,
-            @RequestParam(required = false) Long officeId,
+            @RequestParam(required = false) String office,
             @RequestParam(required = false) OwnershipType ownershipType,
             @RequestParam(required = false) DeviceStatus deviceStatus,
             @RequestParam(required = false) VerificationStatus verificationStatus) {
         return ResponseEntity.ok(reportService.getReportByStatus(
                 assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId,
+                userId, directorateId, sectionId, unitId, zoneId, office,
                 ownershipType, deviceStatus, verificationStatus));
     }
 
@@ -223,13 +223,13 @@ public class ReportController {
             @RequestParam(required = false) Long sectionId,
             @RequestParam(required = false) Long unitId,
             @RequestParam(required = false) Long zoneId,
-            @RequestParam(required = false) Long officeId,
+            @RequestParam(required = false) String office,
             @RequestParam(required = false) OwnershipType ownershipType,
             @RequestParam(required = false) DeviceStatus deviceStatus,
             @RequestParam(required = false) VerificationStatus verificationStatus) {
         return ResponseEntity.ok(reportService.getFilteredAssets(
                 assetNumber, serialNumber, deviceName, deviceTypeId, userId,
-                directorateId, sectionId, unitId, zoneId, officeId,
+                directorateId, sectionId, unitId, zoneId, office,
                 ownershipType, deviceStatus, verificationStatus));
     }
 
@@ -246,14 +246,14 @@ public class ReportController {
             @RequestParam(required = false) Long sectionId,
             @RequestParam(required = false) Long unitId,
             @RequestParam(required = false) Long zoneId,
-            @RequestParam(required = false) Long officeId,
+            @RequestParam(required = false) String office,
             @RequestParam(required = false) OwnershipType ownershipType,
             @RequestParam(required = false) DeviceStatus deviceStatus,
             @RequestParam(required = false) VerificationStatus verificationStatus) {
 
         String csv = reportService.exportInventoryCsv(
                 assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId,
+                userId, directorateId, sectionId, unitId, zoneId, office,
                 ownershipType, deviceStatus, verificationStatus);
 
         return ResponseEntity.ok()

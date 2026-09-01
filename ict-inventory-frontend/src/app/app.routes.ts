@@ -44,11 +44,13 @@ export const routes: Routes = [
         path: 'zones',
         loadComponent: () => import('./features/admin/master-data/zones').then((m) => m.ZonesComponent),
       },
-      {
-        path: 'offices',
-        loadComponent: () =>
-          import('./features/admin/master-data/offices').then((m) => m.OfficesComponent),
-      },
+      // Offices are no longer a pre-defined master list for asset registration.
+      // Users enter office codes directly when registering assets.
+      // {
+      //   path: 'offices',
+      //   loadComponent: () =>
+      //     import('./features/admin/master-data/offices').then((m) => m.OfficesComponent),
+      // },
       {
         path: 'device-types',
         loadComponent: () =>

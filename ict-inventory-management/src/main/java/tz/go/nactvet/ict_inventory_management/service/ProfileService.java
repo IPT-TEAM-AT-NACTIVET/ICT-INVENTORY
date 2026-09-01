@@ -2,15 +2,18 @@ package tz.go.nactvet.ict_inventory_management.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import tz.go.nactvet.ict_inventory_management.dto.PasswordChangeRequest;
 import tz.go.nactvet.ict_inventory_management.dto.ProfileResponse;
 import tz.go.nactvet.ict_inventory_management.dto.ProfileUpdateRequest;
 import tz.go.nactvet.ict_inventory_management.entity.Directorate;
 import tz.go.nactvet.ict_inventory_management.entity.Section;
 import tz.go.nactvet.ict_inventory_management.entity.Unit;
 import tz.go.nactvet.ict_inventory_management.entity.User;
+import tz.go.nactvet.ict_inventory_management.exception.BadRequestException;
 import tz.go.nactvet.ict_inventory_management.exception.ConflictException;
 import tz.go.nactvet.ict_inventory_management.exception.ResourceNotFoundException;
 import tz.go.nactvet.ict_inventory_management.repository.DirectorateRepository;
@@ -29,17 +32,20 @@ public class ProfileService {
     private final SectionRepository sectionRepository;
     private final UnitRepository unitRepository;
     private final OrganizationalValidator organizationalValidator;
+    private final PasswordEncoder passwordEncoder;
 
     public ProfileService(UserRepository userRepository,
                           DirectorateRepository directorateRepository,
                           SectionRepository sectionRepository,
                           UnitRepository unitRepository,
-                          OrganizationalValidator organizationalValidator) {
+                          OrganizationalValidator organizationalValidator,
+                          PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.directorateRepository = directorateRepository;
         this.sectionRepository = sectionRepository;
         this.unitRepository = unitRepository;
         this.organizationalValidator = organizationalValidator;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional(readOnly = true)
@@ -93,6 +99,25 @@ public class ProfileService {
         User saved = userRepository.save(user);
         log.info("Profile updated for user: {}", saved.getUsername());
         return toResponse(saved);
+    }
+
+    public void changePassword(Long userId, PasswordChangeRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new BadRequestException("Current password is incorrect.");
+        }
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new BadRequestException("New password and confirmation do not match.");
+        }
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new BadRequestException("New password must be different from the current password.");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        log.info("Password changed for user: {}", user.getUsername());
     }
 
     private boolean isSetupComplete(User user) {

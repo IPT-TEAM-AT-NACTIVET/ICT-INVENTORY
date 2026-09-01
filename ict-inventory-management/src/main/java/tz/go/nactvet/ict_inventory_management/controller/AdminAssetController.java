@@ -60,13 +60,13 @@ public class AdminAssetController {
             @RequestParam(required = false) Long sectionId,
             @RequestParam(required = false) Long unitId,
             @RequestParam(required = false) Long zoneId,
-            @RequestParam(required = false) Long officeId,
+            @RequestParam(required = false) String office,
             @RequestParam(required = false) OwnershipType ownershipType,
             @RequestParam(required = false) DeviceStatus deviceStatus,
             @RequestParam(required = false) VerificationStatus verificationStatus) {
         return ResponseEntity.ok(assetService.findFiltered(
                 page, size, assetNumber, serialNumber, deviceName, deviceTypeId,
-                employeeId, userName, userId, directorateId, sectionId, unitId, zoneId, officeId,
+                employeeId, userName, userId, directorateId, sectionId, unitId, zoneId, office,
                 ownershipType, deviceStatus, verificationStatus));
     }
 

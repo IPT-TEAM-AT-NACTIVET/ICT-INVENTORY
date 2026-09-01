@@ -12,7 +12,7 @@ public class AssetUpdateRequest {
     private DeviceStatus deviceStatus;
     private OwnershipType ownershipType;
     private Long zoneId;
-    private Long officeId;
+    private String office;
 
     public String getAssetNumber() {
         return assetNumber;
@@ -70,11 +70,11 @@ public class AssetUpdateRequest {
         this.zoneId = zoneId;
     }
 
-    public Long getOfficeId() {
-        return officeId;
+    public String getOffice() {
+        return office;
     }
 
-    public void setOfficeId(Long officeId) {
-        this.officeId = officeId;
+    public void setOffice(String office) {
+        this.office = office;
     }
 }

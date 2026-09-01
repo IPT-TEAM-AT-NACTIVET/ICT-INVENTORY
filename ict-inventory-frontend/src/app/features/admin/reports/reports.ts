@@ -7,7 +7,7 @@ import { ReferenceService } from '../../../shared/services/reference.service';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
 import { ReportResponse } from '../../../core/models/report.model';
 import { AssetFilter } from '../../../core/models/asset.model';
-import { Directorate, DeviceType, Office, Section, Unit, Zone } from '../../../core/models/master-data.model';
+import { Directorate, DeviceType, Section, Unit, Zone } from '../../../core/models/master-data.model';
 import { DeviceStatus, OwnershipType, VerificationStatus } from '../../../core/models/enums';
 import {
   DEVICE_STATUS_LABELS,
@@ -59,7 +59,6 @@ export class Reports implements OnInit {
   readonly sections = signal<Section[]>([]);
   readonly units = signal<Unit[]>([]);
   readonly zones = signal<Zone[]>([]);
-  readonly offices = signal<Office[]>([]);
 
   readonly filters = this.fb.nonNullable.group({
     assetNumber: [''],
@@ -71,7 +70,7 @@ export class Reports implements OnInit {
     sectionId: [''],
     unitId: [''],
     zoneId: [''],
-    officeId: [''],
+    office: [''],
     ownershipType: [''],
     deviceStatus: [''],
     verificationStatus: [''],
@@ -83,16 +82,6 @@ export class Reports implements OnInit {
     this.reference.getSections().subscribe((items) => this.sections.set(items));
     this.reference.getUnits().subscribe((items) => this.units.set(items));
     this.reference.getZones().subscribe((items) => this.zones.set(items));
-    this.reference.getOffices().subscribe((items) => this.offices.set(items));
-    this.filters.controls.zoneId.valueChanges.subscribe((zoneId) => {
-      this.filters.controls.officeId.setValue('', { emitEvent: false });
-      const zone = this.num(zoneId);
-      if (zone) {
-        this.reference.getOffices(zone).subscribe((items) => this.offices.set(items));
-      } else {
-        this.offices.set([]);
-      }
-    });
     this.load();
   }
 
@@ -189,7 +178,7 @@ export class Reports implements OnInit {
       sectionId: this.num(f.sectionId),
       unitId: this.num(f.unitId),
       zoneId: this.num(f.zoneId),
-      officeId: this.num(f.officeId),
+      office: f.office || undefined,
       ownershipType: (f.ownershipType || undefined) as OwnershipType | undefined,
       deviceStatus: (f.deviceStatus || undefined) as DeviceStatus | undefined,
       verificationStatus: (f.verificationStatus || undefined) as VerificationStatus | undefined,

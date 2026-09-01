@@ -2,6 +2,7 @@ package tz.go.nactvet.ict_inventory_management.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import tz.go.nactvet.ict_inventory_management.enums.DeviceStatus;
 import tz.go.nactvet.ict_inventory_management.enums.OwnershipType;
@@ -27,8 +28,9 @@ public class StaffAssetRequest {
     @NotNull(message = "zoneId: must not be null")
     private Long zoneId;
 
-    @NotNull(message = "officeId: must not be null")
-    private Long officeId;
+    @NotBlank(message = "office: must not be blank")
+    @Size(max = 100, message = "office: must not exceed 100 characters")
+    private String office;
 
     public String getAssetNumber() {
         return assetNumber;
@@ -86,11 +88,11 @@ public class StaffAssetRequest {
         this.zoneId = zoneId;
     }
 
-    public Long getOfficeId() {
-        return officeId;
+    public String getOffice() {
+        return office;
     }
 
-    public void setOfficeId(Long officeId) {
-        this.officeId = officeId;
+    public void setOffice(String office) {
+        this.office = office;
     }
 }

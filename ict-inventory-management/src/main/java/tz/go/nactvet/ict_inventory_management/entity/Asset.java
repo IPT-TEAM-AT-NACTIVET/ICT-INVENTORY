@@ -14,7 +14,6 @@ import tz.go.nactvet.ict_inventory_management.enums.VerificationStatus;
         @Index(name = "idx_assets_user_id", columnList = "user_id"),
         @Index(name = "idx_assets_device_type_id", columnList = "device_type_id"),
         @Index(name = "idx_assets_zone_id", columnList = "zone_id"),
-        @Index(name = "idx_assets_office_id", columnList = "office_id"),
         @Index(name = "idx_assets_verification_status", columnList = "verification_status"),
         @Index(name = "idx_assets_device_status", columnList = "device_status")
 })
@@ -46,9 +45,8 @@ public class Asset {
     @JoinColumn(name = "zone_id")
     private Zone zone;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "office_id")
-    private Office office;
+    @Column(name = "office", nullable = false, length = 100)
+    private String office;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "ownership_type", nullable = false)
@@ -141,11 +139,11 @@ public class Asset {
         this.zone = zone;
     }
 
-    public Office getOffice() {
+    public String getOffice() {
         return office;
     }
 
-    public void setOffice(Office office) {
+    public void setOffice(String office) {
         this.office = office;
     }
 

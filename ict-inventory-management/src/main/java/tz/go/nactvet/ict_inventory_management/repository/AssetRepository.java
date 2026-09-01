@@ -19,25 +19,25 @@ import tz.go.nactvet.ict_inventory_management.enums.VerificationStatus;
 @Repository
 public interface AssetRepository extends JpaRepository<Asset, Long> {
 
-    @EntityGraph(attributePaths = {"user", "user.directorate", "user.section", "user.unit", "zone", "office", "deviceType"})
+    @EntityGraph(attributePaths = {"user", "user.directorate", "user.section", "user.unit", "zone", "deviceType"})
     List<Asset> findAllByOrderByCreatedAtDesc();
 
-    @EntityGraph(attributePaths = {"user", "user.directorate", "user.section", "user.unit", "zone", "office", "deviceType"})
+    @EntityGraph(attributePaths = {"user", "user.directorate", "user.section", "user.unit", "zone", "deviceType"})
     List<Asset> findByUserId(Long userId);
 
-    @EntityGraph(attributePaths = {"user", "user.directorate", "user.section", "user.unit", "zone", "office", "deviceType"})
+    @EntityGraph(attributePaths = {"user", "user.directorate", "user.section", "user.unit", "zone", "deviceType"})
     List<Asset> findByDeviceTypeId(Long deviceTypeId);
 
-    @EntityGraph(attributePaths = {"user", "user.directorate", "user.section", "user.unit", "zone", "office", "deviceType"})
+    @EntityGraph(attributePaths = {"user", "user.directorate", "user.section", "user.unit", "zone", "deviceType"})
     List<Asset> findByDeviceStatus(DeviceStatus status);
 
-    @EntityGraph(attributePaths = {"user", "user.directorate", "user.section", "user.unit", "zone", "office", "deviceType"})
+    @EntityGraph(attributePaths = {"user", "user.directorate", "user.section", "user.unit", "zone", "deviceType"})
     List<Asset> findByVerificationStatus(VerificationStatus status);
 
-    @EntityGraph(attributePaths = {"user", "user.directorate", "user.section", "user.unit", "zone", "office", "deviceType"})
+    @EntityGraph(attributePaths = {"user", "user.directorate", "user.section", "user.unit", "zone", "deviceType"})
     List<Asset> findByUserIdAndVerificationStatus(Long userId, VerificationStatus status);
 
-    @EntityGraph(attributePaths = {"user", "user.directorate", "user.section", "user.unit", "zone", "office", "deviceType"})
+    @EntityGraph(attributePaths = {"user", "user.directorate", "user.section", "user.unit", "zone", "deviceType"})
     Optional<Asset> findWithDetailsById(Long id);
 
     Optional<Asset> findByAssetNumber(String assetNumber);
@@ -62,8 +62,6 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
 
     long countByZoneId(Long zoneId);
 
-    long countByOfficeId(Long officeId);
-
     long countByUserIdAndVerificationStatus(Long userId, VerificationStatus status);
 
     long countByUserIdAndDeviceStatus(Long userId, DeviceStatus status);
@@ -86,13 +84,13 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
     @Query("SELECT a.deviceStatus, COUNT(a) FROM Asset a GROUP BY a.deviceStatus")
     List<Object[]> countByDeviceStatusGrouped();
 
-    @Query("SELECT a.office.id, a.office.officeCode, COUNT(a) FROM Asset a WHERE a.office IS NOT NULL GROUP BY a.office.id, a.office.officeCode")
+    @Query("SELECT a.office, COUNT(a) FROM Asset a WHERE a.office IS NOT NULL GROUP BY a.office")
     List<Object[]> countByOfficeGrouped();
 
     @Query("SELECT a.user.unit.id, a.user.unit.name, COUNT(a) FROM Asset a WHERE a.user.unit IS NOT NULL GROUP BY a.user.unit.id, a.user.unit.name")
     List<Object[]> countByUnitGrouped();
 
-    @EntityGraph(attributePaths = {"user", "user.directorate", "user.section", "user.unit", "zone", "office", "deviceType"})
+    @EntityGraph(attributePaths = {"user", "user.directorate", "user.section", "user.unit", "zone", "deviceType"})
     Page<Asset> findByOrderByCreatedAtDesc(Pageable pageable);
 
     @Query("SELECT a FROM Asset a " +
@@ -101,7 +99,6 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            "LEFT JOIN FETCH u.section " +
            "LEFT JOIN FETCH u.unit " +
            "LEFT JOIN FETCH a.zone " +
-           "LEFT JOIN FETCH a.office " +
            "LEFT JOIN FETCH a.deviceType WHERE " +
            "(:assetNumber IS NULL OR a.assetNumber LIKE %:assetNumber%) AND " +
            "(:serialNumber IS NULL OR a.serialNumber LIKE %:serialNumber%) AND " +
@@ -114,7 +111,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            "(:sectionId IS NULL OR a.user.section.id = :sectionId) AND " +
            "(:unitId IS NULL OR a.user.unit.id = :unitId) AND " +
            "(:zoneId IS NULL OR a.zone.id = :zoneId) AND " +
-           "(:officeId IS NULL OR a.office.id = :officeId) AND " +
+           "(:office IS NULL OR a.office LIKE %:office%) AND " +
            "(:ownershipType IS NULL OR a.ownershipType = :ownershipType) AND " +
            "(:deviceStatus IS NULL OR a.deviceStatus = :deviceStatus) AND " +
            "(:verificationStatus IS NULL OR a.verificationStatus = :verificationStatus) " +
@@ -131,7 +128,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            @Param("sectionId") Long sectionId,
            @Param("unitId") Long unitId,
            @Param("zoneId") Long zoneId,
-           @Param("officeId") Long officeId,
+           @Param("office") String office,
            @Param("ownershipType") OwnershipType ownershipType,
            @Param("deviceStatus") DeviceStatus deviceStatus,
            @Param("verificationStatus") VerificationStatus verificationStatus,

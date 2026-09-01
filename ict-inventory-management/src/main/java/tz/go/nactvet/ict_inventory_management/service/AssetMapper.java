@@ -50,10 +50,7 @@ public class AssetMapper {
             response.setZoneId(asset.getZone().getId());
             response.setZoneName(asset.getZone().getName());
         }
-        if (asset.getOffice() != null) {
-            response.setOfficeId(asset.getOffice().getId());
-            response.setOfficeCode(asset.getOffice().getOfficeCode());
-        }
+        response.setOffice(asset.getOffice());
 
         return response;
     }

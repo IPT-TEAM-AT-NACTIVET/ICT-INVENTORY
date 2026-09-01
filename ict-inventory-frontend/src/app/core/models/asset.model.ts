@@ -20,8 +20,7 @@ export interface Asset {
   unitName: string | null;
   zoneId: number | null;
   zoneName: string | null;
-  officeId: number | null;
-  officeCode: string | null;
+  office: string | null;
   ownershipType: OwnershipType;
   deviceStatus: DeviceStatus;
   verificationStatus: VerificationStatus;
@@ -47,7 +46,7 @@ export interface AssetRequest {
   ownershipType: OwnershipType;
   deviceStatus: DeviceStatus;
   zoneId: number;
-  officeId: number;
+  office: string;
 }
 
 export interface StaffAssetRequest {
@@ -58,7 +57,7 @@ export interface StaffAssetRequest {
   ownershipType: OwnershipType;
   deviceStatus: DeviceStatus;
   zoneId: number;
-  officeId: number;
+  office: string;
 }
 
 export interface AssetUpdateRequest {
@@ -69,7 +68,7 @@ export interface AssetUpdateRequest {
   deviceStatus?: DeviceStatus;
   ownershipType?: OwnershipType;
   zoneId?: number;
-  officeId?: number;
+  office?: string;
 }
 
 export interface RejectRequest {
@@ -88,7 +87,7 @@ export interface AssetFilter {
   sectionId?: number | null;
   unitId?: number | null;
   zoneId?: number | null;
-  officeId?: number | null;
+  office?: string;
   ownershipType?: OwnershipType | '';
   deviceStatus?: DeviceStatus | '';
   verificationStatus?: VerificationStatus | '';

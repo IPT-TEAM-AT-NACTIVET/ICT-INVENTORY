@@ -6,7 +6,7 @@ import { ReferenceService } from '../../../shared/services/reference.service';
 import { ProfileService } from '../../../core/services/profile.service';
 import { StaffAssetService } from '../../../core/services/staff-asset.service';
 import { Asset } from '../../../core/models/asset.model';
-import { DeviceType, Office, Zone } from '../../../core/models/master-data.model';
+import { DeviceType, Zone } from '../../../core/models/master-data.model';
 import { Profile } from '../../../core/models/profile.model';
 import { DeviceStatus, OwnershipType } from '../../../core/models/enums';
 import {
@@ -42,12 +42,11 @@ export class AssetForm implements OnInit {
     ownershipType: ['', Validators.required],
     deviceStatus: ['', Validators.required],
     zoneId: [0, Validators.required],
-    officeId: [0, Validators.required],
+    office: ['', [Validators.required, Validators.maxLength(100)]],
   });
 
   readonly deviceTypes = signal<DeviceType[]>([]);
   readonly zones = signal<Zone[]>([]);
-  readonly offices = signal<Office[]>([]);
   readonly registrar = signal<Profile | undefined>(undefined);
   assetId: number | null = null;
   readonly existing = signal<Asset | undefined>(undefined);
@@ -60,15 +59,6 @@ export class AssetForm implements OnInit {
     this.assetId = idParam ? Number(idParam) : null;
     this.reference.getDeviceTypes().subscribe((items) => this.deviceTypes.set(items));
     this.reference.getZones().subscribe((items) => this.zones.set(items));
-
-    this.form.controls.zoneId.valueChanges.subscribe((value) => {
-      const zoneId = Number(value);
-      this.offices.set([]);
-      this.form.controls.officeId.setValue(0, { emitEvent: false });
-      if (zoneId) {
-        this.reference.getOffices(zoneId).subscribe((offices) => this.offices.set(offices));
-      }
-    });
 
     this.profileService.getMe().subscribe({
       next: (profile) => this.registrar.set(profile),
@@ -90,11 +80,8 @@ export class AssetForm implements OnInit {
           ownershipType: asset.ownershipType,
           deviceStatus: asset.deviceStatus,
           zoneId: asset.zoneId ?? 0,
-          officeId: asset.officeId ?? 0,
+          office: asset.office ?? '',
         });
-        if (asset.zoneId) {
-          this.reference.getOffices(asset.zoneId).subscribe((offices) => this.offices.set(offices));
-        }
       },
       error: () => {
         this.error.set('Failed to load this asset. You can only edit your own assets.');
@@ -130,7 +117,7 @@ export class AssetForm implements OnInit {
       ownershipType: raw.ownershipType as OwnershipType,
       deviceStatus: raw.deviceStatus as DeviceStatus,
       zoneId: Number(raw.zoneId),
-      officeId: Number(raw.officeId),
+      office: raw.office.trim(),
     };
     const op = this.assetId
       ? this.staffAssetService.updateMyAsset(this.assetId, payload)

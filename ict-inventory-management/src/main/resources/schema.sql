@@ -55,6 +55,37 @@ ALTER TABLE users DROP COLUMN IF EXISTS zone_id;
 @@
 ALTER TABLE users DROP COLUMN IF EXISTS office_id;
 @@
+-- Assets: Migrate from office_id (FK to offices table) to office (VARCHAR code).
+-- Migrate existing office codes from the offices table to assets.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns
+               WHERE table_schema = current_schema() AND table_name = 'assets' AND column_name = 'office_id') THEN
+        -- Populate office from the offices table before dropping the FK
+        UPDATE assets a SET office = o.office_code
+        FROM offices o
+        WHERE a.office_id = o.id AND a.office IS NULL;
+        
+        -- Set a default office for any remaining NULL values
+        UPDATE assets SET office = 'UNASSIGNED' WHERE office IS NULL;
+    END IF;
+END $$;
+@@
+-- Drop the old index on office_id
+DROP INDEX IF EXISTS idx_assets_office_id;
+@@
+-- Drop the old office_id foreign key constraint
+ALTER TABLE assets DROP CONSTRAINT IF EXISTS assets_office_id_fkey;
+@@
+-- Drop the old office_id column
+ALTER TABLE assets DROP COLUMN IF EXISTS office_id;
+@@
+-- Add the new office VARCHAR column if it doesn't exist (with NOT NULL constraint)
+ALTER TABLE assets ADD COLUMN IF NOT EXISTS office VARCHAR(100) NOT NULL DEFAULT 'UNASSIGNED';
+@@
+-- Remove the default constraint after the column is added
+ALTER TABLE assets ALTER COLUMN office DROP DEFAULT;
+@@
 -- Sequence used to generate unique Employee IDs (NCT-EMP-00001, ...) in a
 -- concurrency-safe manner. Created before Hibernate so it is present for
 -- registration-time generation.

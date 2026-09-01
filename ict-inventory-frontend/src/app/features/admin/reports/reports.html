@@ -85,12 +85,7 @@
       </div>
       <div class="form-field">
         <label for="office">Office</label>
-        <select id="office" formControlName="officeId">
-          <option value="">All</option>
-          @for (item of offices(); track item.id) {
-            <option [value]="item.id">{{ item.officeCode }}</option>
-          }
-        </select>
+        <input id="office" type="text" formControlName="office" placeholder="Office code" />
       </div>
       <div class="form-field">
         <label for="ownership">Ownership</label>
@@ -195,7 +190,7 @@
                         <td>{{ asset.sectionName ?? '—' }}</td>
                         <td>{{ asset.unitName ?? '—' }}</td>
                         <td>{{ asset.zoneName ?? '—' }}</td>
-                        <td>{{ asset.officeCode ?? '—' }}</td>
+                        <td>{{ asset.office ?? '—' }}</td>
                         <td>{{ ownershipLabels[asset.ownershipType] }}</td>
                         <td>
                           <app-status-badge [label]="deviceStatusLabels[asset.deviceStatus]" [tone]="deviceTone(asset.deviceStatus)" />

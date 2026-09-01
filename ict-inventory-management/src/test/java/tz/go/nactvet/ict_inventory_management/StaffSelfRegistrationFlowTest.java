@@ -25,11 +25,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tz.go.nactvet.ict_inventory_management.entity.DeviceType;
 import tz.go.nactvet.ict_inventory_management.entity.Directorate;
-import tz.go.nactvet.ict_inventory_management.entity.Office;
 import tz.go.nactvet.ict_inventory_management.entity.Zone;
 import tz.go.nactvet.ict_inventory_management.repository.DeviceTypeRepository;
 import tz.go.nactvet.ict_inventory_management.repository.DirectorateRepository;
-import tz.go.nactvet.ict_inventory_management.repository.OfficeRepository;
 import tz.go.nactvet.ict_inventory_management.repository.ZoneRepository;
 
 @SpringBootTest
@@ -50,16 +48,12 @@ class StaffSelfRegistrationFlowTest {
     private ZoneRepository zoneRepository;
 
     @Autowired
-    private OfficeRepository officeRepository;
-
-    @Autowired
     private DeviceTypeRepository deviceTypeRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private Long directorateId;
     private Long zoneId;
-    private Long officeId;
     private Long deviceTypeId;
 
     @BeforeEach
@@ -88,19 +82,6 @@ class StaffSelfRegistrationFlowTest {
                     return zoneRepository.save(z);
                 });
         zoneId = zone.getId();
-
-        List<Office> existing = officeRepository.findByZoneIdOrderByOfficeCodeAsc(zoneId);
-        Office office;
-        if (existing.isEmpty()) {
-            office = new Office();
-            office.setOfficeCode("EZO-001");
-            office.setZone(zone);
-            office.setStatus("ACTIVE");
-            office = officeRepository.save(office);
-        } else {
-            office = existing.get(0);
-        }
-        officeId = office.getId();
 
         DeviceType deviceType = deviceTypeRepository.findByName("Laptop")
                 .orElseGet(() -> {
@@ -262,7 +243,7 @@ class StaffSelfRegistrationFlowTest {
                 + "\"ownershipType\":\"OFFICE\","
                 + "\"deviceStatus\":\"ACTIVE\","
                 + "\"zoneId\":" + zoneId + ","
-                + "\"officeId\":" + officeId
+                + "\"office\":\"B12\""
                 + "}";
 
         MvcResult result = mockMvc.perform(post("/assets")

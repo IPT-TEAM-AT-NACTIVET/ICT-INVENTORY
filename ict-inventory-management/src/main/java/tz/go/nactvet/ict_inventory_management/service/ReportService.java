@@ -38,12 +38,12 @@ public class ReportService {
     public ReportResponse getInventoryReport(
             String assetNumber, String serialNumber, String deviceName,
             Long deviceTypeId, String employeeId, String userName, Long userId,
-            Long directorateId, Long sectionId, Long unitId, Long zoneId, Long officeId,
+            Long directorateId, Long sectionId, Long unitId, Long zoneId, String office,
             OwnershipType ownershipType, DeviceStatus deviceStatus, VerificationStatus verificationStatus) {
 
         List<AssetResponse> assets = findFiltered(
                 assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId,
+                userId, directorateId, sectionId, unitId, zoneId, office,
                 ownershipType, deviceStatus, verificationStatus);
 
         ReportResponse response = new ReportResponse();
@@ -60,14 +60,14 @@ public class ReportService {
     public ReportResponse getReportByDirectorate(
             String assetNumber, String serialNumber, String deviceName,
             Long deviceTypeId, String employeeId, String userName, Long userId,
-            Long directorateId, Long sectionId, Long unitId, Long zoneId, Long officeId,
+            Long directorateId, Long sectionId, Long unitId, Long zoneId, String office,
             OwnershipType ownershipType, DeviceStatus deviceStatus, VerificationStatus verificationStatus) {
 
         if (hasAnyFilter(assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId, ownershipType, deviceStatus, verificationStatus)) {
+                userId, directorateId, sectionId, unitId, zoneId, office, ownershipType, deviceStatus, verificationStatus)) {
             return buildGroupedReport("by-directorate",
                     findFiltered(assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                            userId, directorateId, sectionId, unitId, zoneId, officeId,
+                            userId, directorateId, sectionId, unitId, zoneId, office,
                             ownershipType, deviceStatus, verificationStatus),
                     a -> a.getDirectorateId() != null ? a.getDirectorateId() : -1L,
                     a -> a.getDirectorateId() != null ? a.getDirectorateName() : "Unknown");
@@ -78,14 +78,14 @@ public class ReportService {
     public ReportResponse getReportBySection(
             String assetNumber, String serialNumber, String deviceName,
             Long deviceTypeId, String employeeId, String userName, Long userId,
-            Long directorateId, Long sectionId, Long unitId, Long zoneId, Long officeId,
+            Long directorateId, Long sectionId, Long unitId, Long zoneId, String office,
             OwnershipType ownershipType, DeviceStatus deviceStatus, VerificationStatus verificationStatus) {
 
         if (hasAnyFilter(assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId, ownershipType, deviceStatus, verificationStatus)) {
+                userId, directorateId, sectionId, unitId, zoneId, office, ownershipType, deviceStatus, verificationStatus)) {
             return buildGroupedReport("by-section",
                     findFiltered(assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                            userId, directorateId, sectionId, unitId, zoneId, officeId,
+                            userId, directorateId, sectionId, unitId, zoneId, office,
                             ownershipType, deviceStatus, verificationStatus),
                     a -> a.getSectionId() != null ? a.getSectionId() : -1L,
                     a -> a.getSectionId() != null ? a.getSectionName() : "Unknown");
@@ -96,14 +96,14 @@ public class ReportService {
     public ReportResponse getReportByZone(
             String assetNumber, String serialNumber, String deviceName,
             Long deviceTypeId, String employeeId, String userName, Long userId,
-            Long directorateId, Long sectionId, Long unitId, Long zoneId, Long officeId,
+            Long directorateId, Long sectionId, Long unitId, Long zoneId, String office,
             OwnershipType ownershipType, DeviceStatus deviceStatus, VerificationStatus verificationStatus) {
 
         if (hasAnyFilter(assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId, ownershipType, deviceStatus, verificationStatus)) {
+                userId, directorateId, sectionId, unitId, zoneId, office, ownershipType, deviceStatus, verificationStatus)) {
             return buildGroupedReport("by-zone",
                     findFiltered(assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                            userId, directorateId, sectionId, unitId, zoneId, officeId,
+                            userId, directorateId, sectionId, unitId, zoneId, office,
                             ownershipType, deviceStatus, verificationStatus),
                     a -> a.getZoneId() != null ? a.getZoneId() : -1L,
                     a -> a.getZoneId() != null ? a.getZoneName() : "Unknown");
@@ -114,14 +114,14 @@ public class ReportService {
     public ReportResponse getReportByUnit(
             String assetNumber, String serialNumber, String deviceName,
             Long deviceTypeId, String employeeId, String userName, Long userId,
-            Long directorateId, Long sectionId, Long unitId, Long zoneId, Long officeId,
+            Long directorateId, Long sectionId, Long unitId, Long zoneId, String office,
             OwnershipType ownershipType, DeviceStatus deviceStatus, VerificationStatus verificationStatus) {
 
         if (hasAnyFilter(assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId, ownershipType, deviceStatus, verificationStatus)) {
+                userId, directorateId, sectionId, unitId, zoneId, office, ownershipType, deviceStatus, verificationStatus)) {
             return buildGroupedReport("by-unit",
                     findFiltered(assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                            userId, directorateId, sectionId, unitId, zoneId, officeId,
+                            userId, directorateId, sectionId, unitId, zoneId, office,
                             ownershipType, deviceStatus, verificationStatus),
                     a -> a.getUnitId() != null ? a.getUnitId() : -1L,
                     a -> a.getUnitId() != null ? a.getUnitName() : "Unknown");
@@ -132,32 +132,32 @@ public class ReportService {
     public ReportResponse getReportByOffice(
             String assetNumber, String serialNumber, String deviceName,
             Long deviceTypeId, String employeeId, String userName, Long userId,
-            Long directorateId, Long sectionId, Long unitId, Long zoneId, Long officeId,
+            Long directorateId, Long sectionId, Long unitId, Long zoneId, String office,
             OwnershipType ownershipType, DeviceStatus deviceStatus, VerificationStatus verificationStatus) {
 
         if (hasAnyFilter(assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId, ownershipType, deviceStatus, verificationStatus)) {
+                userId, directorateId, sectionId, unitId, zoneId, office, ownershipType, deviceStatus, verificationStatus)) {
             return buildGroupedReport("by-office",
                     findFiltered(assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                            userId, directorateId, sectionId, unitId, zoneId, officeId,
+                            userId, directorateId, sectionId, unitId, zoneId, office,
                             ownershipType, deviceStatus, verificationStatus),
-                    a -> a.getOfficeId() != null ? a.getOfficeId() : -1L,
-                    a -> a.getOfficeCode() != null ? a.getOfficeCode() : "Unknown");
+                    a -> a.getOffice() != null ? a.getOffice().hashCode() : -1L,
+                    a -> a.getOffice() != null ? a.getOffice() : "Unknown");
         }
-        return buildGroupedReport("by-office", assetRepository.countByOfficeGrouped());
+        return buildTwoColumnReport("by-office", assetRepository.countByOfficeGrouped());
     }
 
     public ReportResponse getReportByDeviceType(
             String assetNumber, String serialNumber, String deviceName,
             Long deviceTypeId, String employeeId, String userName, Long userId,
-            Long directorateId, Long sectionId, Long unitId, Long zoneId, Long officeId,
+            Long directorateId, Long sectionId, Long unitId, Long zoneId, String office,
             OwnershipType ownershipType, DeviceStatus deviceStatus, VerificationStatus verificationStatus) {
 
         if (hasAnyFilter(assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId, ownershipType, deviceStatus, verificationStatus)) {
+                userId, directorateId, sectionId, unitId, zoneId, office, ownershipType, deviceStatus, verificationStatus)) {
             return buildGroupedReport("by-device-type",
                     findFiltered(assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                            userId, directorateId, sectionId, unitId, zoneId, officeId,
+                            userId, directorateId, sectionId, unitId, zoneId, office,
                             ownershipType, deviceStatus, verificationStatus),
                     a -> a.getDeviceTypeId() != null ? a.getDeviceTypeId() : -1L,
                     a -> a.getDeviceTypeId() != null ? a.getDeviceTypeName() : "Unknown");
@@ -168,14 +168,14 @@ public class ReportService {
     public ReportResponse getReportByStatus(
             String assetNumber, String serialNumber, String deviceName,
             Long deviceTypeId, String employeeId, String userName, Long userId,
-            Long directorateId, Long sectionId, Long unitId, Long zoneId, Long officeId,
+            Long directorateId, Long sectionId, Long unitId, Long zoneId, String office,
             OwnershipType ownershipType, DeviceStatus deviceStatus, VerificationStatus verificationStatus) {
 
         if (hasAnyFilter(assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId, ownershipType, deviceStatus, verificationStatus)) {
+                userId, directorateId, sectionId, unitId, zoneId, office, ownershipType, deviceStatus, verificationStatus)) {
             return buildGroupedReport("by-status",
                     findFiltered(assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                            userId, directorateId, sectionId, unitId, zoneId, officeId,
+                            userId, directorateId, sectionId, unitId, zoneId, office,
                             ownershipType, deviceStatus, verificationStatus),
                     a -> a.getVerificationStatus() != null ? a.getVerificationStatus().ordinal() : -1L,
                     a -> a.getVerificationStatus() != null ? a.getVerificationStatus().name() : "Unknown");
@@ -186,22 +186,22 @@ public class ReportService {
     public List<AssetResponse> getFilteredAssets(
             String assetNumber, String serialNumber, String deviceName,
             Long deviceTypeId, Long userId, Long directorateId, Long sectionId, Long unitId,
-            Long zoneId, Long officeId,
+            Long zoneId, String office,
             OwnershipType ownershipType, DeviceStatus deviceStatus, VerificationStatus verificationStatus) {
         return findFiltered(assetNumber, serialNumber, deviceName, deviceTypeId, null, null,
-                userId, directorateId, sectionId, unitId, zoneId, officeId,
+                userId, directorateId, sectionId, unitId, zoneId, office,
                 ownershipType, deviceStatus, verificationStatus);
     }
 
     public String exportInventoryCsv(
             String assetNumber, String serialNumber, String deviceName,
             Long deviceTypeId, String employeeId, String userName, Long userId,
-            Long directorateId, Long sectionId, Long unitId, Long zoneId, Long officeId,
+            Long directorateId, Long sectionId, Long unitId, Long zoneId, String office,
             OwnershipType ownershipType, DeviceStatus deviceStatus, VerificationStatus verificationStatus) {
 
         List<AssetResponse> assets = findFiltered(
                 assetNumber, serialNumber, deviceName, deviceTypeId, employeeId, userName,
-                userId, directorateId, sectionId, unitId, zoneId, officeId,
+                userId, directorateId, sectionId, unitId, zoneId, office,
                 ownershipType, deviceStatus, verificationStatus);
 
         StringBuilder csv = new StringBuilder();
@@ -217,7 +217,7 @@ public class ReportService {
                .append(csv(asset.getSectionName())).append(',')
                .append(csv(asset.getUnitName())).append(',')
                .append(csv(asset.getZoneName())).append(',')
-               .append(csv(asset.getOfficeCode())).append(',')
+               .append(csv(asset.getOffice())).append(',')
                .append(csv(asset.getOwnershipType() != null ? asset.getOwnershipType().name() : null)).append(',')
                .append(csv(asset.getDeviceStatus() != null ? asset.getDeviceStatus().name() : null)).append(',')
                .append(csv(asset.getVerificationStatus() != null ? asset.getVerificationStatus().name() : null))
@@ -229,13 +229,13 @@ public class ReportService {
     private List<AssetResponse> findFiltered(
             String assetNumber, String serialNumber, String deviceName,
             Long deviceTypeId, String employeeId, String userName, Long userId,
-            Long directorateId, Long sectionId, Long unitId, Long zoneId, Long officeId,
+            Long directorateId, Long sectionId, Long unitId, Long zoneId, String office,
             OwnershipType ownershipType, DeviceStatus deviceStatus, VerificationStatus verificationStatus) {
 
         return assetRepository.findByFilters(
                 blankToNull(assetNumber), blankToNull(serialNumber), blankToNull(deviceName),
                 deviceTypeId, blankToNull(employeeId), blankToNull(userName), userId,
-                directorateId, sectionId, unitId, zoneId, officeId,
+                directorateId, sectionId, unitId, zoneId, office,
                 ownershipType, deviceStatus, verificationStatus,
                 PageRequest.of(0, 10000))
                 .getContent()
@@ -246,11 +246,11 @@ public class ReportService {
 
     private boolean hasAnyFilter(String assetNumber, String serialNumber, String deviceName,
             Long deviceTypeId, String employeeId, String userName, Long userId,
-            Long directorateId, Long sectionId, Long unitId, Long zoneId, Long officeId,
+            Long directorateId, Long sectionId, Long unitId, Long zoneId, String office,
             OwnershipType ownershipType, DeviceStatus deviceStatus, VerificationStatus verificationStatus) {
         return notBlank(assetNumber) || notBlank(serialNumber) || notBlank(deviceName)
                 || deviceTypeId != null || notBlank(employeeId) || notBlank(userName)
-                || userId != null || directorateId != null || sectionId != null || unitId != null || zoneId != null || officeId != null
+                || userId != null || directorateId != null || sectionId != null || unitId != null || zoneId != null || office != null
                 || ownershipType != null || deviceStatus != null || verificationStatus != null;
     }
 

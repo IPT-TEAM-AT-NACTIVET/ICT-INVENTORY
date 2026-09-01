@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import tz.go.nactvet.ict_inventory_management.dto.PasswordChangeRequest;
 import tz.go.nactvet.ict_inventory_management.dto.ProfileResponse;
 import tz.go.nactvet.ict_inventory_management.dto.ProfileUpdateRequest;
 import tz.go.nactvet.ict_inventory_management.security.CustomUserDetailsService;
@@ -35,5 +36,13 @@ public class ProfileController {
                                                            Authentication authentication) {
         CustomUserDetailsService.UserPrincipal principal = (CustomUserDetailsService.UserPrincipal) authentication.getPrincipal();
         return ResponseEntity.ok(profileService.updateProfile(principal.getId(), request));
+    }
+
+    @PutMapping("/me/password")
+    public ResponseEntity<Void> changeMyPassword(@Valid @RequestBody PasswordChangeRequest request,
+                                                 Authentication authentication) {
+        CustomUserDetailsService.UserPrincipal principal = (CustomUserDetailsService.UserPrincipal) authentication.getPrincipal();
+        profileService.changePassword(principal.getId(), request);
+        return ResponseEntity.noContent().build();
     }
 }

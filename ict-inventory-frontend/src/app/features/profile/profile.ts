@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ProfileService } from '../../core/services/profile.service';
@@ -40,6 +40,18 @@ export class ProfilePage implements OnInit {
   readonly saving = signal(false);
   readonly error = signal('');
   readonly success = signal('');
+
+  readonly passwordForm = this.fb.nonNullable.group(
+    {
+      currentPassword: ['', Validators.required],
+      newPassword: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', Validators.required],
+    },
+    { validators: passwordMatchValidator },
+  );
+  readonly changingPassword = signal(false);
+  readonly passwordError = signal('');
+  readonly passwordSuccess = signal('');
 
   get needsSetup(): boolean {
     const p = this.profile();
@@ -129,4 +141,38 @@ export class ProfilePage implements OnInit {
         },
       });
   }
+
+  submitPassword(): void {
+    if (this.passwordForm.invalid) {
+      this.passwordForm.markAllAsTouched();
+      return;
+    }
+    this.changingPassword.set(true);
+    this.passwordSuccess.set('');
+    this.passwordError.set('');
+    const raw = this.passwordForm.getRawValue();
+    this.profileService
+      .changePassword({
+        currentPassword: raw.currentPassword,
+        newPassword: raw.newPassword,
+        confirmPassword: raw.confirmPassword,
+      })
+      .subscribe({
+        next: () => {
+          this.changingPassword.set(false);
+          this.passwordForm.reset();
+          this.passwordSuccess.set('Password changed successfully.');
+        },
+        error: (err) => {
+          this.changingPassword.set(false);
+          this.passwordError.set(httpErrorMessage(err, 'Failed to change your password.'));
+        },
+      });
+  }
+}
+
+function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
+  const newPassword = control.get('newPassword')?.value;
+  const confirmPassword = control.get('confirmPassword')?.value;
+  return newPassword !== confirmPassword ? { mismatch: true } : null;
 }

@@ -114,13 +114,8 @@
       </div>
       <div class="form-field">
         <label for="office">Office *</label>
-        <select id="office" formControlName="officeId">
-          <option [ngValue]="0" disabled>Select office</option>
-          @for (office of offices(); track office.id) {
-            <option [ngValue]="office.id">{{ office.officeCode }}</option>
-          }
-        </select>
-        @if (form.controls.officeId.touched && form.controls.officeId.invalid) {
+        <input id="office" type="text" formControlName="office" placeholder="Enter office code" maxlength="100" />
+        @if (form.controls.office.touched && form.controls.office.invalid) {
           <div class="field-error">Office is required.</div>
         }
       </div>

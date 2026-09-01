@@ -123,4 +123,46 @@
       </div>
     </form>
   </div>
+
+  <div class="card">
+    <h3>Change Password</h3>
+
+    @if (passwordSuccess()) {
+      <div class="alert alert-success" role="alert">{{ passwordSuccess() }}</div>
+    }
+    @if (passwordError()) {
+      <div class="alert alert-error" role="alert">{{ passwordError() }}</div>
+    }
+
+    <form [formGroup]="passwordForm" (ngSubmit)="submitPassword()">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="currentPassword">Current Password</label>
+          <input id="currentPassword" type="password" formControlName="currentPassword" autocomplete="current-password" />
+          @if (passwordForm.controls.currentPassword.touched && passwordForm.controls.currentPassword.invalid) {
+            <div class="field-error">Current password is required.</div>
+          }
+        </div>
+        <div class="form-field">
+          <label for="newPassword">New Password</label>
+          <input id="newPassword" type="password" formControlName="newPassword" autocomplete="new-password" />
+          @if (passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.invalid) {
+            <div class="field-error">New password must be at least 6 characters.</div>
+          }
+        </div>
+        <div class="form-field">
+          <label for="confirmPassword">Confirm New Password</label>
+          <input id="confirmPassword" type="password" formControlName="confirmPassword" autocomplete="new-password" />
+          @if (passwordForm.controls.confirmPassword.touched && passwordForm.invalid && passwordForm.hasError('mismatch')) {
+            <div class="field-error">Passwords do not match.</div>
+          }
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="changingPassword()">
+          {{ changingPassword() ? 'Updating…' : 'Change Password' }}
+        </button>
+      </div>
+    </form>
+  </div>
 }
