@@ -26,13 +26,6 @@ import org.springframework.stereotype.Component;
  *   <li>Offices are NOT seeded: office codes must come from the real NACTVET list
  *       and are entered by administrators.</li>
  * </ul>
- *
- * <p>Legacy master data (the old "ICT Department", the "Software Development"/
- * "Software Dev" units, the sample room offices, and the non-Council "Head Office"
- * zone) is removed while existing users and assets are preserved and re-mapped onto
- * the new structure. "Head Office" staff/assets are re-mapped to the Eastern Zone
- * Office (NACTVET headquarters is in Dar es Salaam, which falls under the Eastern
- * zone). All statements are idempotent.</p>
  */
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE)
@@ -41,14 +34,14 @@ public class MasterDataInitializer implements ApplicationRunner {
     private static final Logger log = LoggerFactory.getLogger(MasterDataInitializer.class);
 
     private static final String[] ZONES = {
-            "Eastern Zone Office",
-            "Central Zone Office",
-            "Northern Zone Office",
-            "Zanzibar Zone Office",
-            "Western Zone Office",
-            "Lake Zone Office",
-            "Southern Highlands Zone Office",
-            "Southern Zone Office"
+            "Eastern Zone",
+            "Central Zone",
+            "Northern Zone",
+            "Zanzibar Zone",
+            "Western Zone",
+            "Lake Zone",
+            "Southern Highlands Zone",
+            "Southern Zone"
     };
 
     private final DataSource dataSource;
@@ -97,10 +90,10 @@ public class MasterDataInitializer implements ApplicationRunner {
     private String seedDirectorates() {
         return """
                 INSERT INTO directorates (id, name, code, description, created_at, updated_at) VALUES
-                  (1, 'Institutional Operations', 'D1', NULL, now(), now()),
-                  (2, 'Admission, Examination and Certification', 'D2', NULL, now(), now()),
-                  (3, 'Quality Assurance', 'D3', NULL, now(), now()),
-                  (4, 'Corporate Services', 'D4', NULL, now(), now())
+                  (1, 'Institutional Operations Directorate', 'D1', NULL, now(), now()),
+                  (2, 'Admission, Examination and Certification Directorate', 'D2', NULL, now(), now()),
+                  (3, 'Quality Assurance Directorate', 'D3', NULL, now(), now()),
+                  (4, 'Corporate Services Directorate', 'D4', NULL, now(), now())
                 ON CONFLICT (id) DO NOTHING;
                 SELECT setval(pg_get_serial_sequence('directorates', 'id'), (SELECT COALESCE(MAX(id), 1) FROM directorates))
                 """;
@@ -109,14 +102,14 @@ public class MasterDataInitializer implements ApplicationRunner {
     private String seedSections() {
         return """
                 INSERT INTO sections (id, name, code, description, directorate_id, created_at, updated_at) VALUES
-                  (1, 'Student Records and Registration', 'S1', NULL, 1, now(), now()),
-                  (2, 'Learning and Teaching Infrastructure', 'S2', NULL, 1, now(), now()),
-                  (3, 'Admissions', 'S3', NULL, 2, now(), now()),
-                  (4, 'Examination and Certification', 'S4', NULL, 2, now(), now()),
-                  (5, 'Internal Quality Assurance and Audits', 'S5', NULL, 3, now(), now()),
-                  (6, 'Standards, Compliance and Regulatory Support', 'S6', NULL, 3, now(), now()),
-                  (7, 'Finance and Accounts', 'S7', NULL, 4, now(), now()),
-                  (8, 'Human Resources and Administration', 'S8', NULL, 4, now(), now())
+                  (1, 'Registration and Accreditation Section', 'S1', NULL, 1, now(), now()),
+                  (2, 'Labour Market Analysis and Curriculum Development Section', 'S2', NULL, 1, now(), now()),
+                  (3, 'Admission Section', 'S3', NULL, 2, now(), now()),
+                  (4, 'Examinations and Certification Section', 'S4', NULL, 2, now(), now()),
+                  (5, 'Academic Quality Audit Section', 'S5', NULL, 3, now(), now()),
+                  (6, 'Compliance and Enforcement Section', 'S6', NULL, 3, now(), now()),
+                  (7, 'Human Resource Management and Administration Section', 'S7', NULL, 4, now(), now()),
+                  (8, 'Planning, Monitoring and Evaluation Section', 'S8', NULL, 4, now(), now())
                 ON CONFLICT (id) DO NOTHING;
                 SELECT setval(pg_get_serial_sequence('sections', 'id'), (SELECT COALESCE(MAX(id), 1) FROM sections))
                 """;
@@ -124,7 +117,7 @@ public class MasterDataInitializer implements ApplicationRunner {
 
     private String repointLegacyUnits() {
         return """
-                UPDATE users u SET unit_id = (SELECT id FROM units WHERE name = 'Information and Communication Technology')
+                UPDATE users u SET unit_id = (SELECT id FROM units WHERE name = 'Information and Communication Technology Unit')
                 WHERE u.unit_id IN (SELECT id FROM units WHERE name IN ('Software Development', 'Software Dev'));
                 DELETE FROM units WHERE name IN ('Software Development', 'Software Dev')
                 """;
@@ -133,12 +126,12 @@ public class MasterDataInitializer implements ApplicationRunner {
     private String seedUnits() {
         return """
                 INSERT INTO units (name, code, description, created_at, updated_at) VALUES
-                  ('Procurement Management', 'U1', NULL, now(), now()),
-                  ('Internal Audit', 'U2', NULL, now(), now()),
-                  ('Communications and Marketing', 'U3', NULL, now(), now()),
-                  ('Legal Services', 'U4', NULL, now(), now()),
-                  ('Information and Communication Technology', 'U5', NULL, now(), now()),
-                  ('Finance and Accounts', 'U6', NULL, now(), now())
+                  ('Procurement Management Unit', 'U1', NULL, now(), now()),
+                  ('Internal Audit Unit', 'U2', NULL, now(), now()),
+                  ('Communications and Marketing Unit', 'U3', NULL, now(), now()),
+                  ('Legal Services Unit', 'U4', NULL, now(), now()),
+                  ('Information and Communication Technology Unit', 'U5', NULL, now(), now()),
+                  ('Finance and Accounts Unit', 'U6', NULL, now(), now())
                 ON CONFLICT (name) DO NOTHING
                 """;
     }
@@ -149,7 +142,7 @@ public class MasterDataInitializer implements ApplicationRunner {
             builder.append("INSERT INTO zones (name, description, status, created_at, updated_at) VALUES (")
                     .append("'").append(name).append("', NULL, 'ACTIVE', now(), now()) ON CONFLICT (name) DO NOTHING;");
         }
-        builder.append("UPDATE users SET zone_id = (SELECT id FROM zones WHERE name = 'Eastern Zone Office')")
+        builder.append("UPDATE users SET zone_id = (SELECT id FROM zones WHERE name = 'Eastern Zone')")
                 .append(" WHERE zone_id IN (SELECT id FROM zones WHERE name = 'Head Office');");
         builder.append("DELETE FROM zones WHERE name = 'Head Office';");
         return builder.toString();
@@ -157,7 +150,7 @@ public class MasterDataInitializer implements ApplicationRunner {
 
     private String assignStaffDirectorate() {
         return """
-                UPDATE users SET directorate_id = (SELECT id FROM directorates WHERE name = 'Corporate Services')
+                UPDATE users SET directorate_id = (SELECT id FROM directorates WHERE name = 'Corporate Services Directorate')
                 WHERE role = 'STAFF' AND directorate_id IS NULL
                 """;
     }

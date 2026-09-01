@@ -1,6 +1,7 @@
 package tz.go.nactvet.ict_inventory_management.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -9,6 +10,8 @@ import tz.go.nactvet.ict_inventory_management.entity.Unit;
 
 @Repository
 public interface UnitRepository extends JpaRepository<Unit, Long> {
+
+    Optional<Unit> findByName(String name);
 
     List<Unit> findAllByOrderByNameAsc();
 
