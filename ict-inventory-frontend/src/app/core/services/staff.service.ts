@@ -9,8 +9,9 @@ export class StaffService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/admin/staff`;
 
-  getStaff(): Observable<Staff[]> {
-    return this.http.get<Staff[]>(this.base);
+  getStaff(search?: string): Observable<Staff[]> {
+    const params = search ? { params: { search } } : {};
+    return this.http.get<Staff[]>(this.base, params);
   }
 
   create(request: StaffCreateRequest): Observable<Staff> {

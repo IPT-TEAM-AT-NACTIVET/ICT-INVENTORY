@@ -2,6 +2,13 @@
 
 <div class="toolbar">
   <button type="button" class="btn btn-primary" (click)="openCreate()">{{ t('common.add') }} Staff</button>
+  <input
+    type="search"
+    class="search-input"
+    [value]="searchTerm()"
+    placeholder="Search by name, initials or email…"
+    (input)="onSearch($any($event.target).value)"
+  />
   <span class="muted">{{ items().length }} staff members</span>
 </div>
 

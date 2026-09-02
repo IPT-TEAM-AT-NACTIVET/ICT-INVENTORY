@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
@@ -37,8 +38,9 @@ public class StaffController {
     }
 
     @GetMapping
-    public ResponseEntity<List<StaffResponse>> findAll() {
-        return ResponseEntity.ok(staffService.findAll());
+    public ResponseEntity<List<StaffResponse>> findAll(
+            @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(staffService.findAll(search));
     }
 
     @GetMapping("/{id}")

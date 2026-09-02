@@ -158,6 +158,36 @@ public class StaffService {
     }
 
     @Transactional(readOnly = true)
+    public List<StaffResponse> findAll(String search) {
+        if (search == null || search.isBlank()) {
+            return findAll();
+        }
+        String term = search.trim();
+        List<User> dbResults = userRepository.searchStaff(Role.STAFF, term);
+        return dbResults.stream()
+                .filter(u -> matchesSearch(u, term))
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    private boolean matchesSearch(User user, String term) {
+        String lower = term.toLowerCase();
+        if (user.getFullName() != null) {
+            String[] parts = user.getFullName().trim().split("\\s+");
+            StringBuilder initials = new StringBuilder();
+            for (String part : parts) {
+                if (!part.isEmpty()) {
+                    initials.append(Character.toLowerCase(part.charAt(0)));
+                }
+            }
+            if (initials.toString().contains(lower)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Transactional(readOnly = true)
     public StaffResponse findById(Long id) {
         User user = getStaffOrThrow(id);
         return toResponse(user);

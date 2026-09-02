@@ -23,6 +23,7 @@ export class StaffManagement implements OnInit {
   private readonly translation = inject(TranslationService);
 
   readonly items = signal<Staff[]>([]);
+  readonly searchTerm = signal('');
   readonly directorates = signal<Directorate[]>([]);
   readonly sections = signal<Section[]>([]);
   readonly units = signal<Unit[]>([]);
@@ -64,11 +65,11 @@ export class StaffManagement implements OnInit {
     this.load();
   }
 
-  load(): void {
+  load(search = this.searchTerm()): void {
     this.loading.set(true);
     this.error.set('');
     this.staffService
-      .getStaff()
+      .getStaff(search.trim() || undefined)
       .pipe(
         retry({ count: 1, delay: 400 }),
         finalize(() => this.loading.set(false)),
@@ -81,6 +82,11 @@ export class StaffManagement implements OnInit {
           this.error.set(httpErrorMessage(err, 'Failed to load staff.'));
         },
       });
+  }
+
+  onSearch(value: string): void {
+    this.searchTerm.set(value);
+    this.load(value);
   }
 
   openCreate(): void {
