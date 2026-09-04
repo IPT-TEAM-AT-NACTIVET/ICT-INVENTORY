@@ -1,4 +1,4 @@
-import { DeviceStatus, OwnershipType, VerificationStatus } from './enums';
+import { DeviceStatus, OwnershipType } from './enums';
 
 export interface Asset {
   id: number;
@@ -7,26 +7,18 @@ export interface Asset {
   deviceName: string;
   deviceTypeId: number;
   deviceTypeName: string;
-  userId: number;
-  userFullName: string;
-  userEmployeeId: string;
-  userEmail: string | null;
-  userPhoneNumber: string | null;
-  directorateId: number | null;
-  directorateName: string | null;
-  sectionId: number | null;
-  sectionName: string | null;
-  unitId: number | null;
-  unitName: string | null;
+  userOfAsset: string;
   zoneId: number | null;
   zoneName: string | null;
   office: string | null;
   ownershipType: OwnershipType;
   deviceStatus: DeviceStatus;
-  verificationStatus: VerificationStatus;
-  rejectionReason: string | null;
   createdAt: string;
   updatedAt: string;
+  createdById: number | null;
+  createdByName: string | null;
+  updatedById: number | null;
+  updatedByName: string | null;
 }
 
 export interface Paged<T> {
@@ -42,22 +34,11 @@ export interface AssetRequest {
   serialNumber?: string;
   deviceName: string;
   deviceTypeId: number;
-  userId: number;
+  userOfAsset?: string;
   ownershipType: OwnershipType;
   deviceStatus: DeviceStatus;
   zoneId: number;
-  office: string;
-}
-
-export interface StaffAssetRequest {
-  assetNumber?: string;
-  serialNumber?: string;
-  deviceName: string;
-  deviceTypeId: number;
-  ownershipType: OwnershipType;
-  deviceStatus: DeviceStatus;
-  zoneId: number;
-  office: string;
+  office?: string;
 }
 
 export interface AssetUpdateRequest {
@@ -65,14 +46,11 @@ export interface AssetUpdateRequest {
   serialNumber?: string;
   deviceName?: string;
   deviceTypeId?: number;
+  userOfAsset?: string;
   deviceStatus?: DeviceStatus;
   ownershipType?: OwnershipType;
   zoneId?: number;
   office?: string;
-}
-
-export interface RejectRequest {
-  rejectionReason: string;
 }
 
 export interface AssetFilter {
@@ -80,17 +58,22 @@ export interface AssetFilter {
   serialNumber?: string;
   deviceName?: string;
   deviceTypeId?: number | null;
-  employeeId?: string;
-  userName?: string;
-  userId?: number | null;
-  directorateId?: number | null;
-  sectionId?: number | null;
-  unitId?: number | null;
+  userOfAsset?: string;
   zoneId?: number | null;
   office?: string;
   ownershipType?: OwnershipType | '';
   deviceStatus?: DeviceStatus | '';
-  verificationStatus?: VerificationStatus | '';
   page?: number;
   size?: number;
+}
+
+export interface CsvImportError {
+  row: number;
+  message: string;
+}
+
+export interface CsvImportResult {
+  imported: number;
+  failed: number;
+  errors: CsvImportError[];
 }

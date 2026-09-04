@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 import tz.go.nactvet.ict_inventory_management.enums.DeviceStatus;
 import tz.go.nactvet.ict_inventory_management.enums.OwnershipType;
-import tz.go.nactvet.ict_inventory_management.enums.VerificationStatus;
 
 public class AssetResponse {
 
@@ -16,20 +15,13 @@ public class AssetResponse {
     private Long deviceTypeId;
     private String deviceTypeName;
 
-    private Long userId;
-    private String userFullName;
-    private String userEmployeeId;
-    private String userEmail;
-    private String userPhoneNumber;
+    private String userOfAsset;
 
-    private Long directorateId;
-    private String directorateName;
+    private Long createdById;
+    private String createdByName;
 
-    private Long sectionId;
-    private String sectionName;
-
-    private Long unitId;
-    private String unitName;
+    private Long updatedById;
+    private String updatedByName;
 
     private Long zoneId;
     private String zoneName;
@@ -38,8 +30,6 @@ public class AssetResponse {
 
     private OwnershipType ownershipType;
     private DeviceStatus deviceStatus;
-    private VerificationStatus verificationStatus;
-    private String rejectionReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -91,92 +81,12 @@ public class AssetResponse {
         this.deviceTypeName = deviceTypeName;
     }
 
-    public Long getUserId() {
-        return userId;
+    public String getUserOfAsset() {
+        return userOfAsset;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public String getUserFullName() {
-        return userFullName;
-    }
-
-    public void setUserFullName(String userFullName) {
-        this.userFullName = userFullName;
-    }
-
-    public String getUserEmployeeId() {
-        return userEmployeeId;
-    }
-
-    public void setUserEmployeeId(String userEmployeeId) {
-        this.userEmployeeId = userEmployeeId;
-    }
-
-    public String getUserEmail() {
-        return userEmail;
-    }
-
-    public void setUserEmail(String userEmail) {
-        this.userEmail = userEmail;
-    }
-
-    public String getUserPhoneNumber() {
-        return userPhoneNumber;
-    }
-
-    public void setUserPhoneNumber(String userPhoneNumber) {
-        this.userPhoneNumber = userPhoneNumber;
-    }
-
-    public Long getDirectorateId() {
-        return directorateId;
-    }
-
-    public void setDirectorateId(Long directorateId) {
-        this.directorateId = directorateId;
-    }
-
-    public String getDirectorateName() {
-        return directorateName;
-    }
-
-    public void setDirectorateName(String directorateName) {
-        this.directorateName = directorateName;
-    }
-
-    public Long getSectionId() {
-        return sectionId;
-    }
-
-    public void setSectionId(Long sectionId) {
-        this.sectionId = sectionId;
-    }
-
-    public String getSectionName() {
-        return sectionName;
-    }
-
-    public void setSectionName(String sectionName) {
-        this.sectionName = sectionName;
-    }
-
-    public Long getUnitId() {
-        return unitId;
-    }
-
-    public void setUnitId(Long unitId) {
-        this.unitId = unitId;
-    }
-
-    public String getUnitName() {
-        return unitName;
-    }
-
-    public void setUnitName(String unitName) {
-        this.unitName = unitName;
+    public void setUserOfAsset(String userOfAsset) {
+        this.userOfAsset = userOfAsset;
     }
 
     public Long getZoneId() {
@@ -219,20 +129,36 @@ public class AssetResponse {
         this.deviceStatus = deviceStatus;
     }
 
-    public VerificationStatus getVerificationStatus() {
-        return verificationStatus;
+    public Long getCreatedById() {
+        return createdById;
     }
 
-    public void setVerificationStatus(VerificationStatus verificationStatus) {
-        this.verificationStatus = verificationStatus;
+    public void setCreatedById(Long createdById) {
+        this.createdById = createdById;
     }
 
-    public String getRejectionReason() {
-        return rejectionReason;
+    public String getCreatedByName() {
+        return createdByName;
     }
 
-    public void setRejectionReason(String rejectionReason) {
-        this.rejectionReason = rejectionReason;
+    public void setCreatedByName(String createdByName) {
+        this.createdByName = createdByName;
+    }
+
+    public Long getUpdatedById() {
+        return updatedById;
+    }
+
+    public void setUpdatedById(Long updatedById) {
+        this.updatedById = updatedById;
+    }
+
+    public String getUpdatedByName() {
+        return updatedByName;
+    }
+
+    public void setUpdatedByName(String updatedByName) {
+        this.updatedByName = updatedByName;
     }
 
     public LocalDateTime getCreatedAt() {

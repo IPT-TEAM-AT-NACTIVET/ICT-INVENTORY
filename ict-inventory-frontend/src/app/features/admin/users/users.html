@@ -1,0 +1,113 @@
+<app-page-header [title]="t('usersAdmin.title')" [subtitle]="t('usersAdmin.subtitle')" />
+
+@if (error()) {
+  <div class="alert alert-error" role="alert">{{ error() }}</div>
+}
+@if (notice()) {
+  <div class="alert alert-success" role="alert">{{ notice() }}</div>
+}
+
+<div class="card">
+  <div class="filter-bar">
+    <div class="form-field">
+      <label for="globalSearch">{{ t('usersAdmin.search') }}</label>
+      <input
+        id="globalSearch"
+        type="text"
+        [formControl]="search"
+        [placeholder]="t('usersAdmin.searchPlaceholder')"
+        (keyup.enter)="applyFilters()"
+      />
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary btn-sm" (click)="applyFilters()">{{ t('common.search') }}</button>
+      <button type="button" class="btn btn-sm" (click)="resetFilters()">{{ t('reports.reset') }}</button>
+    </div>
+  </div>
+</div>
+
+<section class="card">
+  <h3>{{ t('usersAdmin.pendingRequests') }}</h3>
+  @if (loading()) {
+    <p class="muted">Loading…</p>
+  } @else if (pending().length === 0) {
+    <p class="muted">{{ t('usersAdmin.noPending') }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>{{ t('usersAdmin.fullName') }}</th>
+            <th>{{ t('usersAdmin.email') }}</th>
+            <th>{{ t('usersAdmin.phone') }}</th>
+            <th>{{ t('usersAdmin.employeeId') }}</th>
+            <th>{{ t('usersAdmin.status') }}</th>
+            <th>{{ t('usersAdmin.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of pending(); track user.id) {
+            <tr>
+              <td>{{ user.fullName }}</td>
+              <td>{{ user.email ?? '—' }}</td>
+              <td>{{ user.phoneNumber ?? '—' }}</td>
+              <td>{{ user.employeeId }}</td>
+              <td>
+                <app-status-badge [label]="t('usersAdmin.awaitingApproval')" tone="warning" />
+              </td>
+              <td>
+                <button type="button" class="btn btn-sm btn-primary" (click)="approve(user)">{{ t('usersAdmin.approve') }}</button>
+                <button type="button" class="btn btn-sm btn-danger" (click)="remove(user)">{{ t('usersAdmin.delete') }}</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+<section class="card">
+  <h3>{{ t('usersAdmin.allUsers') }}</h3>
+  @if (loading()) {
+    <p class="muted">Loading…</p>
+  } @else if (activeUsers().length === 0) {
+    <p class="muted">{{ t('usersAdmin.noUsers') }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>{{ t('usersAdmin.fullName') }}</th>
+            <th>{{ t('usersAdmin.email') }}</th>
+            <th>{{ t('usersAdmin.phone') }}</th>
+            <th>{{ t('usersAdmin.employeeId') }}</th>
+            <th>{{ t('usersAdmin.status') }}</th>
+            <th>{{ t('usersAdmin.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of activeUsers(); track user.id) {
+            <tr>
+              <td>{{ user.fullName }}</td>
+              <td>{{ user.email ?? '—' }}</td>
+              <td>{{ user.phoneNumber ?? '—' }}</td>
+              <td>{{ user.employeeId }}</td>
+              <td>
+                <app-status-badge [label]="t('usersAdmin.active')" tone="success" />
+              </td>
+              <td>
+                @if (!isCurrentUser(user)) {
+                  <button type="button" class="btn btn-sm" (click)="deactivate(user)">{{ t('usersAdmin.deactivate') }}</button>
+                  <button type="button" class="btn btn-sm btn-danger" (click)="remove(user)">{{ t('usersAdmin.delete') }}</button>
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

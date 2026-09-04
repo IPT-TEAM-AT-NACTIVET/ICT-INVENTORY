@@ -11,9 +11,6 @@ export function roleGuard(allowed: Role[]): CanActivateFn {
     if (role !== null && allowed.includes(role)) {
       return true;
     }
-    if (role === 'ADMIN') {
-      return router.createUrlTree(['/admin/dashboard']);
-    }
     return router.createUrlTree(['/login']);
   };
 }

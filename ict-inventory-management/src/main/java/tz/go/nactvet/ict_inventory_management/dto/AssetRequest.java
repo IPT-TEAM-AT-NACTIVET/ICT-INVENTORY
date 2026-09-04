@@ -19,8 +19,9 @@ public class AssetRequest {
     @NotNull(message = "deviceTypeId: must not be null")
     private Long deviceTypeId;
 
-    @NotNull(message = "userId: must not be null")
-    private Long userId;
+    @NotBlank(message = "userOfAsset: must not be blank")
+    @Size(max = 255, message = "userOfAsset: must not exceed 255 characters")
+    private String userOfAsset;
 
     @NotNull(message = "ownershipType: must not be null")
     private OwnershipType ownershipType;
@@ -67,12 +68,12 @@ public class AssetRequest {
         this.deviceTypeId = deviceTypeId;
     }
 
-    public Long getUserId() {
-        return userId;
+    public String getUserOfAsset() {
+        return userOfAsset;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUserOfAsset(String userOfAsset) {
+        this.userOfAsset = userOfAsset;
     }
 
     public OwnershipType getOwnershipType() {

@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<Map<String, Object>> handleDisabledUser(DisabledException ex) {
         log.debug("Disabled user login attempt: {}", ex.getMessage());
-        return buildResponse(HttpStatus.UNAUTHORIZED, "Account is disabled");
+        return buildResponse(HttpStatus.UNAUTHORIZED, "Account not yet approved or is disabled");
     }
 
     @ExceptionHandler(AuthenticationException.class)

@@ -4,12 +4,12 @@ import { roleGuard } from './role.guard';
 import { TokenStorageService } from '../services/token-storage.service';
 import { User } from '../models/user.model';
 
-const staffUser: User = {
-  id: 2,
-  employeeId: 'EMP002',
-  fullName: 'Jane Staff',
-  email: 'jane@ict.go.tz',
-  role: 'STAFF',
+const adminUser: User = {
+  id: 1,
+  employeeId: 'EMP001',
+  fullName: 'System Admin',
+  email: 'admin@ict.go.tz',
+  role: 'ADMIN',
 };
 
 describe('roleGuard', () => {
@@ -25,15 +25,16 @@ describe('roleGuard', () => {
     store = TestBed.inject(TokenStorageService);
   });
 
-  it('should allow a staff user into staff routes', () => {
-    store.setSession('token', staffUser);
-    const result = TestBed.runInInjectionContext(() => roleGuard(['STAFF'])(null!, null!));
+  it('should allow an ADMIN user into ADMIN routes', () => {
+    store.setSession('token', adminUser);
+    const result = TestBed.runInInjectionContext(() => roleGuard(['ADMIN'])(null!, null!));
     expect(result).toBe(true);
   });
 
-  it('should route a staff user away from admin routes', () => {
-    store.setSession('token', staffUser);
-    const result = TestBed.runInInjectionContext(() => roleGuard(['ADMIN'])(null!, null!));
+  it('should route a user without the required role to login', () => {
+    const otherUser: User = { ...adminUser, role: 'ADMIN' };
+    store.setSession('token', otherUser);
+    const result = TestBed.runInInjectionContext(() => roleGuard(['OTHER_ROLE'])(null!, null!));
     expect(result).toEqual(router.createUrlTree(['/login']));
   });
 

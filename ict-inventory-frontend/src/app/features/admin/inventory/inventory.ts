@@ -1,26 +1,21 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { StatusBadge } from '../../../shared/components/status-badge/status-badge';
 import { AssetService } from '../../../core/services/asset.service';
 import { ReportService } from '../../../core/services/report.service';
 import { ReferenceService } from '../../../shared/services/reference.service';
-import { StaffService } from '../../../core/services/staff.service';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
-import { Asset, AssetFilter, AssetRequest, AssetUpdateRequest } from '../../../core/models/asset.model';
-import { Directorate, DeviceType, Section, Unit, Zone } from '../../../core/models/master-data.model';
-import { Staff } from '../../../core/models/staff.model';
-import { DeviceStatus, OwnershipType, VerificationStatus } from '../../../core/models/enums';
+import { Asset, AssetRequest, AssetUpdateRequest, CsvImportResult } from '../../../core/models/asset.model';
+import { DeviceType, Zone } from '../../../core/models/master-data.model';
+import { DeviceStatus, OwnershipType } from '../../../core/models/enums';
 import { delay, finalize, retry } from 'rxjs';
 import {
   DEVICE_STATUS_LABELS,
   DEVICE_STATUS_OPTIONS,
   OWNERSHIP_TYPE_LABELS,
   OWNERSHIP_TYPE_OPTIONS,
-  VERIFICATION_STATUS_LABELS,
-  VERIFICATION_STATUS_OPTIONS,
   deviceStatusTone,
-  verificationTone,
 } from '../../../shared/utils/enum-labels';
 
 @Component({
@@ -33,7 +28,6 @@ export class Inventory implements OnInit {
   private readonly assetService = inject(AssetService);
   private readonly reportService = inject(ReportService);
   private readonly reference = inject(ReferenceService);
-  private readonly staffService = inject(StaffService);
 
   readonly pageSize = 10;
   page = 0;
@@ -45,56 +39,34 @@ export class Inventory implements OnInit {
   readonly success = signal('');
   editing: Asset | null = null;
   showAssetForm = false;
+  importsResult = signal<CsvImportResult | null>(null);
+  importing = signal(false);
 
   readonly deviceStatusLabels = DEVICE_STATUS_LABELS;
   readonly ownershipLabels = OWNERSHIP_TYPE_LABELS;
-  readonly verificationLabels = VERIFICATION_STATUS_LABELS;
   readonly deviceStatusOptions = DEVICE_STATUS_OPTIONS;
   readonly ownershipOptions = OWNERSHIP_TYPE_OPTIONS;
-  readonly verificationOptions = VERIFICATION_STATUS_OPTIONS;
 
-  readonly filters = this.fb.nonNullable.group({
-    assetNumber: [''],
-    serialNumber: [''],
-    deviceName: [''],
-    employeeId: [''],
-    deviceTypeId: [''],
-    directorateId: [''],
-    sectionId: [''],
-    unitId: [''],
-    zoneId: [''],
-    office: [''],
-    ownershipType: [''],
-    deviceStatus: [''],
-    verificationStatus: [''],
-  });
+  readonly search = new FormControl('');
 
   readonly assetForm = this.fb.nonNullable.group({
     assetNumber: [''],
     serialNumber: [''],
     deviceName: ['', Validators.required],
     deviceTypeId: [0, Validators.required],
-    userId: [0, Validators.required],
+    userOfAsset: [''],
     ownershipType: ['', Validators.required],
     deviceStatus: ['', Validators.required],
     zoneId: [0, Validators.required],
-    office: ['', [Validators.required, Validators.maxLength(100)]],
+    office: ['', Validators.maxLength(100)],
   });
 
   readonly deviceTypes = signal<DeviceType[]>([]);
-  readonly directorates = signal<Directorate[]>([]);
-  readonly sections = signal<Section[]>([]);
-  readonly units = signal<Unit[]>([]);
   readonly zones = signal<Zone[]>([]);
-  readonly staff = signal<Staff[]>([]);
 
   ngOnInit(): void {
     this.reference.getDeviceTypes().subscribe((items) => this.deviceTypes.set(items));
-    this.reference.getDirectorates().subscribe((items) => this.directorates.set(items));
-    this.reference.getSections().subscribe((items) => this.sections.set(items));
-    this.reference.getUnits().subscribe((items) => this.units.set(items));
     this.reference.getZones().subscribe((items) => this.zones.set(items));
-    this.staffService.getStaff().subscribe((items) => this.staff.set(items));
     this.load();
   }
 
@@ -102,7 +74,7 @@ export class Inventory implements OnInit {
     this.loading.set(true);
     this.error.set('');
     this.assetService
-      .getAssets(this.buildFilter())
+      .getAssets(this.search.value?.trim() || undefined, this.page, this.pageSize)
       .pipe(
         retry({ count: 1, delay: 400 }),
         finalize(() => this.loading.set(false)),
@@ -127,7 +99,7 @@ export class Inventory implements OnInit {
 
   resetFilters(): void {
     this.page = 0;
-    this.filters.reset();
+    this.search.setValue('');
     this.load();
   }
 
@@ -140,7 +112,7 @@ export class Inventory implements OnInit {
   }
 
   downloadCsv(): void {
-    this.reportService.exportCsv(this.buildFilter()).subscribe((blob) => {
+    this.reportService.exportCsv().subscribe((blob) => {
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
@@ -150,11 +122,41 @@ export class Inventory implements OnInit {
     });
   }
 
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+    this.importing.set(true);
+    this.error.set('');
+    this.success.set('');
+    this.importsResult.set(null);
+    this.assetService.importCsv(file).subscribe({
+      next: (result) => {
+        this.importsResult.set(result);
+        this.importing.set(false);
+        if (result.imported > 0) {
+          this.success.set(`Imported ${result.imported} asset(s).`);
+          this.page = 0;
+          this.load();
+        }
+      },
+      error: () => {
+        this.importing.set(false);
+        this.error.set('Failed to import CSV. Check the file and try again.');
+      },
+      complete: () => {
+        input.value = '';
+      },
+    });
+  }
+
   openCreateForm(): void {
     this.editing = null;
     this.success.set('');
     this.showAssetForm = true;
-    this.assetForm.reset({ deviceTypeId: 0, userId: 0, zoneId: 0, office: '' });
+    this.assetForm.reset({ deviceTypeId: 0, zoneId: 0, office: '' });
   }
 
   openEditForm(item: Asset): void {
@@ -166,7 +168,7 @@ export class Inventory implements OnInit {
       serialNumber: item.serialNumber ?? '',
       deviceName: item.deviceName,
       deviceTypeId: item.deviceTypeId,
-      userId: item.userId,
+      userOfAsset: item.userOfAsset,
       ownershipType: item.ownershipType,
       deviceStatus: item.deviceStatus,
       zoneId: item.zoneId ?? 0,
@@ -220,10 +222,6 @@ export class Inventory implements OnInit {
     });
   }
 
-  protected tone(status: VerificationStatus): 'warning' | 'success' | 'danger' {
-    return verificationTone(status);
-  }
-
   protected deviceTone(status: DeviceStatus): 'success' | 'danger' {
     return deviceStatusTone(status);
   }
@@ -233,6 +231,7 @@ export class Inventory implements OnInit {
     serialNumber: string;
     deviceName: string;
     deviceTypeId: number;
+    userOfAsset: string;
     ownershipType: string;
     deviceStatus: string;
     zoneId: number;
@@ -243,10 +242,11 @@ export class Inventory implements OnInit {
       serialNumber: raw.serialNumber || undefined,
       deviceName: raw.deviceName,
       deviceTypeId: Number(raw.deviceTypeId),
+      userOfAsset: raw.userOfAsset?.trim() || undefined,
       ownershipType: raw.ownershipType as OwnershipType,
       deviceStatus: raw.deviceStatus as DeviceStatus,
       zoneId: Number(raw.zoneId),
-      office: raw.office.trim(),
+      office: raw.office?.trim() || undefined,
     };
   }
 
@@ -255,7 +255,7 @@ export class Inventory implements OnInit {
     serialNumber: string;
     deviceName: string;
     deviceTypeId: number;
-    userId: number;
+    userOfAsset: string;
     ownershipType: string;
     deviceStatus: string;
     zoneId: number;
@@ -266,36 +266,11 @@ export class Inventory implements OnInit {
       serialNumber: raw.serialNumber || undefined,
       deviceName: raw.deviceName,
       deviceTypeId: Number(raw.deviceTypeId),
-      userId: Number(raw.userId),
+      userOfAsset: raw.userOfAsset?.trim() || undefined,
       ownershipType: raw.ownershipType as OwnershipType,
       deviceStatus: raw.deviceStatus as DeviceStatus,
       zoneId: Number(raw.zoneId),
-      office: raw.office.trim(),
+      office: raw.office?.trim() || undefined,
     };
-  }
-
-  private buildFilter(): Partial<AssetFilter> {
-    const f = this.filters.getRawValue();
-    return {
-      assetNumber: f.assetNumber || undefined,
-      serialNumber: f.serialNumber || undefined,
-      deviceName: f.deviceName || undefined,
-      employeeId: f.employeeId || undefined,
-      deviceTypeId: this.num(f.deviceTypeId),
-      directorateId: this.num(f.directorateId),
-      sectionId: this.num(f.sectionId),
-      unitId: this.num(f.unitId),
-      zoneId: this.num(f.zoneId),
-      office: f.office || undefined,
-      ownershipType: (f.ownershipType || undefined) as OwnershipType | undefined,
-      deviceStatus: (f.deviceStatus || undefined) as DeviceStatus | undefined,
-      verificationStatus: (f.verificationStatus || undefined) as VerificationStatus | undefined,
-      page: this.page,
-      size: this.pageSize,
-    };
-  }
-
-  private num(value: string): number | undefined {
-    return value ? Number(value) : undefined;
   }
 }

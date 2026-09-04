@@ -1,0 +1,101 @@
+<app-page-header
+  [title]="isEdit ? 'Edit Asset' : 'Register Asset'"
+  [subtitle]="isEdit ? 'Update the asset details' : 'Register a new ICT asset and record its assigned user'"
+/>
+
+@if (error()) {
+  <div class="alert alert-error" role="alert">{{ error() }}</div>
+}
+@if (success()) {
+  <div class="alert alert-success" role="alert">{{ success() }}</div>
+}
+
+<div class="card">
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="assetNumber">Asset Number</label>
+        <input id="assetNumber" type="text" formControlName="assetNumber" />
+      </div>
+      <div class="form-field">
+        <label for="serialNumber">Serial Number</label>
+        <input id="serialNumber" type="text" formControlName="serialNumber" />
+      </div>
+      <div class="form-field">
+        <label for="deviceName">Device Name *</label>
+        <input id="deviceName" type="text" formControlName="deviceName" />
+        @if (form.controls.deviceName.touched && form.controls.deviceName.invalid) {
+          <div class="field-error">Device name is required.</div>
+        }
+      </div>
+      <div class="form-field">
+        <label for="deviceTypeId">Device Type *</label>
+        <select id="deviceTypeId" formControlName="deviceTypeId">
+          <option [ngValue]="0" disabled>Select type</option>
+          @for (item of deviceTypes(); track item.id) {
+            <option [ngValue]="item.id">{{ item.name }}</option>
+          }
+        </select>
+        @if (form.controls.deviceTypeId.touched && form.controls.deviceTypeId.invalid) {
+          <div class="field-error">Device type is required.</div>
+        }
+      </div>
+      <div class="form-field">
+        <label for="userOfAsset">Assigned User *</label>
+        <input id="userOfAsset" type="text" formControlName="userOfAsset" placeholder="Enter full name" maxlength="255" />
+        @if (form.controls.userOfAsset.touched && form.controls.userOfAsset.invalid) {
+          <div class="field-error">Assigned user is required.</div>
+        }
+      </div>
+      <div class="form-field">
+        <label for="ownershipType">Ownership *</label>
+        <select id="ownershipType" formControlName="ownershipType">
+          <option value="" disabled>Select ownership</option>
+          @for (opt of ownershipOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        @if (form.controls.ownershipType.touched && form.controls.ownershipType.invalid) {
+          <div class="field-error">Ownership is required.</div>
+        }
+      </div>
+      <div class="form-field">
+        <label for="deviceStatus">Device Status *</label>
+        <select id="deviceStatus" formControlName="deviceStatus">
+          <option value="" disabled>Select status</option>
+          @for (opt of deviceStatusOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        @if (form.controls.deviceStatus.touched && form.controls.deviceStatus.invalid) {
+          <div class="field-error">Device status is required.</div>
+        }
+      </div>
+      <div class="form-field">
+        <label for="zone">Zone *</label>
+        <select id="zone" formControlName="zoneId">
+          <option [ngValue]="0" disabled>Select zone</option>
+          @for (zone of zones(); track zone.id) {
+            <option [ngValue]="zone.id">{{ zone.name }}</option>
+          }
+        </select>
+        @if (form.controls.zoneId.touched && form.controls.zoneId.invalid) {
+          <div class="field-error">Zone is required.</div>
+        }
+      </div>
+      <div class="form-field">
+        <label for="office">Office *</label>
+        <input id="office" type="text" formControlName="office" placeholder="Enter office code" maxlength="100" />
+        @if (form.controls.office.touched && form.controls.office.invalid) {
+          <div class="field-error">Office is required.</div>
+        }
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : isEdit ? 'Save Changes' : 'Register' }}
+      </button>
+      <button type="button" class="btn" (click)="cancel()">Cancel</button>
+    </div>
+  </form>
+</div>

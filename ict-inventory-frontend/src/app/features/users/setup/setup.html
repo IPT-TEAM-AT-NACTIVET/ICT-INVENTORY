@@ -1,0 +1,74 @@
+<app-page-header title="Complete Your Setup" subtitle="One more step before you can register assets" />
+
+@if (loading()) {
+  <div class="loading">Loading your account…</div>
+}
+
+@if (error()) {
+  <div class="alert alert-error" role="alert">{{ error() }}</div>
+}
+
+@if (!loading()) {
+  <div class="alert alert-info">
+    Before registering any ICT asset you must provide your email, phone number and directorate.
+    These details will be recorded on every asset you register.
+  </div>
+
+  <div class="card">
+    <h3>Your details</h3>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="email">Email *</label>
+          <input id="email" type="email" formControlName="email" />
+          @if (form.controls.email.touched && form.controls.email.invalid) {
+            <div class="field-error">A valid email is required.</div>
+          }
+        </div>
+        <div class="form-field">
+          <label for="phoneNumber">Phone Number *</label>
+          <input id="phoneNumber" type="text" formControlName="phoneNumber" />
+          @if (form.controls.phoneNumber.touched && form.controls.phoneNumber.invalid) {
+            <div class="field-error">Phone number is required.</div>
+          }
+        </div>
+        <div class="form-field">
+          <label for="directorate">Directorate *</label>
+          <select id="directorate" formControlName="directorateId">
+            <option [ngValue]="0" disabled>Select directorate</option>
+            @for (dir of directorates(); track dir.id) {
+              <option [ngValue]="dir.id">{{ dir.name }}</option>
+            }
+          </select>
+          @if (form.controls.directorateId.touched && form.controls.directorateId.invalid) {
+            <div class="field-error">Directorate is required.</div>
+          }
+        </div>
+        <div class="form-field">
+          <label for="section">Section</label>
+          <select id="section" formControlName="sectionId">
+            <option [ngValue]="0">— None —</option>
+            @for (section of sections(); track section.id) {
+              <option [ngValue]="section.id">{{ section.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="unit">Unit</label>
+          <select id="unit" formControlName="unitId">
+            <option [ngValue]="0">— None —</option>
+            @for (unit of units(); track unit.id) {
+              <option [ngValue]="unit.id">{{ unit.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Complete Setup' }}
+        </button>
+        <a class="btn" routerLink="/users/dashboard">Back to Dashboard</a>
+      </div>
+    </form>
+  </div>
+}

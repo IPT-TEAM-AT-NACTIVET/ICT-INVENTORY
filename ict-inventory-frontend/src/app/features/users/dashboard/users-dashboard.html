@@ -1,0 +1,133 @@
+<app-page-header title="ICT Officer Dashboard" subtitle="ICT asset inventory overview" />
+
+@if (error()) {
+  <div class="alert alert-error" role="alert">{{ error() }}</div>
+}
+
+@if (stats(); as stats) {
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-value stat-accent">{{ stats.totalAssets }}</div>
+      <div class="stat-label">Total Assets</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value stat-success">{{ stats.activeAssets }}</div>
+      <div class="stat-label">Working</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value stat-danger">{{ stats.defectiveAssets }}</div>
+      <div class="stat-label">Faulty</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <a class="btn btn-primary" routerLink="/users/assets/register">Register an Asset</a>
+    <a class="btn" routerLink="/users/assets">View Inventory</a>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Assets by Device Type</h3>
+      <div class="bars">
+        @for (item of entries(stats.assetsByDeviceType); track item.key) {
+          <div class="bar-row">
+            <span class="bar-label">{{ item.key }}</span>
+            <div class="bar-track">
+              <div class="bar-fill" [style.width.%]="(item.value / maxBar(stats.assetsByDeviceType)) * 100"></div>
+            </div>
+            <span class="bar-value">{{ item.value }}</span>
+          </div>
+        }
+      </div>
+    </div>
+    <div class="card">
+      <h3>Assets by Zone</h3>
+      <div class="bars">
+        @for (item of entries(stats.assetsByZone); track item.key) {
+          <div class="bar-row">
+            <span class="bar-label">{{ item.key }}</span>
+            <div class="bar-track">
+              <div class="bar-fill" [style.width.%]="(item.value / maxBar(stats.assetsByZone)) * 100"></div>
+            </div>
+            <span class="bar-value">{{ item.value }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Assets by Device Status</h3>
+      <div class="bars">
+        @for (item of entries(stats.assetsByDeviceStatus); track item.key) {
+          <div class="bar-row">
+            <span class="bar-label">{{ item.key }}</span>
+            <div class="bar-track">
+              <div class="bar-fill" [style.width.%]="(item.value / maxBar(stats.assetsByDeviceStatus)) * 100"></div>
+            </div>
+            <span class="bar-value">{{ item.value }}</span>
+          </div>
+        }
+      </div>
+    </div>
+    <div class="card">
+      <h3>Assets by Ownership</h3>
+      <div class="bars">
+        @for (item of entries(stats.assetsByOwnership); track item.key) {
+          <div class="bar-row">
+            <span class="bar-label">{{ item.key }}</span>
+            <div class="bar-track">
+              <div class="bar-fill" [style.width.%]="(item.value / maxBar(stats.assetsByOwnership)) * 100"></div>
+            </div>
+            <span class="bar-value">{{ item.value }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Recent Asset Registrations</h3>
+    @if (stats.recentAssets.length === 0) {
+      <p class="muted">No assets registered yet.</p>
+    } @else {
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Asset No</th>
+              <th>Device</th>
+              <th>Type</th>
+              <th>User</th>
+              <th>Zone</th>
+              <th>Office</th>
+              <th>Registered By</th>
+              <th>Registered At</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (asset of stats.recentAssets; track $index) {
+              <tr>
+                <td>{{ asset.assetNumber ?? '—' }}</td>
+                <td>{{ asset.deviceName }}</td>
+                <td>{{ asset.deviceType ?? '—' }}</td>
+                <td>{{ asset.userOfAsset || '—' }}</td>
+                <td>{{ asset.zone ?? '—' }}</td>
+                <td>{{ asset.office ?? '—' }}</td>
+                <td>{{ asset.registeredBy ?? '—' }}</td>
+                <td>{{ asset.registeredAt | date: 'medium' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+} @else {
+  @if (loading()) {
+    <div class="loading">Loading dashboard…</div>
+  } @else if (!error()) {
+    <div class="empty">No data available yet.</div>
+  }
+}

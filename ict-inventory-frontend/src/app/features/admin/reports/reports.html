@@ -1,212 +1,182 @@
-<app-page-header title="Reports" subtitle="Inventory reports grouped by directorate, section, unit, zone, office, device type and status" />
-
-<div class="toolbar">
-  <div class="tabs">
-    <button type="button" class="tab" [class.active]="reportType === 'inventory'" (click)="setType('inventory')">Inventory</button>
-    <button type="button" class="tab" [class.active]="reportType === 'by-directorate'" (click)="setType('by-directorate')">By Directorate</button>
-    <button type="button" class="tab" [class.active]="reportType === 'by-section'" (click)="setType('by-section')">By Section</button>
-    <button type="button" class="tab" [class.active]="reportType === 'by-unit'" (click)="setType('by-unit')">By Unit</button>
-    <button type="button" class="tab" [class.active]="reportType === 'by-zone'" (click)="setType('by-zone')">By Zone</button>
-    <button type="button" class="tab" [class.active]="reportType === 'by-office'" (click)="setType('by-office')">By Office</button>
-    <button type="button" class="tab" [class.active]="reportType === 'by-device-type'" (click)="setType('by-device-type')">By Device Type</button>
-    <button type="button" class="tab" [class.active]="reportType === 'by-status'" (click)="setType('by-status')">By Status</button>
-  </div>
-  <button type="button" class="btn" (click)="downloadCsv()">Export CSV</button>
-</div>
+<app-page-header [title]="t('reports.title')" [subtitle]="t('reports.subtitle')" />
 
 @if (error()) {
   <div class="alert alert-error" role="alert">{{ error() }}</div>
 }
 
 <div class="card">
-  <h3>Filters</h3>
-  <form [formGroup]="filters" (ngSubmit)="applyFilters()">
-    <div class="filter-bar">
-      <div class="form-field">
-        <label for="assetNumber">Asset Number</label>
-        <input id="assetNumber" type="text" formControlName="assetNumber" />
-      </div>
-      <div class="form-field">
-        <label for="serialNumber">Serial Number</label>
-        <input id="serialNumber" type="text" formControlName="serialNumber" />
-      </div>
-      <div class="form-field">
-        <label for="deviceName">Device Name</label>
-        <input id="deviceName" type="text" formControlName="deviceName" />
-      </div>
-      <div class="form-field">
-        <label for="employeeId">Employee ID</label>
-        <input id="employeeId" type="text" formControlName="employeeId" />
-      </div>
-      <div class="form-field">
-        <label for="deviceType">Device Type</label>
-        <select id="deviceType" formControlName="deviceTypeId">
-          <option value="">All</option>
-          @for (item of deviceTypes(); track item.id) {
-            <option [value]="item.id">{{ item.name }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="directorate">Directorate</label>
-        <select id="directorate" formControlName="directorateId">
-          <option value="">All</option>
-          @for (item of directorates(); track item.id) {
-            <option [value]="item.id">{{ item.name }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="section">Section</label>
-        <select id="section" formControlName="sectionId">
-          <option value="">All</option>
-          @for (item of sections(); track item.id) {
-            <option [value]="item.id">{{ item.name }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="unit">Unit</label>
-        <select id="unit" formControlName="unitId">
-          <option value="">All</option>
-          @for (item of units(); track item.id) {
-            <option [value]="item.id">{{ item.name }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="zone">Zone</label>
-        <select id="zone" formControlName="zoneId">
-          <option value="">All</option>
-          @for (item of zones(); track item.id) {
-            <option [value]="item.id">{{ item.name }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="office">Office</label>
-        <input id="office" type="text" formControlName="office" placeholder="Office code" />
-      </div>
-      <div class="form-field">
-        <label for="ownership">Ownership</label>
-        <select id="ownership" formControlName="ownershipType">
-          <option value="">All</option>
-          @for (opt of ownershipOptions; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="deviceStatus">Device Status</label>
-        <select id="deviceStatus" formControlName="deviceStatus">
-          <option value="">All</option>
-          @for (opt of deviceStatusOptions; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="verificationStatus">Verification</label>
-        <select id="verificationStatus" formControlName="verificationStatus">
-          <option value="">All</option>
-          @for (opt of verificationOptions; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary btn-sm">Apply</button>
-        <button type="button" class="btn btn-sm" (click)="resetFilters()">Reset</button>
-      </div>
+  <h3>{{ t('reports.searchTitle') }}</h3>
+  <div class="filter-bar">
+    <div class="form-field search-field">
+      <label for="globalSearch">{{ t('reports.searchLabel') }}</label>
+      <input
+        id="globalSearch"
+        type="text"
+        class="search-input search-input-wide"
+        [formControl]="search"
+        [placeholder]="t('reports.searchPlaceholder')"
+        (keyup.enter)="applySearch()"
+      />
     </div>
-  </form>
+    <div class="form-actions inline-actions">
+      <button type="button" class="btn btn-primary" (click)="applySearch()">{{ t('common.search') }}</button>
+      <button type="button" class="btn" (click)="resetSearch()">{{ t('reports.reset') }}</button>
+      <button type="button" class="btn" (click)="downloadCsv()">{{ t('reports.export') }}</button>
+    </div>
+  </div>
+</div>
+
+@if (summary(); as summary) {
+  <div class="stat-grid report-summary">
+    <div class="stat-card">
+      <div class="stat-value stat-accent">{{ summary.totalAssets }}</div>
+      <div class="stat-label">{{ t('reports.totalAssets') }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value stat-success">{{ summary.activeAssets }}</div>
+      <div class="stat-label">{{ t('reports.working') }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value stat-danger">{{ summary.defectiveAssets }}</div>
+      <div class="stat-label">{{ t('reports.faulty') }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value stat-warning">{{ summary.officeAssets }}</div>
+      <div class="stat-label">{{ t('reports.office') }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ summary.personalAssets }}</div>
+      <div class="stat-label">{{ t('reports.personal') }}</div>
+    </div>
+  </div>
+}
+
+<div class="tabs report-tabs">
+  @for (type of reportTypes; track type) {
+    <button
+      type="button"
+      class="tab"
+      [class.active]="reportType === type"
+      (click)="setType(type)"
+    >
+      {{ t('reports.types.' + type) }}
+    </button>
+  }
 </div>
 
 @if (loading()) {
-  <div class="loading">Loading report…</div>
-} @else if (report()?.totalAssets === 0) {
-  <div class="empty">No assets match the current filters.</div>
-} @else if (report(); as report) {
-  <div class="toolbar">
-    <span class="muted">Total assets: <strong>{{ report.totalAssets }}</strong></span>
-  </div>
-
-  <div class="table-wrap">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Grouping</th>
-          <th>Count</th>
-          <th>Details</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of report.items; track item; let i = $index) {
+  <div class="loading">{{ t('common.loading') }}</div>
+} @else if (reportType === 'inventory') {
+  <div class="card">
+    <div class="toolbar">
+      <h3>{{ t('reports.inventoryContent') }}</h3>
+      <span class="muted">{{ totalElements() }} {{ t('reports.assets') }}</span>
+    </div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
           <tr>
-            <td>{{ item.name }}</td>
-            <td>{{ item.count }}</td>
-            <td>
-              @if (item.assets.length > 0) {
-                <button type="button" class="btn btn-sm" (click)="toggle(i)">
-                  {{ expandedIndex === i ? 'Hide assets' : 'View assets' }}
-                </button>
-              } @else {
-                <span class="muted">—</span>
-              }
-            </td>
+            <th>{{ t('reports.assetNo') }}</th>
+            <th>{{ t('reports.serial') }}</th>
+            <th>{{ t('reports.device') }}</th>
+            <th>{{ t('reports.type') }}</th>
+            <th>{{ t('reports.user') }}</th>
+            <th>{{ t('reports.ownership') }}</th>
+            <th>{{ t('reports.status') }}</th>
+            <th>{{ t('reports.zone') }}</th>
+            <th>{{ t('reports.officeCol') }}</th>
+            <th>{{ t('reports.registeredBy') }}</th>
+            <th>{{ t('reports.registeredAt') }}</th>
+            <th></th>
           </tr>
-          @if (expandedIndex === i) {
+        </thead>
+        <tbody>
+          @if (assets().length === 0) {
             <tr>
-              <td colspan="3">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>Asset #</th>
-                      <th>Serial</th>
-                      <th>Device</th>
-                      <th>Type</th>
-                      <th>User</th>
-                      <th>Employee ID</th>
-                      <th>Directorate</th>
-                      <th>Section</th>
-                      <th>Unit</th>
-                      <th>Zone</th>
-                      <th>Office</th>
-                      <th>Ownership</th>
-                      <th>Device Status</th>
-                      <th>Verification</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (asset of item.assets; track asset.id) {
-                      <tr>
-                        <td>{{ asset.assetNumber ?? '—' }}</td>
-                        <td>{{ asset.serialNumber ?? '—' }}</td>
-                        <td>{{ asset.deviceName }}</td>
-                        <td>{{ asset.deviceTypeName }}</td>
-                        <td>{{ asset.userFullName }}</td>
-                        <td>{{ asset.userEmployeeId ?? '—' }}</td>
-                        <td>{{ asset.directorateName ?? '—' }}</td>
-                        <td>{{ asset.sectionName ?? '—' }}</td>
-                        <td>{{ asset.unitName ?? '—' }}</td>
-                        <td>{{ asset.zoneName ?? '—' }}</td>
-                        <td>{{ asset.office ?? '—' }}</td>
-                        <td>{{ ownershipLabels[asset.ownershipType] }}</td>
-                        <td>
-                          <app-status-badge [label]="deviceStatusLabels[asset.deviceStatus]" [tone]="deviceTone(asset.deviceStatus)" />
-                        </td>
-                        <td>
-                          <app-status-badge [label]="verificationLabels[asset.verificationStatus]" [tone]="tone(asset.verificationStatus)" />
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </td>
+              <td colspan="12" class="empty">{{ t('reports.noAssets') }}</td>
             </tr>
+          } @else {
+            @for (asset of assets(); track asset.id) {
+              <tr>
+                <td>{{ asset.assetNumber ?? '—' }}</td>
+                <td>{{ asset.serialNumber ?? '—' }}</td>
+                <td>{{ asset.deviceName }}</td>
+                <td>{{ asset.deviceTypeName }}</td>
+                <td>{{ asset.userOfAsset || '—' }}</td>
+                <td>{{ ownershipLabels[asset.ownershipType] }}</td>
+                <td>
+                  <app-status-badge
+                    [label]="deviceStatusLabels[asset.deviceStatus]"
+                    [tone]="deviceTone(asset.deviceStatus)"
+                  />
+                </td>
+                <td>{{ asset.zoneName ?? '—' }}</td>
+                <td>{{ asset.office ?? '—' }}</td>
+                <td>{{ asset.createdByName ?? '—' }}</td>
+                <td>{{ asset.createdAt | date: 'medium' }}</td>
+                <td>
+                  <a class="btn btn-sm" [routerLink]="['/users/assets', asset.id]">{{ t('reports.viewDetails') }}</a>
+                </td>
+              </tr>
+            }
           }
+        </tbody>
+      </table>
+    </div>
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button type="button" class="btn btn-sm" [disabled]="page === 0" (click)="goToPage(page - 1)">Prev</button>
+        <span>{{ t('reports.page') }} {{ page + 1 }} / {{ totalPages() }}</span>
+        <button type="button" class="btn btn-sm" [disabled]="page >= totalPages() - 1" (click)="goToPage(page + 1)">Next</button>
+      </div>
+    }
+  </div>
+} @else if (report(); as report) {
+  <div class="card">
+    <div class="toolbar">
+      <h3>{{ t('reports.contentTitle.' + report.reportType) }}</h3>
+      <span class="muted">{{ t('reports.total') }}: <strong>{{ report.totalAssets }}</strong></span>
+    </div>
+
+    @if (report.items.length === 0) {
+      <div class="empty">{{ t('reports.noAssets') }}</div>
+    } @else {
+      <div class="bars">
+        @for (item of report.items; track $index) {
+          <div class="bar-row">
+            <span class="bar-label">
+              {{ report.reportType === 'by-status' ? statusLabel(item.name) : report.reportType === 'by-ownership' ? ownershipLabel(item.name) : item.name }}
+            </span>
+            <div class="bar-track">
+              <div class="bar-fill" [style.width.%]="(item.count / maxBar(report)) * 100"></div>
+            </div>
+            <span class="bar-value">{{ item.count }}</span>
+          </div>
         }
-      </tbody>
-    </table>
+      </div>
+
+      <div class="table-wrap report-table">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>{{ t('reports.grouping') }}</th>
+              <th>{{ t('reports.count') }}</th>
+              <th>{{ t('reports.percentage') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of report.items; track $index) {
+              <tr>
+                <td>
+                  {{ report.reportType === 'by-status' ? statusLabel(item.name) : report.reportType === 'by-ownership' ? ownershipLabel(item.name) : item.name }}
+                </td>
+                <td>{{ item.count }}</td>
+                <td>{{ percentage(item, report) }}%</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
   </div>
 }

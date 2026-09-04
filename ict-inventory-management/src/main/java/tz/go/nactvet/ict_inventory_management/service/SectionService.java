@@ -111,9 +111,9 @@ public class SectionService {
         Section section = sectionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Section not found with id: " + id));
 
-        long userCount = userRepository.countByRoleAndSectionId(Role.STAFF, id);
+        long userCount = userRepository.countByRoleAndSectionId(Role.ADMIN, id);
         if (userCount > 0) {
-            throw new ConflictException("Cannot delete section: " + userCount + " staff members are assigned to it");
+            throw new ConflictException("Cannot delete section: " + userCount + " user accounts are assigned to it");
         }
 
         sectionRepository.deleteById(id);

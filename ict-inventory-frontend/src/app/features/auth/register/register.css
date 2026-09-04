@@ -1,0 +1,71 @@
+.register-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+  padding: 4.5rem 1rem 1rem;
+}
+
+.register-topbar {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 2rem;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+  max-height: calc(100vh - 5rem);
+  overflow-y: auto;
+}
+
+.register-brand {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.register-brand .brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.6rem;
+}
+
+.register-brand .brand-mark img {
+  height: 48px;
+  object-fit: contain;
+  display: block;
+}
+
+.register-brand h1 {
+  font-size: 1.2rem;
+  margin: 0 0 0.25rem;
+}
+
+.register-brand .muted {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.register-alt {
+  margin: 1rem 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-2);
+}
+
+.register-alt a {
+  color: var(--link, var(--primary));
+  font-weight: 600;
+}

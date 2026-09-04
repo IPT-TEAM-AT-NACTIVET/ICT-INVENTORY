@@ -13,6 +13,7 @@ public class AssetUpdateRequest {
     private OwnershipType ownershipType;
     private Long zoneId;
     private String office;
+    private String userOfAsset;
 
     public String getAssetNumber() {
         return assetNumber;
@@ -76,5 +77,13 @@ public class AssetUpdateRequest {
 
     public void setOffice(String office) {
         this.office = office;
+    }
+
+    public String getUserOfAsset() {
+        return userOfAsset;
+    }
+
+    public void setUserOfAsset(String userOfAsset) {
+        this.userOfAsset = userOfAsset;
     }
 }

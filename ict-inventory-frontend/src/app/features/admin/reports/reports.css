@@ -1,0 +1,13 @@
+.search-input-wide {
+  max-width: none;
+}
+
+@media (min-width: 769px) {
+  .filter-bar {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+.inline-actions {
+  margin-top: 0;
+}

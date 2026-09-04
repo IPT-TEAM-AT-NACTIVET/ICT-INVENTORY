@@ -24,15 +24,15 @@ export class AdminLayout {
 
   readonly navItems: NavItem[] = [
     { path: '/admin/dashboard', labelKey: 'nav.dashboard' },
-    { path: '/admin/users', labelKey: 'nav.staff' },
+    { path: '/admin/inventory', labelKey: 'nav.inventory' },
+    { path: '/admin/register-asset', labelKey: 'nav.registerAsset' },
+    { path: '/admin/reports', labelKey: 'nav.reports' },
+    { path: '/admin/users', labelKey: 'nav.users' },
     { path: '/admin/directorates', labelKey: 'nav.directorates' },
     { path: '/admin/sections', labelKey: 'nav.sections' },
     { path: '/admin/units', labelKey: 'nav.units' },
     { path: '/admin/zones', labelKey: 'nav.zones' },
     { path: '/admin/device-types', labelKey: 'nav.deviceTypes' },
-    { path: '/admin/inventory', labelKey: 'nav.inventory' },
-    { path: '/admin/verification', labelKey: 'nav.verification' },
-    { path: '/admin/reports', labelKey: 'nav.reports' },
     { path: '/admin/profile', labelKey: 'nav.profile' },
   ];
 

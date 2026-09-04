@@ -12,3 +12,11 @@ export interface ReportResponse {
   reportType: string;
   totalAssets: number;
 }
+
+export interface ReportSummary {
+  totalAssets: number;
+  activeAssets: number;
+  defectiveAssets: number;
+  officeAssets: number;
+  personalAssets: number;
+}

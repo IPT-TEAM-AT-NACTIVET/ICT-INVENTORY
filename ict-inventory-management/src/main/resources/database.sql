@@ -132,7 +132,7 @@ CREATE TABLE device_types (
 -- ---------------------------------------------------------------------------
 -- Users
 -- NOTE: A User does NOT have a zone/office (they belong to the Asset location).
---       role is stored as a string (enum): ADMIN, STAFF.
+--       role is stored as a string (enum): ADMIN.
 --       username is kept internally on the entity and equals the email
 --       (email is the public login/username); it is excluded from all DTOs.
 -- ---------------------------------------------------------------------------
@@ -170,8 +170,6 @@ CREATE TABLE assets (
     device_name       VARCHAR(255) NOT NULL,
     ownership_type    VARCHAR(255) NOT NULL,   -- OFFICE, PERSONAL
     device_status     VARCHAR(255) NOT NULL,   -- ACTIVE, DEFECTIVE
-    verification_status VARCHAR(255) NOT NULL, -- PENDING, VERIFIED, REJECTED
-    rejection_reason  TEXT,
     device_type_id    BIGINT NOT NULL REFERENCES device_types (id),
     user_id           BIGINT NOT NULL REFERENCES users (id),
     zone_id           BIGINT REFERENCES zones (id),
@@ -183,7 +181,6 @@ CREATE TABLE assets (
 CREATE INDEX idx_assets_user_id              ON assets (user_id);
 CREATE INDEX idx_assets_device_type_id       ON assets (device_type_id);
 CREATE INDEX idx_assets_zone_id              ON assets (zone_id);
-CREATE INDEX idx_assets_verification_status  ON assets (verification_status);
 CREATE INDEX idx_assets_device_status        ON assets (device_status);
 
 -- ---------------------------------------------------------------------------
@@ -227,7 +224,7 @@ CREATE TABLE audit_logs (
 -- ---------------------------------------------------------------------------
 -- At runtime, src/main/java/.../config/DataSeedInitializer (a CommandLineRunner,
 -- which runs AFTER the MasterDataInitializer ApplicationRunner) idempotently
--- seeds the following so the asset-verification workflow can be tested:
+-- seeds the following: 
 --
 --   11 device types: Laptop, Desktop Computer, Projector, Photocopier,
 --                    Printer, Scanner, Monitor, Network Switch,

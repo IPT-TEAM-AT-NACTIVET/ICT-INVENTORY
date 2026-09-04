@@ -2,7 +2,6 @@ package tz.go.nactvet.ict_inventory_management.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DisabledException;
@@ -17,14 +16,14 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import tz.go.nactvet.ict_inventory_management.dto.LoginRequest;
 import tz.go.nactvet.ict_inventory_management.dto.LoginResponse;
-import tz.go.nactvet.ict_inventory_management.dto.RegisterRequest;
-import tz.go.nactvet.ict_inventory_management.dto.RegisterResponse;
+import tz.go.nactvet.ict_inventory_management.dto.UserManagementCreateRequest;
+import tz.go.nactvet.ict_inventory_management.dto.UserManagementResponse;
 import tz.go.nactvet.ict_inventory_management.dto.UserResponse;
 import tz.go.nactvet.ict_inventory_management.entity.User;
 import tz.go.nactvet.ict_inventory_management.exception.ResourceNotFoundException;
 import tz.go.nactvet.ict_inventory_management.repository.UserRepository;
 import tz.go.nactvet.ict_inventory_management.security.JwtService;
-import tz.go.nactvet.ict_inventory_management.service.StaffService;
+import tz.go.nactvet.ict_inventory_management.service.UserManagementService;
 
 @RestController
 @RequestMapping("/auth")
@@ -35,17 +34,24 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final UserRepository userRepository;
-    private final StaffService staffService;
+    private final UserManagementService userManagementService;
 
     public AuthController(
             AuthenticationManager authenticationManager,
             JwtService jwtService,
             UserRepository userRepository,
-            StaffService staffService) {
+            UserManagementService userManagementService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.userRepository = userRepository;
-        this.staffService = staffService;
+        this.userManagementService = userManagementService;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<UserManagementResponse> register(@Valid @RequestBody UserManagementCreateRequest request) {
+        UserManagementResponse response = userManagementService.registerSelf(request);
+        log.info("New registration submitted for approval: {}", request.getEmail());
+        return ResponseEntity.status(201).body(response);
     }
 
     @PostMapping("/login")
@@ -71,12 +77,5 @@ public class AuthController {
 
         log.info("User '{}' logged in successfully", user.getEmail());
         return ResponseEntity.ok(new LoginResponse(token, userResponse));
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
-        RegisterResponse created = staffService.register(request);
-        log.info("New staff registered: {}", created.getEmail());
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 }

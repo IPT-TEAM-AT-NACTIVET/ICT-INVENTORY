@@ -64,6 +64,13 @@ public class User {
     @Column(name = "setup_completed", nullable = false, columnDefinition = "boolean default false")
     private boolean setupCompleted = false;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approved_by")
+    private User approvedBy;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -186,6 +193,22 @@ public class User {
 
     public void setSetupCompleted(boolean setupCompleted) {
         this.setupCompleted = setupCompleted;
+    }
+
+    public User getApprovedBy() {
+        return approvedBy;
+    }
+
+    public void setApprovedBy(User approvedBy) {
+        this.approvedBy = approvedBy;
+    }
+
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
+    }
+
+    public void setApprovedAt(LocalDateTime approvedAt) {
+        this.approvedAt = approvedAt;
     }
 
     public LocalDateTime getCreatedAt() {

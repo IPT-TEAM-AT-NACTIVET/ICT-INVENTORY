@@ -1,11 +1,9 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
-import { setupGuard } from './core/guards/setup.guard';
 import { AdminLayout } from './features/layout/admin-layout/admin-layout';
 import { Login } from './features/auth/login/login';
 import { Register } from './features/auth/register/register';
-import { StaffLayout } from './features/layout/staff-layout/staff-layout';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -20,11 +18,6 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () =>
           import('./features/admin/dashboard/dashboard').then((m) => m.AdminDashboard),
-      },
-      {
-        path: 'users',
-        loadComponent: () =>
-          import('./features/admin/staff-management/staff-management').then((m) => m.StaffManagement),
       },
       {
         path: 'directorates',
@@ -44,13 +37,6 @@ export const routes: Routes = [
         path: 'zones',
         loadComponent: () => import('./features/admin/master-data/zones').then((m) => m.ZonesComponent),
       },
-      // Offices are no longer a pre-defined master list for asset registration.
-      // Users enter office codes directly when registering assets.
-      // {
-      //   path: 'offices',
-      //   loadComponent: () =>
-      //     import('./features/admin/master-data/offices').then((m) => m.OfficesComponent),
-      // },
       {
         path: 'device-types',
         loadComponent: () =>
@@ -61,13 +47,16 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/inventory/inventory').then((m) => m.Inventory),
       },
       {
-        path: 'verification',
-        loadComponent: () =>
-          import('./features/admin/verification/verification').then((m) => m.Verification),
-      },
-      {
         path: 'reports',
         loadComponent: () => import('./features/admin/reports/reports').then((m) => m.Reports),
+      },
+      {
+        path: 'users',
+        loadComponent: () => import('./features/admin/users/users').then((m) => m.Users),
+      },
+      {
+        path: 'register-asset',
+        loadComponent: () => import('./features/users/assets/asset-form').then((m) => m.AssetForm),
       },
       {
         path: 'profile',
@@ -76,39 +65,35 @@ export const routes: Routes = [
     ],
   },
   {
-    path: 'staff',
-    component: StaffLayout,
-    canActivate: [authGuard, roleGuard(['STAFF'])],
+    path: 'users',
+    component: AdminLayout,
+    canActivate: [authGuard, roleGuard(['ADMIN'])],
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       {
         path: 'dashboard',
         loadComponent: () =>
-          import('./features/staff/dashboard/staff-dashboard').then((m) => m.StaffDashboard),
+          import('./features/users/dashboard/users-dashboard').then((m) => m.UsersDashboard),
       },
       {
         path: 'setup',
-        loadComponent: () => import('./features/staff/setup/setup').then((m) => m.Setup),
+        loadComponent: () => import('./features/users/setup/setup').then((m) => m.Setup),
       },
       {
         path: 'assets',
-        canActivate: [setupGuard],
-        loadComponent: () => import('./features/staff/assets/assets-list').then((m) => m.AssetsList),
+        loadComponent: () => import('./features/users/assets/assets-list').then((m) => m.AssetsList),
       },
       {
         path: 'assets/register',
-        canActivate: [setupGuard],
-        loadComponent: () => import('./features/staff/assets/asset-form').then((m) => m.AssetForm),
+        loadComponent: () => import('./features/users/assets/asset-form').then((m) => m.AssetForm),
       },
       {
         path: 'assets/:id',
-        canActivate: [setupGuard],
-        loadComponent: () => import('./features/staff/assets/asset-detail').then((m) => m.AssetDetail),
+        loadComponent: () => import('./features/users/assets/asset-detail').then((m) => m.AssetDetail),
       },
       {
         path: 'assets/:id/edit',
-        canActivate: [setupGuard],
-        loadComponent: () => import('./features/staff/assets/asset-form').then((m) => m.AssetForm),
+        loadComponent: () => import('./features/users/assets/asset-form').then((m) => m.AssetForm),
       },
       {
         path: 'profile',

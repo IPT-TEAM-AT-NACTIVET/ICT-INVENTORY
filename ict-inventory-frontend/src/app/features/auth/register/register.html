@@ -1,142 +1,103 @@
-<div class="login-page">
-  <div class="login-topbar">
+<div class="register-page">
+  <div class="register-topbar">
     <app-language-switcher />
     <app-theme-toggle />
   </div>
-  @if (registered(); as result) {
-    <div class="login-card">
-      <div class="login-brand">
-        <span class="brand-mark">
+  <form class="register-card" [formGroup]="form" (ngSubmit)="submit()">
+    <div class="register-brand">
+      <span class="brand-mark">
         <img src="/logo-nactvet.png" alt="NACTVET Logo" />
       </span>
-        <h1>Registration Successful</h1>
-        <p class="muted">Your account has been created.</p>
-      </div>
-
-      <div class="alert alert-success" role="alert">{{ result.message }}</div>
-
-      <dl class="detail-list">
-        <div class="detail-item">
-          <dt>{{ t('register.employeeId') }}</dt>
-          <dd><strong>{{ result.employeeId }}</strong></dd>
-        </div>
-        <div class="detail-item">
-          <dt>Email</dt>
-          <dd>{{ result.email }}</dd>
-        </div>
-        <div class="detail-item">
-          <dt>{{ t('profile.status') }}</dt>
-          <dd>{{ result.status }}</dd>
-        </div>
-      </dl>
-
-      <p class="muted">You can now log in using your email address and password.</p>
-      <a class="btn btn-primary btn-block" routerLink="/login">{{ t('login.submit') }}</a>
+      <h1>{{ t('register.title') }}</h1>
+      <p class="muted">{{ t('register.subtitle') }}</p>
     </div>
-  } @else {
-    <form class="login-card" [formGroup]="form" (ngSubmit)="submit()">
-      <div class="login-brand">
-        <span class="brand-mark">
-        <img src="/logo-nactvet.png" alt="NACTVET Logo" />
-      </span>
-        <h1>{{ t('register.title') }}</h1>
-        <p class="muted">{{ t('register.subtitle') }}</p>
-      </div>
 
-      @if (errorMessage()) {
-        <div class="alert alert-error" role="alert">{{ errorMessage() }}</div>
+    @if (successMessage()) {
+      <div class="alert alert-success" role="alert">{{ successMessage() }}</div>
+    }
+    @if (errorMessage()) {
+      <div class="alert alert-error" role="alert">{{ errorMessage() }}</div>
+    }
+
+    <div class="form-field">
+      <label for="fullName">{{ t('register.fullName') }} *</label>
+      <input id="fullName" type="text" formControlName="fullName" autocomplete="name" [placeholder]="t('register.fullName')" />
+      @if (form.controls.fullName.touched && form.controls.fullName.invalid) {
+        <div class="field-error">Full name is required.</div>
       }
+    </div>
 
-      <h3 class="section-title">Personal Information</h3>
+    <div class="form-field">
+      <label for="email">{{ t('login.email') }} *</label>
+      <input id="email" type="email" formControlName="email" autocomplete="email" [placeholder]="t('login.emailPlaceholder')" />
+      @if (form.controls.email.touched && form.controls.email.invalid) {
+        <div class="field-error">
+          {{ form.controls.email.hasError('email') ? 'Enter a valid email address.' : 'Email is required.' }}
+        </div>
+      }
+    </div>
 
-      <div class="form-field">
-        <label for="fullName">{{ t('register.fullName') }} *</label>
-        <input id="fullName" type="text" formControlName="fullName" autocomplete="name" autofocus />
-        @if (form.controls.fullName.touched && form.controls.fullName.invalid) {
-          <div class="field-error">Full name is required.</div>
+    <div class="form-field">
+      <label for="phoneNumber">{{ t('register.phone') }} *</label>
+      <input id="phoneNumber" type="tel" formControlName="phoneNumber" autocomplete="tel" [placeholder]="t('register.phone')" />
+      @if (form.controls.phoneNumber.touched && form.controls.phoneNumber.invalid) {
+        <div class="field-error">Enter a valid phone number.</div>
+      }
+    </div>
+
+    <div class="form-field">
+      <label for="password">{{ t('login.password') }} *</label>
+      <app-password-input inputId="password" formControlName="password" autocomplete="new-password" />
+      @if (form.controls.password.touched && form.controls.password.invalid) {
+        <div class="field-error">Password must be at least 6 characters.</div>
+      }
+    </div>
+
+    <div class="form-field">
+      <label for="confirmPassword">{{ t('register.confirmPassword') }} *</label>
+      <app-password-input inputId="confirmPassword" formControlName="confirmPassword" autocomplete="new-password" />
+      @if (form.controls.confirmPassword.touched && form.controls.confirmPassword.invalid) {
+        <div class="field-error">Please confirm your password.</div>
+      }
+    </div>
+
+    <div class="form-field">
+      <label for="directorate">{{ t('register.directorate') }} *</label>
+      <select id="directorate" formControlName="directorateId">
+        <option [ngValue]="0">— Select Directorate —</option>
+        @for (dir of directorates(); track dir.id) {
+          <option [ngValue]="dir.id">{{ dir.name }}</option>
         }
-      </div>
+      </select>
+    </div>
 
-      <div class="form-field">
-        <label for="email">{{ t('login.email') }} *</label>
-        <input id="email" type="email" formControlName="email" autocomplete="email" />
-        @if (form.controls.email.touched && form.controls.email.invalid) {
-          <div class="field-error">
-            {{ form.controls.email.hasError('email') ? 'Enter a valid email address.' : 'Email is required.' }}
-          </div>
+    <div class="form-field">
+      <label for="section">{{ t('register.section') }}</label>
+      <select id="section" formControlName="sectionId">
+        <option [ngValue]="0">— None —</option>
+        @for (section of sections(); track section.id) {
+          <option [ngValue]="section.id">{{ section.name }}</option>
         }
-      </div>
+      </select>
+    </div>
 
-      <div class="form-field">
-        <label for="phoneNumber">{{ t('register.phone') }} *</label>
-        <input id="phoneNumber" type="tel" formControlName="phoneNumber" autocomplete="tel" />
-        @if (form.controls.phoneNumber.touched && form.controls.phoneNumber.invalid) {
-          <div class="field-error">Phone number is required.</div>
+    <div class="form-field">
+      <label for="unit">{{ t('register.unit') }}</label>
+      <select id="unit" formControlName="unitId">
+        <option [ngValue]="0">— None —</option>
+        @for (unit of units(); track unit.id) {
+          <option [ngValue]="unit.id">{{ unit.name }}</option>
         }
-      </div>
+      </select>
+    </div>
 
-      <div class="form-field">
-        <label for="password">{{ t('login.password') }} *</label>
-        <app-password-input inputId="password" formControlName="password" autocomplete="new-password" />
-        @if (form.controls.password.touched && form.controls.password.invalid) {
-          <div class="field-error">
-            {{ form.controls.password.hasError('minlength') ? 'Password must be at least 6 characters.' : 'Password is required.' }}
-          </div>
-        }
-      </div>
+    <button type="submit" class="btn btn-primary btn-block" [disabled]="loading()">
+      {{ loading() ? 'Submitting…' : t('register.submit') }}
+    </button>
 
-      <div class="form-field">
-        <label for="confirmPassword">Confirm Password *</label>
-        <app-password-input inputId="confirmPassword" formControlName="confirmPassword" autocomplete="new-password" />
-        @if (form.controls.confirmPassword.touched && (form.controls.confirmPassword.invalid || form.errors?.['mismatch'])) {
-          <div class="field-error">
-            {{ form.errors?.['mismatch'] ? 'Passwords do not match.' : 'Please confirm your password.' }}
-          </div>
-        }
-      </div>
-
-      <h3 class="section-title">Organization</h3>
-
-      <div class="form-field">
-        <label for="directorate">Directorate *</label>
-        <select id="directorate" formControlName="directorateId">
-          <option [ngValue]="0">Select directorate</option>
-          @for (item of directorates(); track item.id) {
-            <option [ngValue]="item.id">{{ item.name }}</option>
-          }
-        </select>
-        @if (form.controls.directorateId.touched && form.controls.directorateId.invalid) {
-          <div class="field-error">Directorate is required.</div>
-        }
-      </div>
-
-      <div class="form-field">
-        <label for="section">Section</label>
-        <select id="section" formControlName="sectionId">
-          <option [ngValue]="0">Select section</option>
-          @for (item of sections(); track item.id) {
-            <option [ngValue]="item.id">{{ item.name }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="form-field">
-        <label for="unit">Unit</label>
-        <select id="unit" formControlName="unitId">
-          <option [ngValue]="0">Select unit</option>
-          @for (item of units(); track item.id) {
-            <option [ngValue]="item.id">{{ item.name }}</option>
-          }
-        </select>
-      </div>
-
-      <button type="submit" class="btn btn-primary btn-block" [disabled]="loading()">
-        {{ loading() ? 'Registering…' : t('register.submit') }}
-      </button>
-
-      <p class="muted" style="text-align: center; margin: 1rem 0 0">
-        {{ t('register.haveAccount') }} <a routerLink="/login">{{ t('register.login') }}</a>
-      </p>
-    </form>
-  }
+    <p class="register-alt">
+      {{ t('register.haveAccount') }}
+      <a routerLink="/login">{{ t('register.login') }}</a>
+    </p>
+  </form>
 </div>

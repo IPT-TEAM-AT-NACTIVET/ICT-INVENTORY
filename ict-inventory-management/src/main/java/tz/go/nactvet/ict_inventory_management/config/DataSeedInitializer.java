@@ -20,7 +20,6 @@ import tz.go.nactvet.ict_inventory_management.entity.Zone;
 import tz.go.nactvet.ict_inventory_management.enums.DeviceStatus;
 import tz.go.nactvet.ict_inventory_management.enums.OwnershipType;
 import tz.go.nactvet.ict_inventory_management.enums.Role;
-import tz.go.nactvet.ict_inventory_management.enums.VerificationStatus;
 import tz.go.nactvet.ict_inventory_management.repository.AssetRepository;
 import tz.go.nactvet.ict_inventory_management.repository.DeviceTypeRepository;
 import tz.go.nactvet.ict_inventory_management.repository.SectionRepository;
@@ -73,7 +72,7 @@ public class DataSeedInitializer implements CommandLineRunner {
     };
 
     // Asset columns: assetNumber, serialNumber, deviceName, ownershipType,
-    // deviceStatus, verificationStatus, office, deviceTypeName, staffEmail, zoneName
+    // deviceStatus, legacyVerificationStatus, office, deviceTypeName, staffEmail, zoneName
     private static final String[][] ASSETS = {
             {"NCT-ICT-001-01", "NCTSER-001-01", "Laptop - 01-01", "OFFICE", "ACTIVE", "VERIFIED", "A2", "Laptop", "amani.juma@example.com", "Central Zone"},
             {"NCT-ICT-001-02", "NCTSER-001-02", "Desktop Computer - 01-02", "PERSONAL", "ACTIVE", "VERIFIED", "B3", "Desktop Computer", "amani.juma@example.com", "Northern Zone"},
@@ -318,8 +317,8 @@ public class DataSeedInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        if (userRepository.existsByRole(Role.STAFF)) {
-            log.info("[DataSeedInitializer] Staff users already seeded, skipping.");
+        if (userRepository.existsByRole(Role.ADMIN)) {
+            log.info("[DataSeedInitializer] ADMIN users already seeded, skipping.");
             return;
         }
 
@@ -348,7 +347,7 @@ public class DataSeedInitializer implements CommandLineRunner {
         }
 
         List<User> staff = seedStaff(sectionByEmail, unitByEmail);
-        seedAssets(staff, deviceTypes, zones);
+        seedAssets(deviceTypes, zones);
         advanceEmployeeIdSequence();
 
         log.info("[DataSeedInitializer] Seeded {} staff users and {} assets.",
@@ -360,6 +359,9 @@ public class DataSeedInitializer implements CommandLineRunner {
         List<User> staff = new ArrayList<>();
         for (int i = 0; i < STAFF_EMAILS.length; i++) {
             String email = STAFF_EMAILS[i];
+            if (userRepository.existsByEmail(email)) {
+                continue;
+            }
             User user = new User();
             user.setEmployeeId(STAFF_EMPLOYEE_IDS[i]);
             user.setFullName(STAFF_FULL_NAMES[i]);
@@ -367,7 +369,7 @@ public class DataSeedInitializer implements CommandLineRunner {
             user.setEmail(email);
             user.setPassword(STAFF_PASSWORD_HASH);
             user.setPhoneNumber(STAFF_PHONES[i]);
-            user.setRole(Role.STAFF);
+            user.setRole(Role.ADMIN);
             user.setEnabled(true);
             user.setSetupCompleted(true);
 
@@ -384,10 +386,11 @@ public class DataSeedInitializer implements CommandLineRunner {
         return staff;
     }
 
-    private void seedAssets(List<User> staff, List<DeviceType> deviceTypes, List<Zone> zones) {
+    private void seedAssets(List<DeviceType> deviceTypes, List<Zone> zones) {
         Map<String, User> userByEmail = new java.util.HashMap<>();
-        for (User u : staff) {
-            userByEmail.put(u.getEmail(), u);
+        for (String email : STAFF_EMAILS) {
+            userByEmail.computeIfAbsent(email, e ->
+                    userRepository.findByEmail(e).orElse(null));
         }
         Map<String, DeviceType> typeByName = new java.util.HashMap<>();
         for (DeviceType dt : deviceTypes) {
@@ -399,16 +402,21 @@ public class DataSeedInitializer implements CommandLineRunner {
         }
 
         for (String[] row : ASSETS) {
+            if (assetRepository.existsByAssetNumber(row[0])) {
+                continue;
+            }
             Asset asset = new Asset();
             asset.setAssetNumber(row[0]);
             asset.setSerialNumber(row[1]);
             asset.setDeviceName(row[2]);
             asset.setOwnershipType(OwnershipType.valueOf(row[3]));
             asset.setDeviceStatus(DeviceStatus.valueOf(row[4]));
-            asset.setVerificationStatus(VerificationStatus.valueOf(row[5]));
             asset.setOffice(row[6]);
             asset.setDeviceType(typeByName.get(row[7]));
-            asset.setUser(userByEmail.get(row[8]));
+            User registrar = userByEmail.get(row[8]);
+            asset.setUserOfAsset(registrar != null ? registrar.getFullName() : "ICT Officer");
+            asset.setCreatedBy(registrar);
+            asset.setUpdatedBy(registrar);
             asset.setZone(zoneByName.get(row[9]));
             assetRepository.save(asset);
         }

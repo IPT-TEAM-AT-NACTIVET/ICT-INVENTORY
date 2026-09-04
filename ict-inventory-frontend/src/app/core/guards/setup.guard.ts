@@ -9,7 +9,7 @@ export const setupGuard: CanActivateFn = (_route: ActivatedRouteSnapshot, state:
   const profile = inject(ProfileService);
   const router = inject(Router);
 
-  if (auth.isAdmin()) {
+  if (auth.isAuthenticated() && (auth.user()?.setupCompleted ?? false)) {
     return true;
   }
 
@@ -18,7 +18,7 @@ export const setupGuard: CanActivateFn = (_route: ActivatedRouteSnapshot, state:
       if (p.setupCompleted) {
         return true;
       }
-      return router.createUrlTree(['/staff/setup'], {
+      return router.createUrlTree(['/users/setup'], {
         queryParams: { returnUrl: state.url },
       });
     }),

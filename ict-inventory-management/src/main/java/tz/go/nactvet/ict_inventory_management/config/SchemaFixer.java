@@ -18,7 +18,8 @@ import org.springframework.stereotype.Component;
 /**
  * Runs after Hibernate has updated the schema (ddl-auto: update) and applies the
  * small fixes that Hibernate's schema generator cannot perform on existing tables,
- * such as dropping the NOT NULL constraint on {@code users.email}.
+ * such as dropping the NOT NULL constraint on {@code users.email} and removing
+ * leftover column(s) from features that have been removed from the entity model.
  *
  * <p>New staff accounts are created without an email (the staff member provides it
  * during their profile setup), so the email column must be nullable. Hibernate only
@@ -40,6 +41,7 @@ public class SchemaFixer implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         makeEmailColumnNullable();
+        dropLegacyAssetVerificationColumns();
     }
 
     private void makeEmailColumnNullable() {
@@ -79,6 +81,28 @@ public class SchemaFixer implements ApplicationRunner {
             log.error("[SchemaFixer] Failed to relax the NOT NULL constraint on users.email. "
                     + "Staff accounts cannot be created without an email until this is fixed. "
                     + "Run manually: ALTER TABLE users ALTER COLUMN email DROP NOT NULL;", e);
+        }
+    }
+
+    private void dropLegacyAssetVerificationColumns() {
+        try (Connection connection = dataSource.getConnection()) {
+            for (String column : new String[]{"verification_status", "rejection_reason"}) {
+                boolean columnExists;
+                try (ResultSet rs = connection.getMetaData().getColumns(null, null, "assets", column)) {
+                    columnExists = rs.next();
+                }
+                if (!columnExists) {
+                    continue;
+                }
+                try (Statement statement = connection.createStatement()) {
+                    statement.execute("ALTER TABLE assets DROP COLUMN " + column);
+                }
+                log.info("[SchemaFixer] Dropped legacy column assets.{} (removed asset verification feature).", column);
+            }
+        } catch (Exception e) {
+            log.error("[SchemaFixer] Failed to drop legacy verification columns from assets. "
+                    + "Run manually: ALTER TABLE assets DROP COLUMN IF EXISTS verification_status; "
+                    + "ALTER TABLE assets DROP COLUMN IF EXISTS rejection_reason;", e);
         }
     }
 }

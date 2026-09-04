@@ -1,63 +1,51 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
-import { ReferenceService } from '../../../shared/services/reference.service';
-import { Directorate, Section, Unit } from '../../../core/models/master-data.model';
-import { RegisterResponse } from '../../../core/models/user.model';
-import { httpErrorMessage } from '../../../shared/utils/http-errors';
 import { TranslationService } from '../../../core/services/translation.service';
 import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
 import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/theme-toggle.component';
 import { PasswordInputComponent } from '../../../shared/components/password-input/password-input.component';
+import { ReferenceService } from '../../../shared/services/reference.service';
+import { Directorate, Section, Unit } from '../../../core/models/master-data.model';
 
 @Component({
   selector: 'app-register',
-  imports: [
-    ReactiveFormsModule,
-    RouterLink,
-    LanguageSwitcherComponent,
-    ThemeToggleComponent,
-    PasswordInputComponent,
-  ],
+  imports: [ReactiveFormsModule, RouterLink, LanguageSwitcherComponent, ThemeToggleComponent, PasswordInputComponent],
   templateUrl: './register.html',
-  styleUrl: '../login/login.css',
+  styleUrl: './register.css',
 })
-export class Register implements OnInit {
+export class Register {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly reference = inject(ReferenceService);
   readonly translation = inject(TranslationService);
 
-  readonly form = this.fb.nonNullable.group(
-    {
-      fullName: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      phoneNumber: ['', Validators.required],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', Validators.required],
-      directorateId: [0, Validators.required],
-      sectionId: [0],
-      unitId: [0],
-    },
-    { validators: matchPasswords },
-  );
+  readonly form = this.fb.nonNullable.group({
+    fullName: ['', [Validators.required, Validators.minLength(3)]],
+    email: ['', [Validators.required, Validators.email]],
+    phoneNumber: ['', [Validators.required, Validators.pattern(/^[0-9+\-\s]{9,}$/)]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+    confirmPassword: ['', [Validators.required]],
+    directorateId: [0],
+    sectionId: [0],
+    unitId: [0],
+  });
 
   readonly directorates = signal<Directorate[]>([]);
   readonly sections = signal<Section[]>([]);
   readonly units = signal<Unit[]>([]);
-
   readonly errorMessage = signal('');
+  readonly successMessage = signal('');
   readonly loading = signal(false);
-  readonly registered = signal<RegisterResponse | null>(null);
 
   t(key: string): string {
     return this.translation.t(key);
   }
 
   ngOnInit(): void {
-    this.reference.getDirectorates().subscribe((items) => this.directorates.set(items));
-    this.reference.getUnits().subscribe((items) => this.units.set(items));
+    this.reference.getDirectorates().subscribe((directorates) => this.directorates.set(directorates));
+    this.reference.getUnits().subscribe((units) => this.units.set(units));
 
     this.form.controls.directorateId.valueChanges.subscribe((value) => {
       const directorateId = Number(value);
@@ -74,41 +62,31 @@ export class Register implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
+    const { password, confirmPassword, directorateId, sectionId, unitId, ...rest } = this.form.getRawValue();
+    if (password !== confirmPassword) {
+      this.errorMessage.set('Passwords do not match.');
+      return;
+    }
     this.loading.set(true);
     this.errorMessage.set('');
-    const raw = this.form.getRawValue();
+    this.successMessage.set('');
     this.auth
       .register({
-        fullName: raw.fullName,
-        email: raw.email || undefined,
-        phoneNumber: raw.phoneNumber || undefined,
-        password: raw.password,
-        confirmPassword: raw.confirmPassword,
-        directorateId: this.num(raw.directorateId),
-        sectionId: this.num(raw.sectionId),
-        unitId: this.num(raw.unitId),
+        ...rest,
+        password,
+        directorateId: directorateId ? Number(directorateId) : null,
+        sectionId: sectionId ? Number(sectionId) : null,
+        unitId: unitId ? Number(unitId) : null,
       })
       .subscribe({
-        next: (response) => {
+        next: () => {
           this.loading.set(false);
-          this.registered.set(response);
+          this.successMessage.set(this.t('register.success'));
         },
-        error: (err) => {
+        error: (err: { status?: number; error?: { message?: string } }) => {
           this.loading.set(false);
-          this.errorMessage.set(
-            httpErrorMessage(err, 'Registration failed. The email may already be registered.'),
-          );
+          this.errorMessage.set(err.error?.message ?? 'Registration failed. Please try again.');
         },
       });
   }
-
-  private num(value: number): number | undefined {
-    return value ? Number(value) : undefined;
-  }
-}
-
-function matchPasswords(group: AbstractControl): { [key: string]: boolean } | null {
-  const password = group.get('password')?.value as string | undefined;
-  const confirmPassword = group.get('confirmPassword')?.value as string | undefined;
-  return password && confirmPassword && password !== confirmPassword ? { mismatch: true } : null;
 }

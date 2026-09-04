@@ -49,8 +49,6 @@ describe('AuthService', () => {
 
   it('should start unauthenticated', () => {
     expect(service.isAuthenticated()).toBe(false);
-    expect(service.isAdmin()).toBe(false);
-    expect(service.isStaff()).toBe(false);
   });
 
   it('should login and persist token and user', () => {
@@ -64,7 +62,6 @@ describe('AuthService', () => {
     expect(service.token()).toBe('jwt-token');
     expect(service.user()?.role).toBe('ADMIN');
     expect(service.isAuthenticated()).toBe(true);
-    expect(service.isAdmin()).toBe(true);
     expect(store.getToken()).toBe('jwt-token');
     expect(store.getUser()?.email).toBe('admin@ict.go.tz');
   });
@@ -75,7 +72,6 @@ describe('AuthService', () => {
     expect(restored.token()).toBe('stored-token');
     expect(restored.user()?.fullName).toBe('System Admin');
     expect(restored.isAuthenticated()).toBe(true);
-    expect(restored.isStaff()).toBe(false);
   });
 
   it('should logout and clear storage', () => {

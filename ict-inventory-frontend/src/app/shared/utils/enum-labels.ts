@@ -1,4 +1,4 @@
-import { DeviceStatus, OwnershipType, VerificationStatus } from '../../core/models/enums';
+import { DeviceStatus, OwnershipType } from '../../core/models/enums';
 
 export const DEVICE_STATUS_LABELS: Record<DeviceStatus, string> = {
   ACTIVE: 'Active',
@@ -8,12 +8,6 @@ export const DEVICE_STATUS_LABELS: Record<DeviceStatus, string> = {
 export const OWNERSHIP_TYPE_LABELS: Record<OwnershipType, string> = {
   OFFICE: 'Office',
   PERSONAL: 'Personal',
-};
-
-export const VERIFICATION_STATUS_LABELS: Record<VerificationStatus, string> = {
-  PENDING: 'Pending',
-  VERIFIED: 'Verified',
-  REJECTED: 'Rejected',
 };
 
 export interface SelectOption {
@@ -29,10 +23,6 @@ export const OWNERSHIP_TYPE_OPTIONS: SelectOption[] = Object.entries(OWNERSHIP_T
   ([value, label]) => ({ value, label }),
 );
 
-export const VERIFICATION_STATUS_OPTIONS: SelectOption[] = Object.entries(VERIFICATION_STATUS_LABELS).map(
-  ([value, label]) => ({ value, label }),
-);
-
 export interface KeyValue {
   key: string;
   value: number;
@@ -40,17 +30,6 @@ export interface KeyValue {
 
 export function recordEntries(record: Record<string, number>): KeyValue[] {
   return Object.entries(record).map(([key, value]) => ({ key, value }));
-}
-
-export function verificationTone(status: VerificationStatus): 'warning' | 'success' | 'danger' {
-  switch (status) {
-    case 'VERIFIED':
-      return 'success';
-    case 'REJECTED':
-      return 'danger';
-    default:
-      return 'warning';
-  }
 }
 
 export function deviceStatusTone(status: DeviceStatus): 'success' | 'danger' {

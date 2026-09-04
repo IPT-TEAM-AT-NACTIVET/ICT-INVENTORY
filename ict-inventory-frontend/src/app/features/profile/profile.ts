@@ -55,7 +55,7 @@ export class ProfilePage implements OnInit {
 
   get needsSetup(): boolean {
     const p = this.profile();
-    return p?.role === 'STAFF' && !p.setupCompleted;
+    return p != null && !p.setupCompleted;
   }
 
   t(key: string): string {
@@ -132,7 +132,7 @@ export class ProfilePage implements OnInit {
             email: profile.email,
             phoneNumber: profile.phoneNumber,
             setupCompleted: profile.setupCompleted,
-            role: this.auth.user()?.role ?? 'STAFF',
+            role: this.auth.user()?.role ?? 'ADMIN',
           });
         },
         error: () => {

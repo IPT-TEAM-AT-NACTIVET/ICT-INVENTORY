@@ -7,14 +7,13 @@ import java.time.LocalDateTime;
 
 import tz.go.nactvet.ict_inventory_management.enums.DeviceStatus;
 import tz.go.nactvet.ict_inventory_management.enums.OwnershipType;
-import tz.go.nactvet.ict_inventory_management.enums.VerificationStatus;
 
 @Entity
 @Table(name = "assets", indexes = {
-        @Index(name = "idx_assets_user_id", columnList = "user_id"),
         @Index(name = "idx_assets_device_type_id", columnList = "device_type_id"),
+        @Index(name = "idx_assets_created_by", columnList = "created_by"),
+        @Index(name = "idx_assets_updated_by", columnList = "updated_by"),
         @Index(name = "idx_assets_zone_id", columnList = "zone_id"),
-        @Index(name = "idx_assets_verification_status", columnList = "verification_status"),
         @Index(name = "idx_assets_device_status", columnList = "device_status")
 })
 public class Asset {
@@ -37,15 +36,22 @@ public class Asset {
     @JoinColumn(name = "device_type_id", nullable = false)
     private DeviceType deviceType;
 
+    @Column(name = "user_of_asset", nullable = true, length = 255)
+    private String userOfAsset;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "created_by")
+    private User createdBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "updated_by")
+    private User updatedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "zone_id")
     private Zone zone;
 
-    @Column(name = "office", nullable = false, length = 100)
+    @Column(name = "office", nullable = true, length = 100)
     private String office;
 
     @Enumerated(EnumType.STRING)
@@ -55,13 +61,6 @@ public class Asset {
     @Enumerated(EnumType.STRING)
     @Column(name = "device_status", nullable = false)
     private DeviceStatus deviceStatus;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "verification_status", nullable = false)
-    private VerificationStatus verificationStatus = VerificationStatus.PENDING;
-
-    @Column(name = "rejection_reason", columnDefinition = "TEXT")
-    private String rejectionReason;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -123,12 +122,28 @@ public class Asset {
         this.deviceType = deviceType;
     }
 
-    public User getUser() {
-        return user;
+    public String getUserOfAsset() {
+        return userOfAsset;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUserOfAsset(String userOfAsset) {
+        this.userOfAsset = userOfAsset;
+    }
+
+    public User getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(User createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public User getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(User updatedBy) {
+        this.updatedBy = updatedBy;
     }
 
     public Zone getZone() {
@@ -161,22 +176,6 @@ public class Asset {
 
     public void setDeviceStatus(DeviceStatus deviceStatus) {
         this.deviceStatus = deviceStatus;
-    }
-
-    public VerificationStatus getVerificationStatus() {
-        return verificationStatus;
-    }
-
-    public void setVerificationStatus(VerificationStatus verificationStatus) {
-        this.verificationStatus = verificationStatus;
-    }
-
-    public String getRejectionReason() {
-        return rejectionReason;
-    }
-
-    public void setRejectionReason(String rejectionReason) {
-        this.rejectionReason = rejectionReason;
     }
 
     public LocalDateTime getCreatedAt() {

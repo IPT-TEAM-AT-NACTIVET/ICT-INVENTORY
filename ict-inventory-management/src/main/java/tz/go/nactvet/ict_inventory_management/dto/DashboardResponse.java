@@ -1,48 +1,19 @@
 package tz.go.nactvet.ict_inventory_management.dto;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class DashboardResponse {
 
-    private long totalUsers;
-    private long activeStaff;
-    private long disabledStaff;
     private long totalAssets;
-    private long pendingAssets;
-    private long verifiedAssets;
-    private long rejectedAssets;
     private long activeAssets;
     private long defectiveAssets;
     private Map<String, Long> assetsByDeviceType;
-    private Map<String, Long> assetsByDirectorate;
-    private Map<String, Long> assetsBySection;
     private Map<String, Long> assetsByZone;
-    private Map<String, Long> assetsByVerificationStatus;
     private Map<String, Long> assetsByDeviceStatus;
-
-    public long getTotalUsers() {
-        return totalUsers;
-    }
-
-    public void setTotalUsers(long totalUsers) {
-        this.totalUsers = totalUsers;
-    }
-
-    public long getActiveStaff() {
-        return activeStaff;
-    }
-
-    public void setActiveStaff(long activeStaff) {
-        this.activeStaff = activeStaff;
-    }
-
-    public long getDisabledStaff() {
-        return disabledStaff;
-    }
-
-    public void setDisabledStaff(long disabledStaff) {
-        this.disabledStaff = disabledStaff;
-    }
+    private Map<String, Long> assetsByOwnership;
+    private List<RecentAssetDto> recentAssets = new ArrayList<>();
 
     public long getTotalAssets() {
         return totalAssets;
@@ -50,30 +21,6 @@ public class DashboardResponse {
 
     public void setTotalAssets(long totalAssets) {
         this.totalAssets = totalAssets;
-    }
-
-    public long getPendingAssets() {
-        return pendingAssets;
-    }
-
-    public void setPendingAssets(long pendingAssets) {
-        this.pendingAssets = pendingAssets;
-    }
-
-    public long getVerifiedAssets() {
-        return verifiedAssets;
-    }
-
-    public void setVerifiedAssets(long verifiedAssets) {
-        this.verifiedAssets = verifiedAssets;
-    }
-
-    public long getRejectedAssets() {
-        return rejectedAssets;
-    }
-
-    public void setRejectedAssets(long rejectedAssets) {
-        this.rejectedAssets = rejectedAssets;
     }
 
     public long getActiveAssets() {
@@ -100,22 +47,6 @@ public class DashboardResponse {
         this.assetsByDeviceType = assetsByDeviceType;
     }
 
-    public Map<String, Long> getAssetsByDirectorate() {
-        return assetsByDirectorate;
-    }
-
-    public void setAssetsByDirectorate(Map<String, Long> assetsByDirectorate) {
-        this.assetsByDirectorate = assetsByDirectorate;
-    }
-
-    public Map<String, Long> getAssetsBySection() {
-        return assetsBySection;
-    }
-
-    public void setAssetsBySection(Map<String, Long> assetsBySection) {
-        this.assetsBySection = assetsBySection;
-    }
-
     public Map<String, Long> getAssetsByZone() {
         return assetsByZone;
     }
@@ -124,19 +55,27 @@ public class DashboardResponse {
         this.assetsByZone = assetsByZone;
     }
 
-    public Map<String, Long> getAssetsByVerificationStatus() {
-        return assetsByVerificationStatus;
-    }
-
-    public void setAssetsByVerificationStatus(Map<String, Long> assetsByVerificationStatus) {
-        this.assetsByVerificationStatus = assetsByVerificationStatus;
-    }
-
     public Map<String, Long> getAssetsByDeviceStatus() {
         return assetsByDeviceStatus;
     }
 
     public void setAssetsByDeviceStatus(Map<String, Long> assetsByDeviceStatus) {
         this.assetsByDeviceStatus = assetsByDeviceStatus;
+    }
+
+    public Map<String, Long> getAssetsByOwnership() {
+        return assetsByOwnership;
+    }
+
+    public void setAssetsByOwnership(Map<String, Long> assetsByOwnership) {
+        this.assetsByOwnership = assetsByOwnership;
+    }
+
+    public List<RecentAssetDto> getRecentAssets() {
+        return recentAssets;
+    }
+
+    public void setRecentAssets(List<RecentAssetDto> recentAssets) {
+        this.recentAssets = recentAssets;
     }
 }

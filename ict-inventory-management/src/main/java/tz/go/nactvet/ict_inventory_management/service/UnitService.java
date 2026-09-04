@@ -90,9 +90,9 @@ public class UnitService {
         Unit unit = unitRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Unit not found with id: " + id));
 
-        long userCount = userRepository.countByRoleAndUnitId(Role.STAFF, id);
+        long userCount = userRepository.countByRoleAndUnitId(Role.ADMIN, id);
         if (userCount > 0) {
-            throw new ConflictException("Cannot delete unit: " + userCount + " staff members are assigned to it");
+            throw new ConflictException("Cannot delete unit: " + userCount + " user accounts are assigned to it");
         }
 
         unitRepository.deleteById(id);

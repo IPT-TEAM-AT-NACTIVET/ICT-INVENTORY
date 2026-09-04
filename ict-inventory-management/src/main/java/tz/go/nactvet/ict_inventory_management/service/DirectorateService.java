@@ -94,9 +94,9 @@ public class DirectorateService {
         Directorate directorate = directorateRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Directorate not found with id: " + id));
 
-        long userCount = userRepository.countByRoleAndDirectorateId(Role.STAFF, id);
+        long userCount = userRepository.countByRoleAndDirectorateId(Role.ADMIN, id);
         if (userCount > 0) {
-            throw new ConflictException("Cannot delete directorate: " + userCount + " staff members are assigned to it");
+            throw new ConflictException("Cannot delete directorate: " + userCount + " user accounts are assigned to it");
         }
 
         if (!sectionRepository.findByDirectorateIdOrderByDirectorateIdAscNameAsc(id).isEmpty()) {

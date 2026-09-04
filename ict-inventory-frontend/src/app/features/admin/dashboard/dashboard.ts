@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { DashboardService } from '../../../core/services/dashboard.service';
 import { recordEntries } from '../../../shared/utils/enum-labels';
@@ -9,7 +10,7 @@ import { delay, finalize, retry } from 'rxjs';
 
 @Component({
   selector: 'app-admin-dashboard',
-  imports: [PageHeader, RouterLink],
+  imports: [PageHeader, RouterLink, DatePipe],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })

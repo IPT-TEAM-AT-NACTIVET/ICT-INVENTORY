@@ -1,6 +1,11 @@
 package tz.go.nactvet.ict_inventory_management.service;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -8,22 +13,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import tz.go.nactvet.ict_inventory_management.dto.AssetRequest;
 import tz.go.nactvet.ict_inventory_management.dto.AssetResponse;
 import tz.go.nactvet.ict_inventory_management.dto.AssetUpdateRequest;
+import tz.go.nactvet.ict_inventory_management.dto.CsvImportResult;
 import tz.go.nactvet.ict_inventory_management.dto.PagedResponse;
-import tz.go.nactvet.ict_inventory_management.dto.StaffAssetRequest;
 import tz.go.nactvet.ict_inventory_management.entity.Asset;
 import tz.go.nactvet.ict_inventory_management.entity.DeviceType;
 import tz.go.nactvet.ict_inventory_management.entity.User;
 import tz.go.nactvet.ict_inventory_management.entity.Zone;
 import tz.go.nactvet.ict_inventory_management.enums.DeviceStatus;
 import tz.go.nactvet.ict_inventory_management.enums.OwnershipType;
-import tz.go.nactvet.ict_inventory_management.enums.VerificationStatus;
 import tz.go.nactvet.ict_inventory_management.exception.BadRequestException;
 import tz.go.nactvet.ict_inventory_management.exception.ConflictException;
 import tz.go.nactvet.ict_inventory_management.exception.ResourceNotFoundException;
@@ -59,15 +62,16 @@ public class AssetService {
         this.assetMapper = assetMapper;
     }
 
-    public AssetResponse createByStaff(StaffAssetRequest request, Long currentUserId) {
+    public AssetResponse createByAdmin(AssetRequest request, Long currentUserId) {
         assertUniqueNumbers(request.getAssetNumber(), request.getSerialNumber());
 
         DeviceType deviceType = deviceTypeRepository.findById(request.getDeviceTypeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Device type not found with id: " + request.getDeviceTypeId()));
 
-        User user = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + currentUserId));
-        requireSetupComplete(user);
+        User createdBy = currentUserId != null
+                ? userRepository.findById(currentUserId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + currentUserId))
+                : null;
 
         Zone zone = zoneRepository.findById(request.getZoneId())
                 .orElseThrow(() -> new ResourceNotFoundException("Zone not found with id: " + request.getZoneId()));
@@ -77,49 +81,262 @@ public class AssetService {
         asset.setSerialNumber(request.getSerialNumber());
         asset.setDeviceName(request.getDeviceName());
         asset.setDeviceType(deviceType);
-        asset.setUser(user);
+        asset.setUserOfAsset(normalizeUserOfAsset(request.getUserOfAsset()));
+        asset.setCreatedBy(createdBy);
+        asset.setUpdatedBy(createdBy);
         asset.setZone(zone);
         asset.setOffice(normalizeOffice(request.getOffice()));
         asset.setOwnershipType(request.getOwnershipType());
         asset.setDeviceStatus(request.getDeviceStatus());
-        asset.setVerificationStatus(VerificationStatus.PENDING);
 
         Asset saved = assetRepository.save(asset);
-        auditLogService.log("CREATE", "ASSET", saved.getId(), user.getUsername(), user.getId(),
+        String actor = createdBy != null ? createdBy.getUsername() : "system";
+        auditLogService.log("CREATE", "ASSET", saved.getId(), actor, createdBy != null ? createdBy.getId() : null,
                 "Asset registered: " + saved.getDeviceName() + " (" + saved.getAssetNumber() + ")");
-        log.info("Asset created by staff: {} ({}) by user {}", saved.getDeviceName(), saved.getAssetNumber(), user.getUsername());
+        log.info("Asset created: {} ({})", saved.getDeviceName(), saved.getAssetNumber());
         return assetMapper.toResponse(saved);
     }
 
-    public AssetResponse createByAdmin(AssetRequest request) {
-        assertUniqueNumbers(request.getAssetNumber(), request.getSerialNumber());
+    public CsvImportResult importCsv(String csvContent, Long currentUserId) {
+        CsvImportResult result = new CsvImportResult();
+        if (csvContent == null || csvContent.isBlank()) {
+            result.setImported(0);
+            return result;
+        }
 
-        DeviceType deviceType = deviceTypeRepository.findById(request.getDeviceTypeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Device type not found with id: " + request.getDeviceTypeId()));
+        List<List<String>> rows = parseCsv(csvContent);
+        if (rows.isEmpty()) {
+            return result;
+        }
 
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUserId()));
+        Map<String, Integer> header = indexHeaders(rows.get(0));
+        if (header.isEmpty()) {
+            result.addError(1, "CSV is missing the required header row");
+            return result;
+        }
 
-        Zone zone = zoneRepository.findById(request.getZoneId())
-                .orElseThrow(() -> new ResourceNotFoundException("Zone not found with id: " + request.getZoneId()));
+        User createdBy = currentUserId != null
+                ? userRepository.findById(currentUserId).orElse(null)
+                : null;
+
+        List<Asset> toSave = new ArrayList<>();
+        List<String> fileAssetNumbers = new ArrayList<>();
+        List<String> fileSerialNumbers = new ArrayList<>();
+
+        for (int i = 1; i < rows.size(); i++) {
+            List<String> row = rows.get(i);
+            int rowNumber = i + 1;
+            Asset asset = buildFromRow(row, header, rowNumber, result, fileAssetNumbers, fileSerialNumbers, createdBy);
+            if (asset != null) {
+                toSave.add(asset);
+            }
+        }
+
+        List<Asset> saved = assetRepository.saveAll(toSave);
+        result.setImported(saved.size());
+        log.info("CSV import: {} assets by user id {}", saved.size(), currentUserId);
+        for (Asset asset : saved) {
+            String actor = createdBy != null ? createdBy.getUsername() : "system";
+            auditLogService.log("CREATE", "ASSET", asset.getId(), actor,
+                    createdBy != null ? createdBy.getId() : null,
+                    "Asset imported from CSV: " + asset.getDeviceName() + " (" + asset.getAssetNumber() + ")");
+        }
+        return result;
+    }
+
+    private Asset buildFromRow(List<String> row, Map<String, Integer> header, int rowNumber,
+                               CsvImportResult result, List<String> fileAssetNumbers, List<String> fileSerialNumbers,
+                               User createdBy) {
+        String assetNumber = value(row, header, "assetNumber");
+        String serialNumber = value(row, header, "serialNumber");
+        String deviceName = value(row, header, "deviceName");
+        String deviceTypeName = value(row, header, "deviceType");
+        String userOfAsset = value(row, header, "userOfAsset");
+        String zoneName = value(row, header, "zone");
+        String office = value(row, header, "office");
+        String ownershipRaw = value(row, header, "ownership");
+        String statusRaw = value(row, header, "deviceStatus");
+
+        if (deviceName == null || deviceName.isBlank()) {
+            result.addError(rowNumber, "Device Name is required");
+            return null;
+        }
+        if (deviceTypeName == null || deviceTypeName.isBlank()) {
+            result.addError(rowNumber, "Device Type is required");
+            return null;
+        }
+        if (zoneName == null || zoneName.isBlank()) {
+            result.addError(rowNumber, "Zone is required");
+            return null;
+        }
+
+        DeviceType deviceType = deviceTypeRepository.findByName(deviceTypeName.trim())
+                .orElse(null);
+        if (deviceType == null) {
+            result.addError(rowNumber, "Unknown Device Type: " + deviceTypeName);
+            return null;
+        }
+
+        Zone zone = zoneRepository.findByName(zoneName.trim()).orElse(null);
+        if (zone == null) {
+            result.addError(rowNumber, "Unknown Zone: " + zoneName);
+            return null;
+        }
+
+        OwnershipType ownership = parseOwnership(ownershipRaw);
+        if (ownership == null) {
+            result.addError(rowNumber, "Invalid Ownership: '" + ownershipRaw + "'. Expected OFFICE or PERSONAL");
+            return null;
+        }
+
+        DeviceStatus status = parseStatus(statusRaw);
+        if (status == null) {
+            result.addError(rowNumber, "Invalid Device Status: '" + statusRaw + "'. Expected ACTIVE or DEFECTIVE");
+            return null;
+        }
+
+        String normAssetNumber = blank(assetNumber);
+        String normSerialNumber = blank(serialNumber);
+        String normUser = userOfAsset.trim();
+        String normOffice = office.trim();
+        if (normUser.length() > 255) {
+            result.addError(rowNumber, "User of Asset must not exceed 255 characters");
+            return null;
+        }
+        if (normOffice.length() > 100) {
+            result.addError(rowNumber, "Office must not exceed 100 characters");
+            return null;
+        }
+
+        if (normAssetNumber != null) {
+            if (assetRepository.existsByAssetNumber(normAssetNumber) || fileAssetNumbers.contains(normAssetNumber)) {
+                result.addError(rowNumber, "Asset number already exists: " + normAssetNumber);
+                return null;
+            }
+            fileAssetNumbers.add(normAssetNumber);
+        }
+        if (normSerialNumber != null) {
+            if (assetRepository.existsBySerialNumber(normSerialNumber) || fileSerialNumbers.contains(normSerialNumber)) {
+                result.addError(rowNumber, "Serial number already exists: " + normSerialNumber);
+                return null;
+            }
+            fileSerialNumbers.add(normSerialNumber);
+        }
 
         Asset asset = new Asset();
-        asset.setAssetNumber(request.getAssetNumber());
-        asset.setSerialNumber(request.getSerialNumber());
-        asset.setDeviceName(request.getDeviceName());
+        asset.setAssetNumber(normAssetNumber);
+        asset.setSerialNumber(normSerialNumber);
+        asset.setDeviceName(deviceName.trim());
         asset.setDeviceType(deviceType);
-        asset.setUser(user);
+        asset.setUserOfAsset(normUser);
+        asset.setCreatedBy(createdBy);
+        asset.setUpdatedBy(createdBy);
         asset.setZone(zone);
-        asset.setOffice(normalizeOffice(request.getOffice()));
-        asset.setOwnershipType(request.getOwnershipType());
-        asset.setDeviceStatus(request.getDeviceStatus());
-        asset.setVerificationStatus(VerificationStatus.PENDING);
+        asset.setOffice(normOffice);
+        asset.setOwnershipType(ownership);
+        asset.setDeviceStatus(status);
+        return asset;
+    }
 
-        Asset saved = assetRepository.save(asset);
-        auditLogService.log("CREATE", "ASSET", saved.getId(), "ADMIN", null,
-                "Asset registered by admin: " + saved.getDeviceName() + " (" + saved.getAssetNumber() + ")");
-        log.info("Asset created by admin: {} ({})", saved.getDeviceName(), saved.getAssetNumber());
-        return assetMapper.toResponse(saved);
+    private OwnershipType parseOwnership(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String s = raw.trim().toUpperCase(Locale.ROOT);
+        try {
+            return OwnershipType.valueOf(s);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private DeviceStatus parseStatus(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String s = raw.trim().toUpperCase(Locale.ROOT);
+        try {
+            return DeviceStatus.valueOf(s);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private String blank(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private Map<String, Integer> indexHeaders(List<String> headerRow) {
+        Map<String, Integer> index = new LinkedHashMap<>();
+        for (int i = 0; i < headerRow.size(); i++) {
+            String col = headerRow.get(i).trim().toLowerCase(Locale.ROOT).replace(" ", "");
+            index.putIfAbsent(col, i);
+        }
+        Set<String> required = Set.of("devicename", "devicetype", "zone");
+        if (!index.keySet().containsAll(required)) {
+            return Map.of();
+        }
+        return index;
+    }
+
+    private String value(List<String> row, Map<String, Integer> header, String key) {
+        Integer idx = header.get(key);
+        if (idx == null || idx >= row.size()) {
+            return null;
+        }
+        String v = row.get(idx);
+        return v == null || v.isBlank() ? null : v.trim();
+    }
+
+    private List<List<String>> parseCsv(String content) {
+        List<List<String>> rows = new ArrayList<>();
+        List<String> current = new ArrayList<>();
+        StringBuilder field = new StringBuilder();
+        boolean inQuotes = false;
+        int i = 0;
+        while (i < content.length()) {
+            char c = content.charAt(i);
+            if (inQuotes) {
+                if (c == '"') {
+                    if (i + 1 < content.length() && content.charAt(i + 1) == '"') {
+                        field.append('"');
+                        i++;
+                    } else {
+                        inQuotes = false;
+                    }
+                } else {
+                    field.append(c);
+                }
+                i++;
+            } else {
+                if (c == '"') {
+                    inQuotes = true;
+                    i++;
+                } else if (c == ',') {
+                    current.add(field.toString());
+                    field.setLength(0);
+                    i++;
+                } else if (c == '\n') {
+                    current.add(field.toString());
+                    field.setLength(0);
+                    if (!current.isEmpty() && !(current.size() == 1 && current.get(0).isEmpty())) {
+                        rows.add(current);
+                    }
+                    current = new ArrayList<>();
+                    i++;
+                } else if (c == '\r') {
+                    i++;
+                } else {
+                    field.append(c);
+                    i++;
+                }
+            }
+        }
+        current.add(field.toString());
+        if (!current.isEmpty() && !(current.size() == 1 && current.get(0).isEmpty())) {
+            rows.add(current);
+        }
+        return rows;
     }
 
     @Transactional(readOnly = true)
@@ -135,13 +352,26 @@ public class AssetService {
 
     @Transactional(readOnly = true)
     public PagedResponse<AssetResponse> findFiltered(int page, int size, String assetNumber, String serialNumber,
-            String deviceName, Long deviceTypeId, String employeeId, String userName, Long userId, Long directorateId,
-            Long sectionId, Long unitId, Long zoneId, String office, OwnershipType ownershipType,
-            DeviceStatus deviceStatus, VerificationStatus verificationStatus) {
+            String deviceName, Long deviceTypeId, String userOfAsset, Long zoneId, String office, OwnershipType ownershipType,
+            DeviceStatus deviceStatus) {
         Page<Asset> assetPage = assetRepository.findByFilters(
                 blankToNull(assetNumber), blankToNull(serialNumber), blankToNull(deviceName),
-                deviceTypeId, blankToNull(employeeId), blankToNull(userName), userId, directorateId, sectionId, unitId,
-                zoneId, blankToNull(office), ownershipType, deviceStatus, verificationStatus,
+                deviceTypeId, blankToNull(userOfAsset),
+                zoneId, blankToNull(office), ownershipType, deviceStatus,
+                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+        List<AssetResponse> content = assetPage.getContent().stream()
+                .map(assetMapper::toResponse)
+                .collect(Collectors.toList());
+        return new PagedResponse<>(content, assetPage.getNumber(), assetPage.getSize(),
+                assetPage.getTotalElements(), assetPage.getTotalPages());
+    }
+
+    @Transactional(readOnly = true)
+    public PagedResponse<AssetResponse> findSearch(int page, int size, String search) {
+        String term = search == null || search.isBlank()
+                ? "%"
+                : "%" + search.trim().toLowerCase(Locale.ROOT) + "%";
+        Page<Asset> assetPage = assetRepository.findBySearch(term,
                 PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         List<AssetResponse> content = assetPage.getContent().stream()
                 .map(assetMapper::toResponse)
@@ -166,14 +396,6 @@ public class AssetService {
     }
 
     @Transactional(readOnly = true)
-    public List<AssetResponse> findByUserId(Long userId) {
-        return assetRepository.findByUserId(userId)
-                .stream()
-                .map(assetMapper::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
     public List<AssetResponse> findByDeviceTypeId(Long deviceTypeId) {
         return assetRepository.findByDeviceTypeId(deviceTypeId)
                 .stream()
@@ -181,55 +403,23 @@ public class AssetService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    public List<AssetResponse> findByVerificationStatus(VerificationStatus status) {
-        return assetRepository.findByVerificationStatus(status)
-                .stream()
-                .map(assetMapper::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    public AssetResponse updateByAdmin(Long id, AssetUpdateRequest request) {
+    public AssetResponse updateByAdmin(Long id, AssetUpdateRequest request, Long currentUserId) {
         Asset asset = assetRepository.findWithDetailsById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Asset not found with id: " + id));
 
-        updateAssetFields(asset, request, true);
+        User updatedBy = currentUserId != null
+                ? userRepository.findById(currentUserId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + currentUserId))
+                : null;
+        asset.setUpdatedBy(updatedBy);
 
-        Asset saved = assetRepository.save(asset);
-        auditLogService.log("UPDATE", "ASSET", saved.getId(), "ADMIN", null,
-                "Asset updated: " + saved.getDeviceName() + " (" + saved.getAssetNumber() + ")");
-        log.info("Asset updated by admin: {} ({})", saved.getDeviceName(), saved.getAssetNumber());
-        return assetMapper.toResponse(saved);
-    }
-
-    public AssetResponse updateByStaff(Long id, AssetUpdateRequest request, Long currentUserId) {
-        Asset asset = assetRepository.findWithDetailsById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Asset not found with id: " + id));
-
-        if (!asset.getUser().getId().equals(currentUserId)) {
-            throw new AccessDeniedException("You can only edit your own assets");
-        }
-
-        User user = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + currentUserId));
-        requireSetupComplete(user);
-
-        if (asset.getVerificationStatus() == VerificationStatus.VERIFIED) {
-            throw new BadRequestException("Cannot modify a verified asset. Please contact administrator.");
-        }
-
-        updateAssetFields(asset, request, false);
-
-        if (asset.getVerificationStatus() == VerificationStatus.REJECTED) {
-            asset.setVerificationStatus(VerificationStatus.PENDING);
-            asset.setRejectionReason(null);
-        }
+        updateAssetFields(asset, request);
 
         Asset saved = assetRepository.save(asset);
         auditLogService.log("UPDATE", "ASSET", saved.getId(),
-                user != null ? user.getUsername() : "unknown", currentUserId,
-                "Asset updated by staff: " + saved.getDeviceName() + " (" + saved.getAssetNumber() + ")");
-        log.info("Asset updated by staff: {} ({})", saved.getDeviceName(), saved.getAssetNumber());
+                updatedBy != null ? updatedBy.getUsername() : "admin", updatedBy != null ? updatedBy.getId() : null,
+                "Asset updated: " + saved.getDeviceName() + " (" + saved.getAssetNumber() + ")");
+        log.info("Asset updated: {} ({})", saved.getDeviceName(), saved.getAssetNumber());
         return assetMapper.toResponse(saved);
     }
 
@@ -242,7 +432,7 @@ public class AssetService {
         log.info("Asset deleted: id={}", id);
     }
 
-    private void updateAssetFields(Asset asset, AssetUpdateRequest request, boolean admin) {
+    private void updateAssetFields(Asset asset, AssetUpdateRequest request) {
         if (request.getAssetNumber() != null) {
             String assetNumber = request.getAssetNumber().isBlank() ? null : request.getAssetNumber().trim();
             if (assetNumber != null && assetRepository.existsByAssetNumberAndIdNot(assetNumber, asset.getId())) {
@@ -276,9 +466,23 @@ public class AssetService {
         if (request.getOffice() != null) {
             asset.setOffice(normalizeOffice(request.getOffice()));
         }
-        if (admin && request.getOwnershipType() != null) {
+        if (request.getOwnershipType() != null) {
             asset.setOwnershipType(request.getOwnershipType());
         }
+        if (request.getUserOfAsset() != null) {
+            asset.setUserOfAsset(normalizeUserOfAsset(request.getUserOfAsset()));
+        }
+    }
+
+    private String normalizeUserOfAsset(String userOfAsset) {
+        if (userOfAsset == null) {
+            return null;
+        }
+        String trimmed = userOfAsset.trim();
+        if (trimmed.length() > 255) {
+            throw new BadRequestException("User of asset must not exceed 255 characters");
+        }
+        return trimmed;
     }
 
     private String normalizeOffice(String office) {
@@ -290,13 +494,6 @@ public class AssetService {
             throw new BadRequestException("Office must not exceed 100 characters");
         }
         return trimmed;
-    }
-
-    private void requireSetupComplete(User user) {
-        if (!user.isSetupCompleted()) {
-            throw new BadRequestException(
-                    "Please complete your profile setup before registering assets. Add your email, phone number and directorate.");
-        }
     }
 
     private void assertUniqueNumbers(String assetNumber, String serialNumber) {

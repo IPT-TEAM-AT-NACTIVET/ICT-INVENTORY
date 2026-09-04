@@ -334,6 +334,12 @@ table.table {
   font-size: 0.8rem;
 }
 
+.field-hint {
+  color: var(--text-2);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
 .form-actions {
   display: flex;
   gap: 0.75rem;

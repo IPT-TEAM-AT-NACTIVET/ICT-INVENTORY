@@ -1,26 +1,32 @@
+export interface RecentAsset {
+  assetNumber: string | null;
+  deviceName: string;
+  deviceType: string | null;
+  userOfAsset: string;
+  zone: string | null;
+  office: string | null;
+  registeredBy: string | null;
+  registeredAt: string;
+}
+
 export interface DashboardResponse {
-  totalUsers: number;
-  activeStaff: number;
-  disabledStaff: number;
   totalAssets: number;
-  pendingAssets: number;
-  verifiedAssets: number;
-  rejectedAssets: number;
   activeAssets: number;
   defectiveAssets: number;
   assetsByDeviceType: Record<string, number>;
-  assetsByDirectorate: Record<string, number>;
-  assetsBySection: Record<string, number>;
   assetsByZone: Record<string, number>;
-  assetsByVerificationStatus: Record<string, number>;
   assetsByDeviceStatus: Record<string, number>;
+  assetsByOwnership: Record<string, number>;
+  recentAssets: RecentAsset[];
 }
 
-export interface StaffDashboardResponse {
+export interface UserDashboardResponse {
   totalAssets: number;
-  pendingAssets: number;
-  verifiedAssets: number;
-  rejectedAssets: number;
   activeAssets: number;
   defectiveAssets: number;
+  assetsByDeviceType: Record<string, number>;
+  assetsByZone: Record<string, number>;
+  assetsByDeviceStatus: Record<string, number>;
+  assetsByOwnership: Record<string, number>;
+  recentAssets: RecentAsset[];
 }

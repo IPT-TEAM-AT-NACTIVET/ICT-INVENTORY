@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import tz.go.nactvet.ict_inventory_management.dto.DashboardResponse;
-import tz.go.nactvet.ict_inventory_management.dto.StaffDashboardResponse;
+import tz.go.nactvet.ict_inventory_management.dto.UserDashboardResponse;
 import tz.go.nactvet.ict_inventory_management.security.CustomUserDetailsService;
 import tz.go.nactvet.ict_inventory_management.service.DashboardService;
 
@@ -26,9 +26,9 @@ public class DashboardController {
         return ResponseEntity.ok(dashboardService.getAdminDashboard());
     }
 
-    @GetMapping("/staff/dashboard")
-    public ResponseEntity<StaffDashboardResponse> getStaffDashboard(Authentication authentication) {
+    @GetMapping("/users/dashboard")
+    public ResponseEntity<UserDashboardResponse> getUserDashboard(Authentication authentication) {
         CustomUserDetailsService.UserPrincipal principal = (CustomUserDetailsService.UserPrincipal) authentication.getPrincipal();
-        return ResponseEntity.ok(dashboardService.getStaffDashboard(principal.getId()));
+        return ResponseEntity.ok(dashboardService.getUserDashboard(principal.getId()));
     }
 }

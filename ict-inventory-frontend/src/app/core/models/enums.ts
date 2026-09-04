@@ -1,7 +1,5 @@
-export type Role = 'ADMIN' | 'STAFF';
+export type Role = 'ADMIN';
 
 export type DeviceStatus = 'ACTIVE' | 'DEFECTIVE';
 
 export type OwnershipType = 'OFFICE' | 'PERSONAL';
-
-export type VerificationStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';

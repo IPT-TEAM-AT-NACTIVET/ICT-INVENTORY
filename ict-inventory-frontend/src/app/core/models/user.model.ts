@@ -15,26 +15,7 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface RegisterRequest {
-  fullName: string;
-  email?: string;
-  phoneNumber?: string;
-  password: string;
-  confirmPassword: string;
-  directorateId?: number;
-  sectionId?: number;
-  unitId?: number;
-}
-
 export interface LoginResponse {
   token: string;
   user: User;
-}
-
-export interface RegisterResponse {
-  message: string;
-  employeeId: string;
-  email: string | null;
-  role: Role;
-  status: string;
 }

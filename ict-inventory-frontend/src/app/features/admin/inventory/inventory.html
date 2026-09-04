@@ -4,6 +4,10 @@
   <div>
     <button type="button" class="btn btn-primary" (click)="openCreateForm()">Register Asset</button>
     <button type="button" class="btn" (click)="downloadCsv()">Export CSV</button>
+    <button type="button" class="btn" [disabled]="importing()" (click)="fileInput.click()">
+      {{ importing() ? 'Importing…' : 'Import CSV' }}
+    </button>
+    <input #fileInput type="file" accept=".csv,text/csv" hidden (change)="onFileSelected($event)" />
   </div>
   <span class="muted">{{ totalElements() }} assets</span>
 </div>
@@ -15,108 +19,56 @@
   <div class="alert alert-success" role="alert">{{ success() }}</div>
 }
 
+@if (importsResult(); as result) {
+  <div class="card">
+    <h3>Import Result</h3>
+    <p>
+      Imported <strong>{{ result.imported }}</strong> asset(s),
+      <strong class="{{ result.failed ? 'text-danger' : '' }}">{{ result.failed }}</strong> skipped.
+    </p>
+    @if (result.errors.length > 0) {
+      <p class="muted">
+        CSV columns (header): Asset Number, Serial Number, Device Type, Device Name, User of Asset, Zone, Office,
+        Ownership (OFFICE/PERSONAL), Device Status (ACTIVE/DEFECTIVE).
+      </p>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Row</th>
+            <th>Issue</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (err of result.errors; track $index) {
+            <tr>
+              <td>{{ err.row }}</td>
+              <td>{{ err.message }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+}
+
 <div class="card">
-  <h3>Filters</h3>
-  <form [formGroup]="filters" (ngSubmit)="applyFilters()">
-    <div class="filter-bar">
-      <div class="form-field">
-        <label for="assetNumber">Asset Number</label>
-        <input id="assetNumber" type="text" formControlName="assetNumber" />
-      </div>
-      <div class="form-field">
-        <label for="serialNumber">Serial Number</label>
-        <input id="serialNumber" type="text" formControlName="serialNumber" />
-      </div>
-      <div class="form-field">
-        <label for="deviceName">Device Name</label>
-        <input id="deviceName" type="text" formControlName="deviceName" />
-      </div>
-      <div class="form-field">
-        <label for="employeeId">Employee ID</label>
-        <input id="employeeId" type="text" formControlName="employeeId" />
-      </div>
-      <div class="form-field">
-        <label for="deviceType">Device Type</label>
-        <select id="deviceType" formControlName="deviceTypeId">
-          <option value="">All</option>
-@for (item of deviceTypes(); track item.id) {
-              <option [ngValue]="item.id">{{ item.name }}</option>
-            }
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="directorate">Directorate</label>
-        <select id="directorate" formControlName="directorateId">
-          <option value="">All</option>
-          @for (item of directorates(); track item.id) {
-            <option [value]="item.id">{{ item.name }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="section">Section</label>
-        <select id="section" formControlName="sectionId">
-          <option value="">All</option>
-          @for (item of sections(); track item.id) {
-            <option [value]="item.id">{{ item.name }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="unit">Unit</label>
-        <select id="unit" formControlName="unitId">
-          <option value="">All</option>
-          @for (item of units(); track item.id) {
-            <option [value]="item.id">{{ item.name }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="zone">Zone</label>
-        <select id="zone" formControlName="zoneId">
-          <option value="">All</option>
-          @for (item of zones(); track item.id) {
-            <option [value]="item.id">{{ item.name }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="office">Office</label>
-        <input id="office" type="text" formControlName="office" placeholder="Office code" />
-      </div>
-      <div class="form-field">
-        <label for="ownership">Ownership</label>
-        <select id="ownership" formControlName="ownershipType">
-          <option value="">All</option>
-          @for (opt of ownershipOptions; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="deviceStatus">Device Status</label>
-        <select id="deviceStatus" formControlName="deviceStatus">
-          <option value="">All</option>
-          @for (opt of deviceStatusOptions; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="verificationStatus">Verification</label>
-        <select id="verificationStatus" formControlName="verificationStatus">
-          <option value="">All</option>
-          @for (opt of verificationOptions; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary btn-sm">Apply</button>
-        <button type="button" class="btn btn-sm" (click)="resetFilters()">Reset</button>
-      </div>
+  <h3>Search Inventory</h3>
+  <div class="filter-bar">
+    <div class="form-field">
+      <label for="globalSearch">Search</label>
+      <input
+        id="globalSearch"
+        type="text"
+        [formControl]="search"
+        placeholder="Search by asset number, serial, device, user, zone, office, ownership or status..."
+        (keyup.enter)="applyFilters()"
+      />
     </div>
-  </form>
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary btn-sm" (click)="applyFilters()">Search</button>
+      <button type="button" class="btn btn-sm" (click)="resetFilters()">Reset</button>
+    </div>
+  </div>
 </div>
 
 @if (showAssetForm) {
@@ -152,16 +104,9 @@
           }
         </div>
         <div class="form-field">
-          <label for="userId">Assigned User *</label>
-          <select id="userId" formControlName="userId">
-            <option [ngValue]="0" disabled>Select user</option>
-            @for (item of staff(); track item.id) {
-              <option [ngValue]="item.id">{{ item.fullName }} ({{ item.employeeId }})</option>
-            }
-          </select>
-          @if (assetForm.controls.userId.touched && assetForm.controls.userId.invalid) {
-            <div class="field-error">User is required.</div>
-          }
+          <label for="userOfAsset">User of Asset</label>
+          <input id="userOfAsset" type="text" formControlName="userOfAsset" placeholder="Optional — leave blank for servers, access points, etc." maxlength="255" />
+          <span class="field-hint">Leave blank if the asset has no direct user (e.g. servers, access points).</span>
         </div>
         <div class="form-field">
           <label for="ownershipType">Ownership *</label>
@@ -200,11 +145,9 @@
           }
         </div>
         <div class="form-field">
-          <label for="office">Office *</label>
-          <input id="office" type="text" formControlName="office" placeholder="Enter office code" maxlength="100" />
-          @if (assetForm.controls.office.touched && assetForm.controls.office.invalid) {
-            <div class="field-error">Office is required.</div>
-          }
+          <label for="office">Office</label>
+          <input id="office" type="text" formControlName="office" placeholder="Optional — leave blank for servers, access points, etc." maxlength="100" />
+          <span class="field-hint">Leave blank if the asset has no specific office (e.g. servers, access points).</span>
         </div>
       </div>
       <div class="form-actions">
@@ -223,27 +166,22 @@
         <th>Serial</th>
         <th>Device</th>
         <th>Type</th>
-        <th>User</th>
-        <th>Employee ID</th>
-        <th>Directorate</th>
-        <th>Section</th>
-        <th>Unit</th>
+        <th>User of Asset</th>
         <th>Zone</th>
         <th>Office</th>
         <th>Ownership</th>
         <th>Device Status</th>
-        <th>Verification</th>
         <th>Actions</th>
       </tr>
     </thead>
     <tbody>
       @if (loading()) {
         <tr>
-          <td colspan="15" class="loading">Loading…</td>
+          <td colspan="10" class="loading">Loading…</td>
         </tr>
       } @else if (assets().length === 0) {
         <tr>
-          <td colspan="15" class="empty">No assets match the current filters.</td>
+          <td colspan="10" class="empty">No assets match the current filters.</td>
         </tr>
       } @else {
         @for (item of assets(); track item.id) {
@@ -252,19 +190,12 @@
             <td>{{ item.serialNumber ?? '—' }}</td>
             <td>{{ item.deviceName }}</td>
             <td>{{ item.deviceTypeName }}</td>
-            <td>{{ item.userFullName }}</td>
-            <td>{{ item.userEmployeeId ?? '—' }}</td>
-            <td>{{ item.directorateName ?? '—' }}</td>
-            <td>{{ item.sectionName ?? '—' }}</td>
-            <td>{{ item.unitName ?? '—' }}</td>
+            <td>{{ item.userOfAsset || '—' }}</td>
             <td>{{ item.zoneName ?? '—' }}</td>
             <td>{{ item.office ?? '—' }}</td>
             <td>{{ ownershipLabels[item.ownershipType] }}</td>
             <td>
               <app-status-badge [label]="deviceStatusLabels[item.deviceStatus]" [tone]="deviceTone(item.deviceStatus)" />
-            </td>
-            <td>
-              <app-status-badge [label]="verificationLabels[item.verificationStatus]" [tone]="tone(item.verificationStatus)" />
             </td>
             <td>
               <button type="button" class="btn btn-sm" (click)="openEditForm(item)">Edit</button>

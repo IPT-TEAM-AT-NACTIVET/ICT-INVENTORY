@@ -142,8 +142,6 @@ public class MasterDataInitializer implements ApplicationRunner {
             builder.append("INSERT INTO zones (name, description, status, created_at, updated_at) VALUES (")
                     .append("'").append(name).append("', NULL, 'ACTIVE', now(), now()) ON CONFLICT (name) DO NOTHING;");
         }
-        builder.append("UPDATE users SET zone_id = (SELECT id FROM zones WHERE name = 'Eastern Zone')")
-                .append(" WHERE zone_id IN (SELECT id FROM zones WHERE name = 'Head Office');");
         builder.append("DELETE FROM zones WHERE name = 'Head Office';");
         return builder.toString();
     }
@@ -151,7 +149,7 @@ public class MasterDataInitializer implements ApplicationRunner {
     private String assignStaffDirectorate() {
         return """
                 UPDATE users SET directorate_id = (SELECT id FROM directorates WHERE name = 'Corporate Services Directorate')
-                WHERE role = 'STAFF' AND directorate_id IS NULL
+                WHERE role = 'ADMIN' AND directorate_id IS NULL
                 """;
     }
 }

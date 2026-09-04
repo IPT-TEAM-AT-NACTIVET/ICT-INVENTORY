@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { TranslationService } from '../../../core/services/translation.service';
 import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
@@ -41,22 +42,18 @@ export class Login {
     const { email, password } = this.form.getRawValue();
     this.auth.login({ email, password }).subscribe({
       next: () => {
-        if (this.auth.isAdmin()) {
-          this.router.navigate(['/admin/dashboard']);
-          return;
-        }
-        const user = this.auth.user();
-        if (user?.setupCompleted === false) {
-          this.router.navigate(['/staff/setup']);
-          return;
-        }
-        this.router.navigate(['/staff/dashboard']);
+        this.router.navigate(['/admin/dashboard']);
       },
-      error: (err: { status?: number }) => {
+      error: (err: { status?: number; error?: { message?: string } }) => {
         this.loading.set(false);
-        this.errorMessage.set(
-          err.status === 401 ? this.t('login.invalidCredentials') : 'Login failed. Please try again.',
-        );
+        const message = err.error?.message ?? '';
+        if (err.status === 401 && message.toLowerCase().includes('not yet approved')) {
+          this.errorMessage.set(this.t('register.pending'));
+        } else if (err.status === 401) {
+          this.errorMessage.set(this.t('login.invalidCredentials'));
+        } else {
+          this.errorMessage.set('Login failed. Please try again.');
+        }
       },
     });
   }

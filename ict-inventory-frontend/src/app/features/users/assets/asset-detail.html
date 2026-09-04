@@ -1,0 +1,75 @@
+<app-page-header title="Asset Details" subtitle="View asset information" />
+
+@if (loading()) {
+  <div class="loading">Loading…</div>
+}
+
+@if (error()) {
+  <div class="alert alert-error" role="alert">{{ error() }}</div>
+}
+
+@if (asset(); as asset) {
+  <div class="card">
+    <dl class="detail-list">
+      <div class="detail-item">
+        <dt>Asset Number</dt>
+        <dd>{{ asset.assetNumber ?? '—' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Serial Number</dt>
+        <dd>{{ asset.serialNumber ?? '—' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Device Name</dt>
+        <dd>{{ asset.deviceName }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Device Type</dt>
+        <dd>{{ asset.deviceTypeName }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Ownership</dt>
+        <dd>{{ ownershipLabels[asset.ownershipType] }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Device Status</dt>
+        <dd>
+          <app-status-badge [label]="deviceStatusLabels[asset.deviceStatus]" [tone]="deviceTone(asset.deviceStatus)" />
+        </dd>
+      </div>
+      <div class="detail-item">
+        <dt>User of Asset</dt>
+        <dd>{{ asset.userOfAsset || '—' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Zone</dt>
+        <dd>{{ asset.zoneName ?? '—' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Office</dt>
+        <dd>{{ asset.office ?? '—' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Registered By</dt>
+        <dd>{{ asset.createdByName ?? '—' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Registered At</dt>
+        <dd>{{ asset.createdAt }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Updated By</dt>
+        <dd>{{ asset.updatedByName ?? '—' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Last Updated At</dt>
+        <dd>{{ asset.updatedAt }}</dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="toolbar">
+    <a class="btn btn-primary" [routerLink]="['/users/assets', asset.id, 'edit']">Edit Asset</a>
+    <a class="btn" routerLink="/users/assets">Back to Inventory</a>
+  </div>
+}

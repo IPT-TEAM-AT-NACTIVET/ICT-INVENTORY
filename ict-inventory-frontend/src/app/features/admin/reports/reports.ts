@@ -1,125 +1,177 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { StatusBadge } from '../../../shared/components/status-badge/status-badge';
 import { ReportService } from '../../../core/services/report.service';
-import { ReferenceService } from '../../../shared/services/reference.service';
+import { TranslationService } from '../../../core/services/translation.service';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
-import { ReportResponse } from '../../../core/models/report.model';
-import { AssetFilter } from '../../../core/models/asset.model';
-import { Directorate, DeviceType, Section, Unit, Zone } from '../../../core/models/master-data.model';
-import { DeviceStatus, OwnershipType, VerificationStatus } from '../../../core/models/enums';
+import { ReportResponse, ReportItem, ReportSummary } from '../../../core/models/report.model';
+import { Asset } from '../../../core/models/asset.model';
+import { DeviceStatus } from '../../../core/models/enums';
 import {
   DEVICE_STATUS_LABELS,
-  DEVICE_STATUS_OPTIONS,
   OWNERSHIP_TYPE_LABELS,
-  OWNERSHIP_TYPE_OPTIONS,
-  VERIFICATION_STATUS_LABELS,
-  VERIFICATION_STATUS_OPTIONS,
   deviceStatusTone,
-  verificationTone,
 } from '../../../shared/utils/enum-labels';
 import { delay, finalize, retry } from 'rxjs';
 
 export type ReportType =
   | 'inventory'
-  | 'by-directorate'
-  | 'by-section'
-  | 'by-unit'
   | 'by-zone'
   | 'by-office'
   | 'by-device-type'
-  | 'by-status';
+  | 'by-status'
+  | 'by-ownership';
 
 @Component({
   selector: 'app-reports',
-  imports: [PageHeader, ReactiveFormsModule, FormsModule, StatusBadge],
+  imports: [PageHeader, ReactiveFormsModule, StatusBadge, RouterLink, DatePipe],
   templateUrl: './reports.html',
+  styleUrl: './reports.css',
 })
 export class Reports implements OnInit {
-  private readonly fb = inject(FormBuilder);
   private readonly reportService = inject(ReportService);
-  private readonly reference = inject(ReferenceService);
+  private readonly translation = inject(TranslationService);
+
+  t = (k: string) => this.translation.t(k);
 
   readonly deviceStatusLabels = DEVICE_STATUS_LABELS;
   readonly ownershipLabels = OWNERSHIP_TYPE_LABELS;
-  readonly verificationLabels = VERIFICATION_STATUS_LABELS;
-  readonly deviceStatusOptions = DEVICE_STATUS_OPTIONS;
-  readonly ownershipOptions = OWNERSHIP_TYPE_OPTIONS;
-  readonly verificationOptions = VERIFICATION_STATUS_OPTIONS;
+
+  readonly reportTypes: ReportType[] = [
+    'inventory',
+    'by-zone',
+    'by-office',
+    'by-device-type',
+    'by-status',
+    'by-ownership',
+  ];
 
   reportType: ReportType = 'inventory';
+  readonly search = new FormControl('');
+  readonly summary = signal<ReportSummary | null>(null);
   readonly report = signal<ReportResponse | null>(null);
-  expandedIndex: number | null = null;
+  readonly assets = signal<Asset[]>([]);
+  readonly totalElements = signal(0);
+  readonly totalPages = signal(0);
+  page = 0;
+  readonly pageSize = 10;
   readonly loading = signal(true);
   readonly error = signal('');
 
-  readonly deviceTypes = signal<DeviceType[]>([]);
-  readonly directorates = signal<Directorate[]>([]);
-  readonly sections = signal<Section[]>([]);
-  readonly units = signal<Unit[]>([]);
-  readonly zones = signal<Zone[]>([]);
-
-  readonly filters = this.fb.nonNullable.group({
-    assetNumber: [''],
-    serialNumber: [''],
-    deviceName: [''],
-    employeeId: [''],
-    deviceTypeId: [''],
-    directorateId: [''],
-    sectionId: [''],
-    unitId: [''],
-    zoneId: [''],
-    office: [''],
-    ownershipType: [''],
-    deviceStatus: [''],
-    verificationStatus: [''],
-  });
-
   ngOnInit(): void {
-    this.reference.getDeviceTypes().subscribe((items) => this.deviceTypes.set(items));
-    this.reference.getDirectorates().subscribe((items) => this.directorates.set(items));
-    this.reference.getSections().subscribe((items) => this.sections.set(items));
-    this.reference.getUnits().subscribe((items) => this.units.set(items));
-    this.reference.getZones().subscribe((items) => this.zones.set(items));
-    this.load();
+    this.loadSummary();
+    this.loadReport();
   }
 
   setType(type: ReportType): void {
     this.reportType = type;
-    this.expandedIndex = null;
-    this.load();
+    this.page = 0;
+    this.error.set('');
+    this.loadReport();
   }
 
-  load(): void {
+  applySearch(): void {
+    this.page = 0;
+    this.error.set('');
+    this.loadSummary();
+    this.loadReport();
+  }
+
+  resetSearch(): void {
+    this.search.setValue('');
+    this.page = 0;
+    this.error.set('');
+    this.loadSummary();
+    this.loadReport();
+  }
+
+  goToPage(target: number): void {
+    if (target < 0 || target >= this.totalPages() || target === this.page) {
+      return;
+    }
+    this.page = target;
+    this.loadReport();
+  }
+
+  downloadCsv(): void {
+    this.error.set('');
+    this.reportService.exportCsv(this.searchTerm()).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = 'inventory.csv';
+        anchor.click();
+        URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        this.error.set(httpErrorMessage(err, 'Failed to export the report.'));
+      },
+    });
+  }
+
+  maxBar(report: ReportResponse): number {
+    return Math.max(1, ...report.items.map((i) => i.count));
+  }
+
+  percentage(item: ReportItem, report: ReportResponse): number {
+    if (!report.totalAssets) {
+      return 0;
+    }
+    return Math.round((item.count / report.totalAssets) * 100);
+  }
+
+  protected deviceTone(status: DeviceStatus): 'success' | 'danger' {
+    return deviceStatusTone(status);
+  }
+
+  protected statusLabel(name: string): string {
+    return (DEVICE_STATUS_LABELS as Record<string, string>)[name] ?? name;
+  }
+
+  protected ownershipLabel(name: string): string {
+    return (OWNERSHIP_TYPE_LABELS as Record<string, string>)[name] ?? name;
+  }
+
+  private searchTerm(): string | undefined {
+    const term = (this.search.value ?? '').trim();
+    return term || undefined;
+  }
+
+  private loadSummary(): void {
+    this.reportService.getSummary(this.searchTerm()).subscribe({
+      next: (summary) => this.summary.set(summary),
+      error: (err) => this.error.set(httpErrorMessage(err, 'Failed to load the report summary.')),
+    });
+  }
+
+  private loadReport(): void {
     this.loading.set(true);
     this.error.set('');
-    const filter = this.buildFilter();
+    const term = this.searchTerm();
     let op;
     switch (this.reportType) {
-      case 'by-directorate':
-        op = this.reportService.getByDirectorate(filter);
-        break;
-      case 'by-section':
-        op = this.reportService.getBySection(filter);
-        break;
-      case 'by-unit':
-        op = this.reportService.getByUnit(filter);
-        break;
       case 'by-zone':
-        op = this.reportService.getByZone(filter);
+        op = this.reportService.getByZone(term);
         break;
       case 'by-office':
-        op = this.reportService.getByOffice(filter);
+        op = this.reportService.getByOffice(term);
         break;
       case 'by-device-type':
-        op = this.reportService.getByDeviceType(filter);
+        op = this.reportService.getByDeviceType(term);
         break;
       case 'by-status':
-        op = this.reportService.getByStatus(filter);
+        op = this.reportService.getByStatus(term);
+        break;
+      case 'by-ownership':
+        op = this.reportService.getByOwnership(term);
         break;
       default:
-        op = this.reportService.getInventory(filter);
+        this.loadInventory(term);
+        return;
     }
     op.pipe(
       retry({ count: 1, delay: 400 }),
@@ -127,6 +179,8 @@ export class Reports implements OnInit {
     ).subscribe({
       next: (report) => {
         this.report.set(report);
+        this.assets.set([]);
+        this.totalElements.set(report.totalAssets);
       },
       error: (err) => {
         this.error.set(httpErrorMessage(err, 'Failed to load the report.'));
@@ -134,58 +188,24 @@ export class Reports implements OnInit {
     });
   }
 
-  applyFilters(): void {
-    this.load();
-  }
-
-  resetFilters(): void {
-    this.filters.reset();
-    this.load();
-  }
-
-  downloadCsv(): void {
-    this.reportService.exportCsv(this.buildFilter()).subscribe((blob) => {
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = 'inventory.csv';
-      anchor.click();
-      URL.revokeObjectURL(url);
-    });
-  }
-
-  toggle(index: number): void {
-    this.expandedIndex = this.expandedIndex === index ? null : index;
-  }
-
-  protected tone(status: VerificationStatus): 'warning' | 'success' | 'danger' {
-    return verificationTone(status);
-  }
-
-  protected deviceTone(status: DeviceStatus): 'success' | 'danger' {
-    return deviceStatusTone(status);
-  }
-
-  private buildFilter(): Partial<AssetFilter> {
-    const f = this.filters.getRawValue();
-    return {
-      assetNumber: f.assetNumber || undefined,
-      serialNumber: f.serialNumber || undefined,
-      deviceName: f.deviceName || undefined,
-      employeeId: f.employeeId || undefined,
-      deviceTypeId: this.num(f.deviceTypeId),
-      directorateId: this.num(f.directorateId),
-      sectionId: this.num(f.sectionId),
-      unitId: this.num(f.unitId),
-      zoneId: this.num(f.zoneId),
-      office: f.office || undefined,
-      ownershipType: (f.ownershipType || undefined) as OwnershipType | undefined,
-      deviceStatus: (f.deviceStatus || undefined) as DeviceStatus | undefined,
-      verificationStatus: (f.verificationStatus || undefined) as VerificationStatus | undefined,
-    };
-  }
-
-  private num(value: string): number | undefined {
-    return value ? Number(value) : undefined;
+  private loadInventory(term: string | undefined): void {
+    this.reportService
+      .getInventory(term, this.page, this.pageSize)
+      .pipe(
+        retry({ count: 1, delay: 400 }),
+        finalize(() => this.loading.set(false)),
+      )
+      .subscribe({
+        next: (paged) => {
+          this.assets.set(paged.content);
+          this.totalElements.set(paged.totalElements);
+          this.totalPages.set(paged.totalPages);
+          this.page = paged.page;
+          this.report.set(null);
+        },
+        error: (err) => {
+          this.error.set(httpErrorMessage(err, 'Failed to load the report.'));
+        },
+      });
   }
 }

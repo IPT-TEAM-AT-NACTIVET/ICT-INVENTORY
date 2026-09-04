@@ -3,7 +3,8 @@ import { Injectable, Signal, WritableSignal, computed, signal } from '@angular/c
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../env';
-import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, User } from '../models/user.model';
+import { LoginRequest, LoginResponse, User } from '../models/user.model';
+import { UserCreateRequest, UserAccount } from '../models/users.model';
 import { TokenStorageService } from './token-storage.service';
 
 @Injectable({ providedIn: 'root' })
@@ -18,8 +19,6 @@ export class AuthService {
   readonly token: Signal<string | null>;
   readonly user: Signal<User | null>;
   readonly isAuthenticated: Signal<boolean>;
-  readonly isAdmin: Signal<boolean>;
-  readonly isStaff: Signal<boolean>;
 
   constructor(http: HttpClient, router: Router, tokenStorage: TokenStorageService) {
     this.http = http;
@@ -30,8 +29,6 @@ export class AuthService {
     this.token = this.tokenSignal.asReadonly();
     this.user = this.userSignal.asReadonly();
     this.isAuthenticated = computed(() => this.tokenSignal() !== null);
-    this.isAdmin = computed(() => this.userSignal()?.role === 'ADMIN');
-    this.isStaff = computed(() => this.userSignal()?.role === 'STAFF');
   }
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
@@ -44,8 +41,8 @@ export class AuthService {
     );
   }
 
-  register(request: RegisterRequest): Observable<RegisterResponse> {
-    return this.http.post<RegisterResponse>(`${environment.apiUrl}/auth/register`, request);
+  register(request: UserCreateRequest): Observable<UserAccount> {
+    return this.http.post<UserAccount>(`${environment.apiUrl}/auth/register`, request);
   }
 
   updateStoredUser(user: User): void {

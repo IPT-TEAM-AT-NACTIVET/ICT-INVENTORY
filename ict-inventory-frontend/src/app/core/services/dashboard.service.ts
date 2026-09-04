@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../env';
-import { DashboardResponse, StaffDashboardResponse } from '../models/dashboard.model';
+import { DashboardResponse, UserDashboardResponse } from '../models/dashboard.model';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
@@ -13,7 +13,7 @@ export class DashboardService {
     return this.http.get<DashboardResponse>(`${this.base}/admin/dashboard`);
   }
 
-  getStaffDashboard(): Observable<StaffDashboardResponse> {
-    return this.http.get<StaffDashboardResponse>(`${this.base}/staff/dashboard`);
+  getUserDashboard(): Observable<UserDashboardResponse> {
+    return this.http.get<UserDashboardResponse>(`${this.base}/users/dashboard`);
   }
 }

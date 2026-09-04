@@ -49,8 +49,9 @@
       {{ loading() ? 'Signing in…' : t('login.submit') }}
     </button>
 
-    <p class="muted" style="text-align: center; margin: 1rem 0 0">
-      {{ t('login.noAccount') }} <a routerLink="/register">{{ t('login.register') }}</a>
+    <p class="login-alt">
+      {{ t('login.noAccount') }}
+      <a routerLink="/register">{{ t('login.register') }}</a>
     </p>
   </form>
 </div>
