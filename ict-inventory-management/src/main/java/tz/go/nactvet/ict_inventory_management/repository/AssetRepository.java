@@ -170,7 +170,8 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            "LEFT JOIN FETCH a.zone " +
            "LEFT JOIN FETCH a.deviceType " +
            "LEFT JOIN FETCH a.createdBy " +
-           "WHERE (:term IS NULL) " +
+           "WHERE (:statusOn = true AND a.deviceStatus IN :statuses) " +
+           "OR (:statusOn = false AND (:term IS NULL " +
            "OR LOWER(COALESCE(a.assetNumber, '')) LIKE :term " +
            "OR LOWER(COALESCE(a.serialNumber, '')) LIKE :term " +
            "OR LOWER(a.deviceModel) LIKE :term " +
@@ -179,8 +180,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            "OR LOWER(COALESCE(a.createdBy.fullName, '')) LIKE :term " +
            "OR LOWER(a.zone.name) LIKE :term " +
            "OR LOWER(a.deviceType.name) LIKE :term " +
-           "OR LOWER(CAST(a.ownershipType AS string)) LIKE :term " +
-           "OR (:statusOn = true AND a.deviceStatus IN :statuses) " +
+           "OR LOWER(CAST(a.ownershipType AS string)) LIKE :term)) " +
            "ORDER BY a.createdAt DESC")
     List<Asset> searchAll(@Param("term") String term,
                           @Param("statusOn") boolean statusOn,
@@ -210,4 +210,58 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            @Param("ownershipType") OwnershipType ownershipType,
            @Param("deviceStatus") DeviceStatus deviceStatus,
            Pageable pageable);
+
+    @Query("SELECT a FROM Asset a " +
+           "LEFT JOIN FETCH a.zone " +
+           "LEFT JOIN FETCH a.deviceType " +
+           "LEFT JOIN FETCH a.createdBy " +
+"WHERE (:statusOn = true AND a.deviceStatus IN :statuses) " +
+            "OR (:statusOn = false AND (" +
+            "  LOWER(COALESCE(a.assetNumber,'')) LIKE :term OR " +
+            "  LOWER(COALESCE(a.serialNumber,'')) LIKE :term OR " +
+            "  LOWER(a.deviceModel) LIKE :term OR " +
+            "  LOWER(COALESCE(a.userOfAsset,'')) LIKE :term OR " +
+            "  LOWER(COALESCE(a.office,'')) LIKE :term OR " +
+            "  LOWER(a.zone.name) LIKE :term OR " +
+            "  LOWER(a.deviceType.name) LIKE :term OR " +
+            "  LOWER(CAST(a.ownershipType AS string)) LIKE :term OR " +
+            "  LOWER(CAST(a.deviceStatus AS string)) LIKE :term OR " +
+            "  LOWER(COALESCE(a.createdBy.fullName,'')) LIKE :term)) " +
+            "AND (:deviceTypeId IS NULL OR a.deviceType.id = :deviceTypeId) " +
+            "AND (:ownershipType IS NULL OR a.ownershipType = :ownershipType) " +
+            "AND (:explicitStatus IS NULL OR a.deviceStatus = :explicitStatus) " +
+            "AND (:zoneId IS NULL OR a.zone.id = :zoneId) " +
+            "AND LOWER(COALESCE(a.office,'')) LIKE :office " +
+            "AND LOWER(COALESCE(a.userOfAsset,'')) LIKE :userOfAsset " +
+            "AND LOWER(COALESCE(a.createdBy.fullName,'')) LIKE :registeredBy " +
+            "AND a.createdAt >= :fromDt " +
+            "AND a.createdAt <= :toDt " +
+            "ORDER BY a.createdAt DESC")
+    List<Asset> findForReport(
+           @Param("term") String term,
+           @Param("statusOn") boolean statusOn,
+           @Param("statuses") Collection<DeviceStatus> statuses,
+           @Param("deviceTypeId") Long deviceTypeId,
+           @Param("ownershipType") OwnershipType ownershipType,
+           @Param("explicitStatus") DeviceStatus explicitStatus,
+           @Param("zoneId") Long zoneId,
+           @Param("office") String office,
+           @Param("userOfAsset") String userOfAsset,
+           @Param("registeredBy") String registeredBy,
+           @Param("fromDt") java.time.LocalDateTime fromDt,
+           @Param("toDt") java.time.LocalDateTime toDt);
+
+    @Query("SELECT DISTINCT a.office FROM Asset a " +
+           "WHERE a.office IS NOT NULL AND a.office <> '' ORDER BY a.office")
+    List<String> findDistinctOffices();
+
+    @Query("SELECT DISTINCT a.userOfAsset FROM Asset a " +
+           "WHERE a.userOfAsset IS NOT NULL AND a.userOfAsset <> '' ORDER BY a.userOfAsset")
+    List<String> findDistinctUsersOfAsset();
+
+    @Query("SELECT a.createdBy.id, a.createdBy.fullName FROM Asset a " +
+           "WHERE a.createdBy IS NOT NULL " +
+           "GROUP BY a.createdBy.id, a.createdBy.fullName " +
+           "ORDER BY a.createdBy.fullName")
+    List<Object[]> findDistinctRegistrars();
 }

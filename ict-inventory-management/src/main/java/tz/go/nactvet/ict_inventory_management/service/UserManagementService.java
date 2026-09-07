@@ -64,59 +64,10 @@ public class UserManagementService {
     }
 
     /**
-     * Self-registration: creates a new user account with role ADMIN, PENDING status.
-     * The account remains disabled until approved by an active ADMIN.
+     * Active user creates a new user account (enabled immediately).
+     * The creator is recorded automatically from the authenticated session.
      */
-    public UserManagementResponse registerSelf(UserManagementCreateRequest request) {
-        String email = request.getEmail() == null ? null : request.getEmail().trim();
-        if (email == null || email.isBlank()) {
-            throw new BadRequestException("Email is required.");
-        }
-        if (userRepository.existsByEmail(email)) {
-            throw new ConflictException("Email address is already registered.");
-        }
-
-        String username = email;
-        String employeeId = employeeIdGenerator.next();
-
-        User user = new User();
-        user.setEmployeeId(employeeId);
-        user.setFullName(request.getFullName().trim());
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setEmail(email);
-        user.setPhoneNumber(request.getPhoneNumber() != null ? request.getPhoneNumber().trim() : null);
-        user.setRole(Role.ADMIN);
-        user.setEnabled(false);
-        user.setSetupCompleted(false);
-
-        if (request.getDirectorateId() != null) {
-            Directorate directorate = directorateRepository.findById(request.getDirectorateId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Directorate not found with id: " + request.getDirectorateId()));
-            user.setDirectorate(directorate);
-        }
-        if (request.getSectionId() != null) {
-            Section section = sectionRepository.findById(request.getSectionId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Section not found with id: " + request.getSectionId()));
-            user.setSection(section);
-        }
-        if (request.getUnitId() != null) {
-            Unit unit = unitRepository.findById(request.getUnitId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Unit not found with id: " + request.getUnitId()));
-            user.setUnit(unit);
-        }
-
-        User saved = userRepository.save(user);
-        auditLogService.log("CREATE", "USER", saved.getId(), "ADMIN", null,
-                "User account registered awaiting approval: " + saved.getFullName() + " (" + saved.getEmail() + ")");
-        log.info("User account registered awaiting approval: {} ({})", saved.getFullName(), saved.getEmail());
-        return toResponse(saved);
-    }
-
-    /**
-     * Admin creates a new user account (enabled immediately).
-     */
-    public UserManagementResponse create(UserManagementCreateRequest request) {
+    public UserManagementResponse create(UserManagementCreateRequest request, Long createdById) {
         String email = request.getEmail() == null ? null : request.getEmail().trim();
         if (email == null || email.isBlank()) {
             throw new BadRequestException("Email is required.");
@@ -165,10 +116,17 @@ public class UserManagementService {
         user.setUnit(unit);
         user.setSetupCompleted(isSetupComplete(user));
 
+        if (createdById != null) {
+            User creator = getUserOrThrow(createdById);
+            user.setCreatedBy(creator);
+            user.setCreatedByName(creator.getFullName());
+        }
+
         User saved = userRepository.save(user);
-        auditLogService.log("CREATE", "USER", saved.getId(), "ADMIN", null,
-                "User account created: " + saved.getFullName() + " (" + saved.getEmail() + ")");
-        log.info("User account created: {} ({})", saved.getFullName(), saved.getEmail());
+        auditLogService.log("CREATE", "USER", saved.getId(), "ADMIN", createdById,
+                "User account created by " + (saved.getCreatedByName() != null ? saved.getCreatedByName() : "ADMIN")
+                        + ": " + saved.getFullName() + " (" + saved.getEmail() + ")");
+        log.info("User account created: {} ({}) by user ID {}", saved.getFullName(), saved.getEmail(), createdById);
         return toResponse(saved);
     }
 
@@ -372,6 +330,13 @@ public class UserManagementService {
         }
         if (user.getApprovedAt() != null) {
             response.setApprovedAt(user.getApprovedAt());
+        }
+
+        if (user.getCreatedBy() != null) {
+            response.setCreatedById(user.getCreatedBy().getId());
+        }
+        if (user.getCreatedByName() != null) {
+            response.setCreatedByName(user.getCreatedByName());
         }
 
         if (user.getDirectorate() != null) {

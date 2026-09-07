@@ -1,8 +1,9 @@
 package tz.go.nactvet.ict_inventory_management.controller;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+import java.time.LocalDate;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,9 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import tz.go.nactvet.ict_inventory_management.dto.AssetResponse;
+import tz.go.nactvet.ict_inventory_management.dto.ReportFilterOptionsResponse;
 import tz.go.nactvet.ict_inventory_management.dto.ReportResponse;
-import tz.go.nactvet.ict_inventory_management.dto.ReportSummaryResponse;
 import tz.go.nactvet.ict_inventory_management.service.ReportService;
 
 @RestController
@@ -26,56 +26,47 @@ public class ReportController {
         this.reportService = reportService;
     }
 
-    @GetMapping("/summary")
-    public ResponseEntity<ReportSummaryResponse> getSummary(
-            @RequestParam(required = false) String search) {
-        return ResponseEntity.ok(reportService.getSummary(search));
+    @GetMapping("/data")
+    public ResponseEntity<ReportResponse> getReportData(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long deviceTypeId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String ownershipType,
+            @RequestParam(required = false) Long zoneId,
+            @RequestParam(required = false) String office,
+            @RequestParam(required = false) String userOfAsset,
+            @RequestParam(required = false) String registeredBy,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate to,
+            @RequestParam(defaultValue = "overview") String groupBy) {
+        return ResponseEntity.ok(reportService.getReportData(
+                search, deviceTypeId, status, ownershipType, zoneId,
+                office, userOfAsset, registeredBy, from, to, groupBy));
     }
 
-    @GetMapping("/inventory")
-    public ResponseEntity<List<AssetResponse>> getInventoryReport(
-            @RequestParam(required = false) String search) {
-        return ResponseEntity.ok(reportService.getInventoryReport(search));
+    @GetMapping("/filter-options")
+    public ResponseEntity<ReportFilterOptionsResponse> getFilterOptions() {
+        return ResponseEntity.ok(reportService.getFilterOptions());
     }
 
-    @GetMapping("/by-zone")
-    public ResponseEntity<ReportResponse> getReportByZone(
-            @RequestParam(required = false) String search) {
-        return ResponseEntity.ok(reportService.getReportByZone(search));
-    }
+    @GetMapping("/export/csv")
+    public ResponseEntity<byte[]> exportCsv(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long deviceTypeId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String ownershipType,
+            @RequestParam(required = false) Long zoneId,
+            @RequestParam(required = false) String office,
+            @RequestParam(required = false) String userOfAsset,
+            @RequestParam(required = false) String registeredBy,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate to) {
 
-    @GetMapping("/by-device-type")
-    public ResponseEntity<ReportResponse> getReportByDeviceType(
-            @RequestParam(required = false) String search) {
-        return ResponseEntity.ok(reportService.getReportByDeviceType(search));
-    }
-
-    @GetMapping("/by-status")
-    public ResponseEntity<ReportResponse> getReportByStatus(
-            @RequestParam(required = false) String search) {
-        return ResponseEntity.ok(reportService.getReportByStatus(search));
-    }
-
-    @GetMapping("/by-ownership")
-    public ResponseEntity<ReportResponse> getReportByOwnership(
-            @RequestParam(required = false) String search) {
-        return ResponseEntity.ok(reportService.getReportByOwnership(search));
-    }
-
-    @GetMapping("/filtered")
-    public ResponseEntity<List<AssetResponse>> getFilteredAssets(
-            @RequestParam(required = false) String search) {
-        return ResponseEntity.ok(reportService.getFilteredAssets(search));
-    }
-
-    @GetMapping("/inventory/export/csv")
-    public ResponseEntity<byte[]> exportInventoryCsv(
-            @RequestParam(required = false) String search) {
-
-        String csv = reportService.exportInventoryCsv(search);
+        String csv = reportService.exportCsv(search, deviceTypeId, status, ownershipType,
+                zoneId, office, userOfAsset, registeredBy, from, to);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=inventory.csv")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ict-inventory-report.csv")
                 .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
                 .body(csv.getBytes(StandardCharsets.UTF_8));
     }

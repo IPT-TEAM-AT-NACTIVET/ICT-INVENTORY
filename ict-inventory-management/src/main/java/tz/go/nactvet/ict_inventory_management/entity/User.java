@@ -65,6 +65,13 @@ public class User {
     private boolean setupCompleted = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private User createdBy;
+
+    @Column(name = "created_by_name")
+    private String createdByName;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by")
     private User approvedBy;
 
@@ -193,6 +200,22 @@ public class User {
 
     public void setSetupCompleted(boolean setupCompleted) {
         this.setupCompleted = setupCompleted;
+    }
+
+    public User getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(User createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getCreatedByName() {
+        return createdByName;
+    }
+
+    public void setCreatedByName(String createdByName) {
+        this.createdByName = createdByName;
     }
 
     public User getApprovedBy() {

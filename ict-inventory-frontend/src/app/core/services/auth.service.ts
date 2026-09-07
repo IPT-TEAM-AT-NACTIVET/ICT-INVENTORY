@@ -4,7 +4,6 @@ import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../env';
 import { LoginRequest, LoginResponse, User } from '../models/user.model';
-import { UserCreateRequest, UserAccount } from '../models/users.model';
 import { TokenStorageService } from './token-storage.service';
 
 @Injectable({ providedIn: 'root' })
@@ -39,10 +38,6 @@ export class AuthService {
         this.userSignal.set(response.user);
       }),
     );
-  }
-
-  register(request: UserCreateRequest): Observable<UserAccount> {
-    return this.http.post<UserAccount>(`${environment.apiUrl}/auth/register`, request);
   }
 
   updateStoredUser(user: User): void {

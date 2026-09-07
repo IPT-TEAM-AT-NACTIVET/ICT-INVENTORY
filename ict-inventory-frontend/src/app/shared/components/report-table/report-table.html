@@ -1,0 +1,47 @@
+<div class="table-wrap report-table">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ t('reports.assetNo') }}</th>
+        <th>{{ t('reports.serial') }}</th>
+        <th>{{ t('reports.device') }}</th>
+        <th>{{ t('reports.type') }}</th>
+        <th>{{ t('reports.user') }}</th>
+        <th>{{ t('reports.zone') }}</th>
+        <th>{{ t('reports.officeCol') }}</th>
+        <th>{{ t('reports.ownership') }}</th>
+        <th>{{ t('reports.status') }}</th>
+        <th>{{ t('reports.registeredBy') }}</th>
+        <th>{{ t('reports.registeredAt') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (assets().length === 0) {
+        <tr>
+          <td colspan="11" class="empty">{{ t('reports.noAssets') }}</td>
+        </tr>
+      } @else {
+        @for (asset of assets(); track asset.id) {
+          <tr>
+            <td>{{ asset.assetNumber ?? '—' }}</td>
+            <td>{{ asset.serialNumber ?? '—' }}</td>
+            <td>{{ asset.deviceModel }}</td>
+            <td>{{ asset.deviceTypeName }}</td>
+            <td>{{ asset.userOfAsset || '—' }}</td>
+            <td>{{ asset.zoneName ?? '—' }}</td>
+            <td>{{ asset.office ?? '—' }}</td>
+            <td>{{ ownershipLabels[asset.ownershipType] }}</td>
+            <td>
+              <app-status-badge
+                [label]="deviceStatusLabels[asset.deviceStatus]"
+                [tone]="deviceTone(asset.deviceStatus)"
+              />
+            </td>
+            <td>{{ asset.createdByName ?? '—' }}</td>
+            <td>{{ asset.createdAt | date: 'medium' }}</td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>

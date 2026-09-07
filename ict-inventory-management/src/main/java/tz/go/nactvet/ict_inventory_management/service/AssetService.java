@@ -389,26 +389,40 @@ public class AssetService {
      * is matched case-insensitively across every asset field, including the
      * registering user's name.
      */
+    /**
+     * Result of normalizing a user-supplied search term. The term is wrapped in
+     * LIKE wildcards; when the phrase refers to a device status ("working" /
+     * "not working") a dedicated enum set is produced so the space/underscore
+     * difference between the display value and the stored enum never prevents a match.
+     */
+    public record SearchParams(String term, boolean statusOn, List<DeviceStatus> statuses) {
+    }
+
+    public static SearchParams normalizeSearch(String search) {
+        if (search == null || search.isBlank()) {
+            return new SearchParams(null, false, List.of());
+        }
+        String normalized = search.trim().toLowerCase(Locale.ROOT)
+                .replace('_', ' ')
+                .replaceAll("\\s+", " ")
+                .trim();
+        String term = "%" + normalized + "%";
+        boolean statusOn = false;
+        List<DeviceStatus> statuses = List.of();
+        if (normalized.contains("not working")) {
+            statuses = List.of(DeviceStatus.NOT_WORKING);
+            statusOn = true;
+        } else if (normalized.contains("working")) {
+            statuses = List.of(DeviceStatus.WORKING);
+            statusOn = true;
+        }
+        return new SearchParams(term, statusOn, statuses);
+    }
+
     @Transactional(readOnly = true)
     public List<AssetResponse> searchAll(String search) {
-        String term = null;
-        List<DeviceStatus> statuses = new ArrayList<>();
-        boolean statusOn = false;
-        if (search != null && !search.isBlank()) {
-            String normalized = search.trim().toLowerCase(Locale.ROOT)
-                    .replace('_', ' ')
-                    .replaceAll("\\s+", " ")
-                    .trim();
-            term = "%" + normalized + "%";
-            if (normalized.contains("not working")) {
-                statuses = List.of(DeviceStatus.NOT_WORKING);
-                statusOn = true;
-            } else if (normalized.contains("working")) {
-                statuses = List.of(DeviceStatus.WORKING);
-                statusOn = true;
-            }
-        }
-        return assetRepository.searchAll(term, statusOn, statuses)
+        SearchParams sp = normalizeSearch(search);
+        return assetRepository.searchAll(sp.term(), sp.statusOn(), sp.statuses())
                 .stream()
                 .map(assetMapper::toResponse)
                 .collect(Collectors.toList());

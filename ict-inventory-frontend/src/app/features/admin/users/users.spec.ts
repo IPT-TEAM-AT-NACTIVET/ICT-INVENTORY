@@ -4,7 +4,8 @@ import { of } from 'rxjs';
 import { Users } from './users';
 import { UsersService } from '../../../core/services/users.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { UserAccount } from '../../../core/models/users.model';
+import { ReferenceService } from '../../../shared/services/reference.service';
+import { UserAccount, UserCreateRequest } from '../../../core/models/users.model';
 
 const pendingUser: UserAccount = {
   id: 1,
@@ -43,6 +44,7 @@ const activeUser: UserAccount = {
 describe('Users', () => {
   let service: {
     findAll: ReturnType<typeof vi.fn>;
+    create: ReturnType<typeof vi.fn>;
     approve: ReturnType<typeof vi.fn>;
     activate: ReturnType<typeof vi.fn>;
     deactivate: ReturnType<typeof vi.fn>;
@@ -51,10 +53,16 @@ describe('Users', () => {
   let authService: {
     user: ReturnType<typeof vi.fn>;
   };
+  let referenceService: {
+    getDirectorates: ReturnType<typeof vi.fn>;
+    getUnits: ReturnType<typeof vi.fn>;
+    getSections: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     service = {
       findAll: vi.fn(() => of([pendingUser, activeUser])),
+      create: vi.fn((_req: UserCreateRequest) => of(activeUser)),
       approve: vi.fn(() => of(activeUser)),
       activate: vi.fn(() => of()),
       deactivate: vi.fn(() => of()),
@@ -63,12 +71,18 @@ describe('Users', () => {
     authService = {
       user: vi.fn(() => ({ id: 99 })),
     };
+    referenceService = {
+      getDirectorates: vi.fn(() => of([])),
+      getUnits: vi.fn(() => of([])),
+      getSections: vi.fn(() => of([])),
+    };
     await TestBed.configureTestingModule({
       imports: [Users],
       providers: [
         provideHttpClient(),
         { provide: UsersService, useValue: service },
         { provide: AuthService, useValue: authService },
+        { provide: ReferenceService, useValue: referenceService },
       ],
     }).compileComponents();
   });
@@ -78,18 +92,17 @@ describe('Users', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should separate pending from active users', () => {
+  it('should load all users into the list', () => {
     const fixture = TestBed.createComponent(Users);
     const component = fixture.componentInstance;
     component.ngOnInit();
-    expect(component.pending().map((u) => u.id)).toEqual([1]);
-    expect(component.activeUsers().map((u) => u.id)).toEqual([2]);
+    expect(component.allUsers().map((u) => u.id)).toEqual([1, 2]);
   });
 
-  it('should approve a pending user', () => {
+  it('should deactivate a user', () => {
     const fixture = TestBed.createComponent(Users);
     const component = fixture.componentInstance;
-    component.approve(pendingUser);
-    expect(service.approve).toHaveBeenCalledWith(1);
+    component.deactivate(activeUser);
+    expect(service.deactivate).toHaveBeenCalledWith(2);
   });
 });

@@ -209,6 +209,21 @@ END $$;
 @@
 CREATE INDEX IF NOT EXISTS idx_users_approved_by ON users(approved_by);
 @@
+-- Track which active user created a new user account and when.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS created_by BIGINT;
+@@
+ALTER TABLE users ADD COLUMN IF NOT EXISTS created_by_name VARCHAR(255);
+@@
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_created_by_fkey') THEN
+        ALTER TABLE users ADD CONSTRAINT users_created_by_fkey
+            FOREIGN KEY (created_by) REFERENCES users(id);
+    END IF;
+END $$;
+@@
+CREATE INDEX IF NOT EXISTS idx_users_created_by ON users(created_by);
+@@
 -- Device status migrated from legacy ACTIVE/DEFECTIVE labels to WORKING/NOT_WORKING.
 -- Runs only when the assets table already exists (fresh databases are created by
 -- Hibernate using the new labels directly). Idempotent.

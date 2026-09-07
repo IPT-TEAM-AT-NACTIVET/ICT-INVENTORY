@@ -116,32 +116,27 @@ class TwoRoleWorkflowTest {
     }
 
     @Test
-    void selfRegistrationCreatesDisabledPendingAccountAndCanBeApprovedByActiveUser() throws Exception {
-        // Self-registration creates an ADMIN account that is DISABLED (pending approval).
+    void unauthenticatedRegistrationIsRejectedAndActiveUserCreatesAndApprovesUser() throws Exception {
+        // An unauthenticated person cannot self-register (endpoint removed).
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createUserBody("john.doe@nactvet.go.tz")))
-                .andExpect(status().isCreated())
+                .andExpect(result -> org.junit.jupiter.api.Assertions.assertTrue(
+                        result.getResponse().getStatus() >= 400,
+                        "Registration endpoint should reject unauthenticated requests"));
+
+        // An active ADMIN creates a user account (enabled immediately, no approval needed).
+        String adminToken = loginAndGetToken("admin@nactvet.go.tz", "admin123");
+        mockMvc.perform(post("/users")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createUserBody("john.doe@nactvet.go.tz")))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("john.doe@nactvet.go.tz"))
                 .andExpect(jsonPath("$.role").value("ADMIN"))
-                .andExpect(jsonPath("$.enabled").value(false));
-
-        // A disabled (pending) account cannot log in yet.
-        mockMvc.perform(post("/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(loginBody("john.doe@nactvet.go.tz", "secret123")))
-                .andExpect(status().isUnauthorized());
-
-        // An active ADMIN can approve the pending account.
-        String adminToken = loginAndGetToken("admin@nactvet.go.tz", "admin123");
-        long officerId = findUserIdByEmail("john.doe@nactvet.go.tz");
-
-        mockMvc.perform(post("/users/" + officerId + "/approve")
-                        .header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.enabled").value(true));
 
-        // After approval the account can log in.
+        // The newly created (active) user can log in immediately.
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginBody("john.doe@nactvet.go.tz", "secret123")))
@@ -256,12 +251,14 @@ class TwoRoleWorkflowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1));
 
-        mockMvc.perform(get("/admin/reports/by-zone")
-                        .header("Authorization", "Bearer " + officerToken))
+        mockMvc.perform(get("/admin/reports/data")
+                        .header("Authorization", "Bearer " + officerToken)
+                        .param("groupBy", "by-zone"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/admin/reports/by-status")
-                        .header("Authorization", "Bearer " + officerToken))
+        mockMvc.perform(get("/admin/reports/data")
+                        .header("Authorization", "Bearer " + officerToken)
+                        .param("groupBy", "by-status"))
                 .andExpect(status().isOk());
     }
 

@@ -11,6 +11,8 @@ export interface UserAccount {
   role: Role;
   enabled: boolean;
   createdAt?: string | null;
+  createdById?: number | null;
+  createdByName?: string | null;
   approvedById?: number | null;
   approvedByName?: string | null;
   approvedAt?: string | null;

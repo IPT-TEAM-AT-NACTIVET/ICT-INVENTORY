@@ -4,26 +4,70 @@
   <div class="alert alert-error" role="alert">{{ error() }}</div>
 }
 
-<div class="card">
-  <h3>{{ t('reports.searchTitle') }}</h3>
-  <div class="filter-bar">
-    <div class="form-field search-field">
-      <label for="globalSearch">{{ t('reports.searchLabel') }}</label>
-      <input
-        id="globalSearch"
-        type="text"
-        class="search-input search-input-wide"
-        [formControl]="search"
-        [placeholder]="t('reports.searchPlaceholder')"
-        (keyup.enter)="applySearch()"
-      />
-    </div>
-    <div class="form-actions inline-actions">
-      <button type="button" class="btn btn-primary" (click)="applySearch()">{{ t('common.search') }}</button>
-      <button type="button" class="btn" (click)="resetSearch()">{{ t('reports.reset') }}</button>
-      <button type="button" class="btn" (click)="downloadCsv()">{{ t('reports.export') }}</button>
-    </div>
+<div class="toolbar report-toolbar">
+  <div class="filter-wrap">
+    <button
+      type="button"
+      class="btn"
+      [class.active]="filterOpen()"
+      (click)="toggleFilter()"
+    >
+      {{ activeFilter()?.label ?? t('reports.filter') }} ▾
+    </button>
+
+    @if (filterOpen()) {
+      <div class="filter-menu card">
+        <div class="filter-menu-title">{{ t('reports.filterBy') }}</div>
+        <div class="filter-menu-criteria">
+          @for (c of criteria; track c) {
+            <button
+              type="button"
+              class="filter-criterion"
+              [class.active]="criterion() === c"
+              (click)="selectCriterion(c)"
+            >
+              {{ t('reports.criteria.' + c) }}
+            </button>
+          }
+        </div>
+
+        @if (criterion(); as c) {
+          <div class="filter-menu-value">
+            <label for="reportFilterValue">{{ t('reports.criteria.' + c) }}</label>
+            <select
+              id="reportFilterValue"
+              [value]="criterionValue()"
+              (change)="criterionValue.set($any($event.target).value)"
+            >
+              <option value="">{{ t('reports.selectValue') }}</option>
+              @for (opt of valueOptions(); track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+            <div class="filter-menu-actions">
+              <button
+                type="button"
+                class="btn btn-primary"
+                [disabled]="!criterionValue()"
+                (click)="applyFilter()"
+              >
+                {{ t('reports.apply') }}
+              </button>
+              <button type="button" class="btn" (click)="resetFilter()">{{ t('reports.reset') }}</button>
+            </div>
+          </div>
+        }
+      </div>
+    }
   </div>
+
+  <button type="button" class="btn btn-primary" (click)="downloadCsv()" [disabled]="loading()">
+    {{ t('reports.export') }}
+  </button>
+
+  @if (activeFilter()) {
+    <button type="button" class="btn" (click)="resetFilter()">{{ t('reports.reset') }}</button>
+  }
 </div>
 
 @if (summary(); as summary) {
@@ -51,125 +95,17 @@
   </div>
 }
 
-<div class="tabs report-tabs">
-  @for (type of reportTypes; track type) {
-    <button
-      type="button"
-      class="tab"
-      [class.active]="reportType === type"
-      (click)="setType(type)"
-    >
-      {{ t('reports.types.' + type) }}
-    </button>
+<div class="card report-results">
+  <div class="toolbar results-head">
+    <h3>{{ t('reports.resultsTitle') }}</h3>
+    <span class="muted">
+      <strong>{{ report()?.assets?.length ?? 0 }}</strong> {{ t('reports.assetsFound') }}
+    </span>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">{{ t('common.loading') }}</div>
+  } @else if (report(); as report) {
+    <app-report-table [assets]="report.assets" />
   }
 </div>
-
-@if (loading()) {
-  <div class="loading">{{ t('common.loading') }}</div>
-} @else if (reportType === 'inventory') {
-  <div class="card">
-    <div class="toolbar">
-      <h3>{{ t('reports.inventoryContent') }}</h3>
-      <span class="muted">{{ totalElements() }} {{ t('reports.assets') }}</span>
-    </div>
-    <div class="table-wrap">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>{{ t('reports.assetNo') }}</th>
-            <th>{{ t('reports.serial') }}</th>
-            <th>{{ t('reports.device') }}</th>
-            <th>{{ t('reports.type') }}</th>
-            <th>{{ t('reports.user') }}</th>
-            <th>{{ t('reports.ownership') }}</th>
-            <th>{{ t('reports.status') }}</th>
-            <th>{{ t('reports.zone') }}</th>
-            <th>{{ t('reports.officeCol') }}</th>
-            <th>{{ t('reports.registeredBy') }}</th>
-            <th>{{ t('reports.registeredAt') }}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @if (assets().length === 0) {
-            <tr>
-              <td colspan="12" class="empty">{{ t('reports.noAssets') }}</td>
-            </tr>
-          } @else {
-            @for (asset of assets(); track asset.id) {
-              <tr>
-                <td>{{ asset.assetNumber ?? '—' }}</td>
-                <td>{{ asset.serialNumber ?? '—' }}</td>
-                <td>{{ asset.deviceModel }}</td>
-                <td>{{ asset.deviceTypeName }}</td>
-                <td>{{ asset.userOfAsset || '—' }}</td>
-                <td>{{ ownershipLabels[asset.ownershipType] }}</td>
-                <td>
-                  <app-status-badge
-                    [label]="deviceStatusLabels[asset.deviceStatus]"
-                    [tone]="deviceTone(asset.deviceStatus)"
-                  />
-                </td>
-                <td>{{ asset.zoneName ?? '—' }}</td>
-                <td>{{ asset.office ?? '—' }}</td>
-                <td>{{ asset.createdByName ?? '—' }}</td>
-                <td>{{ asset.createdAt | date: 'medium' }}</td>
-                <td>
-                  <a class="btn btn-sm" [routerLink]="['/users/assets', asset.id]">{{ t('reports.viewDetails') }}</a>
-                </td>
-              </tr>
-            }
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
-} @else if (report(); as report) {
-  <div class="card">
-    <div class="toolbar">
-      <h3>{{ t('reports.contentTitle.' + report.reportType) }}</h3>
-      <span class="muted">{{ t('reports.total') }}: <strong>{{ report.totalAssets }}</strong></span>
-    </div>
-
-    @if (report.items.length === 0) {
-      <div class="empty">{{ t('reports.noAssets') }}</div>
-    } @else {
-      <div class="bars">
-        @for (item of report.items; track $index) {
-          <div class="bar-row">
-            <span class="bar-label">
-              {{ report.reportType === 'by-status' ? statusLabel(item.name) : report.reportType === 'by-ownership' ? ownershipLabel(item.name) : item.name }}
-            </span>
-            <div class="bar-track">
-              <div class="bar-fill" [style.width.%]="(item.count / maxBar(report)) * 100"></div>
-            </div>
-            <span class="bar-value">{{ item.count }}</span>
-          </div>
-        }
-      </div>
-
-      <div class="table-wrap report-table">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>{{ t('reports.grouping') }}</th>
-              <th>{{ t('reports.count') }}</th>
-              <th>{{ t('reports.percentage') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of report.items; track $index) {
-              <tr>
-                <td>
-                  {{ report.reportType === 'by-status' ? statusLabel(item.name) : report.reportType === 'by-ownership' ? ownershipLabel(item.name) : item.name }}
-                </td>
-                <td>{{ item.count }}</td>
-                <td>{{ percentage(item, report) }}%</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
-  </div>
-}

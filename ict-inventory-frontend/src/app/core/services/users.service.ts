@@ -2,12 +2,16 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../env';
-import { UserAccount } from '../models/users.model';
+import { UserAccount, UserCreateRequest } from '../models/users.model';
 
 @Injectable({ providedIn: 'root' })
 export class UsersService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/users`;
+
+  create(request: UserCreateRequest): Observable<UserAccount> {
+    return this.http.post<UserAccount>(this.base, request);
+  }
 
   findAll(search?: string): Observable<UserAccount[]> {
     let params = new HttpParams();

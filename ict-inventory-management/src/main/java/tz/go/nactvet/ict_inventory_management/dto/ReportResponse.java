@@ -7,6 +7,8 @@ public class ReportResponse {
     private List<ReportItem> items;
     private String reportType;
     private long totalAssets;
+    private ReportSummaryResponse summary;
+    private List<AssetResponse> assets;
 
     public List<ReportItem> getItems() {
         return items;
@@ -32,11 +34,31 @@ public class ReportResponse {
         this.totalAssets = totalAssets;
     }
 
+    public ReportSummaryResponse getSummary() {
+        return summary;
+    }
+
+    public void setSummary(ReportSummaryResponse summary) {
+        this.summary = summary;
+    }
+
+    public List<AssetResponse> getAssets() {
+        return assets;
+    }
+
+    public void setAssets(List<AssetResponse> assets) {
+        this.assets = assets;
+    }
+
     public static class ReportItem {
 
         private Long id;
         private String name;
         private long count;
+        private long working;
+        private long notWorking;
+        private long officeCount;
+        private long personalCount;
         private List<AssetResponse> assets;
 
         public Long getId() {
@@ -61,6 +83,38 @@ public class ReportResponse {
 
         public void setCount(long count) {
             this.count = count;
+        }
+
+        public long getWorking() {
+            return working;
+        }
+
+        public void setWorking(long working) {
+            this.working = working;
+        }
+
+        public long getNotWorking() {
+            return notWorking;
+        }
+
+        public void setNotWorking(long notWorking) {
+            this.notWorking = notWorking;
+        }
+
+        public long getOfficeCount() {
+            return officeCount;
+        }
+
+        public void setOfficeCount(long officeCount) {
+            this.officeCount = officeCount;
+        }
+
+        public long getPersonalCount() {
+            return personalCount;
+        }
+
+        public void setPersonalCount(long personalCount) {
+            this.personalCount = personalCount;
         }
 
         public List<AssetResponse> getAssets() {

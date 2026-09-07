@@ -1,5 +1,4 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -10,7 +9,7 @@ import { PasswordInputComponent } from '../../../shared/components/password-inpu
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, LanguageSwitcherComponent, ThemeToggleComponent, PasswordInputComponent],
+  imports: [ReactiveFormsModule, LanguageSwitcherComponent, ThemeToggleComponent, PasswordInputComponent],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
@@ -47,8 +46,8 @@ export class Login {
       error: (err: { status?: number; error?: { message?: string } }) => {
         this.loading.set(false);
         const message = err.error?.message ?? '';
-        if (err.status === 401 && message.toLowerCase().includes('not yet approved')) {
-          this.errorMessage.set(this.t('register.pending'));
+        if (err.status === 401 && message.toLowerCase().includes('disabled')) {
+          this.errorMessage.set('Your account is disabled. Contact an administrator.');
         } else if (err.status === 401) {
           this.errorMessage.set(this.t('login.invalidCredentials'));
         } else {

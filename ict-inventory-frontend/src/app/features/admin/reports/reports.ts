@@ -1,189 +1,196 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
-import { StatusBadge } from '../../../shared/components/status-badge/status-badge';
+import { ReportTable } from '../../../shared/components/report-table/report-table';
 import { ReportService } from '../../../core/services/report.service';
+import { ReferenceService } from '../../../shared/services/reference.service';
 import { TranslationService } from '../../../core/services/translation.service';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
-import { ReportResponse, ReportItem, ReportSummary } from '../../../core/models/report.model';
-import { Asset } from '../../../core/models/asset.model';
-import { DeviceStatus } from '../../../core/models/enums';
 import {
-  DEVICE_STATUS_LABELS,
-  OWNERSHIP_TYPE_LABELS,
-  deviceStatusTone,
+  ReportFilter,
+  ReportFilterOptions,
+  ReportQuery,
+  ReportResponse,
+  ReportSummary,
+} from '../../../core/models/report.model';
+import { DeviceType, Zone } from '../../../core/models/master-data.model';
+import { DeviceStatus, OwnershipType } from '../../../core/models/enums';
+import {
+  DEVICE_STATUS_OPTIONS,
+  OWNERSHIP_TYPE_OPTIONS,
 } from '../../../shared/utils/enum-labels';
-import { delay, finalize, retry } from 'rxjs';
-
-export type ReportType =
-  | 'inventory'
-  | 'by-zone'
-  | 'by-device-type'
-  | 'by-status'
-  | 'by-ownership';
+import { finalize, retry } from 'rxjs';
 
 @Component({
   selector: 'app-reports',
-  imports: [PageHeader, ReactiveFormsModule, StatusBadge, RouterLink, DatePipe],
+  imports: [PageHeader, ReportTable],
   templateUrl: './reports.html',
   styleUrl: './reports.css',
 })
 export class Reports implements OnInit {
   private readonly reportService = inject(ReportService);
+  private readonly reference = inject(ReferenceService);
   private readonly translation = inject(TranslationService);
 
   t = (k: string) => this.translation.t(k);
 
-  readonly deviceStatusLabels = DEVICE_STATUS_LABELS;
-  readonly ownershipLabels = OWNERSHIP_TYPE_LABELS;
-
-  readonly reportTypes: ReportType[] = [
-    'inventory',
+  readonly criteria: ReportFilter[] = [
     'by-zone',
+    'by-office',
     'by-device-type',
     'by-status',
     'by-ownership',
+    'by-user',
+    'by-registered-by',
   ];
 
-  reportType: ReportType = 'inventory';
-  readonly search = new FormControl('');
-  readonly summary = signal<ReportSummary | null>(null);
+  readonly filterOpen = signal(false);
+  readonly criterion = signal<ReportFilter | null>(null);
+  readonly criterionValue = signal('');
+
+  readonly zones = signal<Zone[]>([]);
+  readonly deviceTypes = signal<DeviceType[]>([]);
+  readonly filterOptions = signal<ReportFilterOptions | null>(null);
+
   readonly report = signal<ReportResponse | null>(null);
-  readonly assets = signal<Asset[]>([]);
-  readonly totalElements = signal(0);
   readonly loading = signal(true);
   readonly error = signal('');
 
   ngOnInit(): void {
-    this.loadSummary();
-    this.loadReport();
+    this.reference.getZones().subscribe({
+      next: (z) => this.zones.set(z),
+    });
+    this.reference.getDeviceTypes().subscribe({
+      next: (d) => this.deviceTypes.set(d),
+    });
+    this.reportService.getFilterOptions().subscribe({
+      next: (o) => this.filterOptions.set(o),
+    });
+    this.loadData();
   }
 
-  setType(type: ReportType): void {
-    this.reportType = type;
-    this.error.set('');
-    this.loadReport();
+  readonly valueOptions = computed(() => {
+    switch (this.criterion()) {
+      case 'by-zone':
+        return this.zones().map((z) => ({ value: String(z.id), label: z.name }));
+      case 'by-device-type':
+        return this.deviceTypes().map((d) => ({ value: String(d.id), label: d.name }));
+      case 'by-status':
+        return DEVICE_STATUS_OPTIONS;
+      case 'by-ownership':
+        return OWNERSHIP_TYPE_OPTIONS;
+      case 'by-office':
+        return (this.filterOptions()?.offices ?? []).map((o) => ({ value: o, label: o }));
+      case 'by-user':
+        return (this.filterOptions()?.usersOfAsset ?? []).map((u) => ({ value: u, label: u }));
+      case 'by-registered-by':
+        return (this.filterOptions()?.registeredBy ?? []).map((r) => ({ value: r.name, label: r.name }));
+      default:
+        return [];
+    }
+  });
+
+  readonly activeFilter = computed(() => {
+    const c = this.criterion();
+    if (!c || !this.criterionValue()) {
+      return null;
+    }
+    const label =
+      this.valueOptions().find((v) => v.value === this.criterionValue())?.label ??
+      this.criterionValue();
+    return { criterion: c, label };
+  });
+
+  summary(): ReportSummary | null {
+    return this.report()?.summary ?? null;
   }
 
-  applySearch(): void {
-    this.error.set('');
-    this.loadSummary();
-    this.loadReport();
+  toggleFilter(): void {
+    this.filterOpen.set(!this.filterOpen());
   }
 
-  resetSearch(): void {
-    this.search.setValue('');
-    this.error.set('');
-    this.loadSummary();
-    this.loadReport();
+  selectCriterion(c: ReportFilter): void {
+    this.criterion.set(this.criterion() === c ? null : c);
+    this.criterionValue.set('');
+  }
+
+  applyFilter(): void {
+    if (!this.criterion() || !this.criterionValue()) {
+      return;
+    }
+    this.filterOpen.set(false);
+    this.loadData();
+  }
+
+  resetFilter(): void {
+    this.criterion.set(null);
+    this.criterionValue.set('');
+    this.filterOpen.set(false);
+    this.loadData();
   }
 
   downloadCsv(): void {
     this.error.set('');
-    this.reportService.exportCsv(this.searchTerm()).subscribe({
+    this.reportService.exportCsv(this.buildQuery()).subscribe({
       next: (blob) => {
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement('a');
         anchor.href = url;
-        anchor.download = 'inventory.csv';
+        anchor.download = 'ict-inventory-report.csv';
         anchor.click();
         URL.revokeObjectURL(url);
       },
       error: (err) => {
-        this.error.set(httpErrorMessage(err, 'Failed to export the report.'));
+        this.error.set(httpErrorMessage(err, this.t('reports.exportError')));
       },
     });
   }
 
-  maxBar(report: ReportResponse): number {
-    return Math.max(1, ...report.items.map((i) => i.count));
-  }
-
-  percentage(item: ReportItem, report: ReportResponse): number {
-    if (!report.totalAssets) {
-      return 0;
+  private buildQuery(): ReportQuery {
+    const query: ReportQuery = {};
+    const c = this.criterion();
+    const v = this.criterionValue();
+    if (!c || !v) {
+      return query;
     }
-    return Math.round((item.count / report.totalAssets) * 100);
-  }
-
-  protected deviceTone(status: DeviceStatus): 'success' | 'danger' {
-    return deviceStatusTone(status);
-  }
-
-  protected statusLabel(name: string): string {
-    return (DEVICE_STATUS_LABELS as Record<string, string>)[name] ?? name;
-  }
-
-  protected ownershipLabel(name: string): string {
-    return (OWNERSHIP_TYPE_LABELS as Record<string, string>)[name] ?? name;
-  }
-
-  private searchTerm(): string | undefined {
-    const term = (this.search.value ?? '').trim();
-    return term || undefined;
-  }
-
-  private loadSummary(): void {
-    this.reportService.getSummary(this.searchTerm()).subscribe({
-      next: (summary) => this.summary.set(summary),
-      error: (err) => this.error.set(httpErrorMessage(err, 'Failed to load the report summary.')),
-    });
-  }
-
-  private loadReport(): void {
-    this.loading.set(true);
-    this.error.set('');
-    const term = this.searchTerm();
-    let op;
-    switch (this.reportType) {
+    switch (c) {
       case 'by-zone':
-        op = this.reportService.getByZone(term);
+        query.zoneId = Number(v);
         break;
       case 'by-device-type':
-        op = this.reportService.getByDeviceType(term);
+        query.deviceTypeId = Number(v);
         break;
       case 'by-status':
-        op = this.reportService.getByStatus(term);
+        query.status = v as DeviceStatus;
         break;
       case 'by-ownership':
-        op = this.reportService.getByOwnership(term);
+        query.ownershipType = v as OwnershipType;
         break;
-      default:
-        this.loadInventory(term);
-        return;
+      case 'by-office':
+        query.office = v;
+        break;
+      case 'by-user':
+        query.userOfAsset = v;
+        break;
+      case 'by-registered-by':
+        query.registeredBy = v;
+        break;
     }
-    op.pipe(
-      retry({ count: 1, delay: 400 }),
-      finalize(() => this.loading.set(false)),
-    ).subscribe({
-      next: (report) => {
-        this.report.set(report);
-        this.assets.set([]);
-        this.totalElements.set(report.totalAssets);
-      },
-      error: (err) => {
-        this.error.set(httpErrorMessage(err, 'Failed to load the report.'));
-      },
-    });
+    return query;
   }
 
-  private loadInventory(term: string | undefined): void {
+  private loadData(): void {
+    this.loading.set(true);
+    this.error.set('');
     this.reportService
-      .getInventory(term)
+      .getData(this.buildQuery())
       .pipe(
         retry({ count: 1, delay: 400 }),
         finalize(() => this.loading.set(false)),
       )
       .subscribe({
-        next: (list) => {
-          this.assets.set(list);
-          this.totalElements.set(list.length);
-          this.report.set(null);
-        },
+        next: (report) => this.report.set(report),
         error: (err) => {
-          this.error.set(httpErrorMessage(err, 'Failed to load the report.'));
+          this.error.set(httpErrorMessage(err, this.t('reports.loadError')));
         },
       });
   }

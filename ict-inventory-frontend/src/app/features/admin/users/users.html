@@ -8,8 +8,8 @@
 }
 
 <div class="card">
-  <div class="filter-bar">
-    <div class="form-field">
+  <div class="toolbar">
+    <div class="search-field form-field">
       <label for="globalSearch">{{ t('usersAdmin.search') }}</label>
       <input
         id="globalSearch"
@@ -23,55 +23,117 @@
       <button type="button" class="btn btn-primary btn-sm" (click)="applyFilters()">{{ t('common.search') }}</button>
       <button type="button" class="btn btn-sm" (click)="resetFilters()">{{ t('reports.reset') }}</button>
     </div>
+    <div class="toolbar-actions">
+      <button type="button" class="btn btn-primary btn-sm" (click)="openNewUser()">+ {{ t('usersAdmin.newUser') }}</button>
+    </div>
   </div>
 </div>
 
-<section class="card">
-  <h3>{{ t('usersAdmin.pendingRequests') }}</h3>
-  @if (loading()) {
-    <p class="muted">Loading…</p>
-  } @else if (pending().length === 0) {
-    <p class="muted">{{ t('usersAdmin.noPending') }}</p>
-  } @else {
-    <div class="table-wrap">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>{{ t('usersAdmin.fullName') }}</th>
-            <th>{{ t('usersAdmin.email') }}</th>
-            <th>{{ t('usersAdmin.phone') }}</th>
-            <th>{{ t('usersAdmin.employeeId') }}</th>
-            <th>{{ t('usersAdmin.status') }}</th>
-            <th>{{ t('usersAdmin.actions') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (user of pending(); track user.id) {
-            <tr>
-              <td>{{ user.fullName }}</td>
-              <td>{{ user.email ?? '—' }}</td>
-              <td>{{ user.phoneNumber ?? '—' }}</td>
-              <td>{{ user.employeeId }}</td>
-              <td>
-                <app-status-badge [label]="t('usersAdmin.awaitingApproval')" tone="warning" />
-              </td>
-              <td>
-                <button type="button" class="btn btn-sm btn-primary" (click)="approve(user)">{{ t('usersAdmin.approve') }}</button>
-                <button type="button" class="btn btn-sm btn-danger" (click)="remove(user)">{{ t('usersAdmin.delete') }}</button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+@if (showNewUser()) {
+  <div class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>{{ t('usersAdmin.newUserTitle') }}</h3>
+        <button type="button" class="modal-close" (click)="closeNewUser()" [disabled]="savingNewUser()" aria-label="Close">&times;</button>
+      </div>
+
+      @if (newUserError()) {
+        <div class="alert alert-error" role="alert">{{ newUserError() }}</div>
+      }
+
+      <form [formGroup]="newUserForm" (ngSubmit)="saveNewUser()">
+        <div class="form-section">
+          <h4>{{ t('register.personalInfo') }}</h4>
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="nu-fullName">{{ t('register.fullName') }} *</label>
+              <input id="nu-fullName" type="text" formControlName="fullName" />
+              @if (newUserForm.controls.fullName.touched && newUserForm.controls.fullName.invalid) {
+                <div class="field-error">Full name is required.</div>
+              }
+            </div>
+            <div class="form-field">
+              <label for="nu-email">{{ t('register.email') }} *</label>
+              <input id="nu-email" type="email" formControlName="email" />
+              @if (newUserForm.controls.email.touched && newUserForm.controls.email.invalid) {
+                <div class="field-error">
+                  {{ newUserForm.controls.email.hasError('email') ? 'Enter a valid email address.' : 'Email is required.' }}
+                </div>
+              }
+            </div>
+            <div class="form-field">
+              <label for="nu-phone">{{ t('register.phone') }} *</label>
+              <input id="nu-phone" type="text" formControlName="phoneNumber" />
+              @if (newUserForm.controls.phoneNumber.touched && newUserForm.controls.phoneNumber.invalid) {
+                <div class="field-error">Phone number is required.</div>
+              }
+            </div>
+            <div class="form-field">
+              <label for="nu-password">{{ t('register.password') }} *</label>
+              <input id="nu-password" type="password" formControlName="password" autocomplete="new-password" />
+              @if (newUserForm.controls.password.touched && newUserForm.controls.password.invalid) {
+                <div class="field-error">Password must be at least 6 characters.</div>
+              }
+            </div>
+            <div class="form-field">
+              <label for="nu-confirm">{{ t('register.confirmPassword') }} *</label>
+              <input id="nu-confirm" type="password" formControlName="confirmPassword" autocomplete="new-password" />
+              @if (newUserForm.controls.confirmPassword.touched && newUserForm.controls.confirmPassword.invalid) {
+                <div class="field-error">Confirm password is required.</div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h4>Organization</h4>
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="nu-directorate">Directorate</label>
+              <select id="nu-directorate" formControlName="directorateId">
+                <option [ngValue]="0">— None —</option>
+                @for (dir of directorates(); track dir.id) {
+                  <option [ngValue]="dir.id">{{ dir.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="nu-section">Section</label>
+              <select id="nu-section" formControlName="sectionId">
+                <option [ngValue]="0">— None —</option>
+                @for (section of sections(); track section.id) {
+                  <option [ngValue]="section.id">{{ section.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="nu-unit">Unit</label>
+              <select id="nu-unit" formControlName="unitId">
+                <option [ngValue]="0">— None —</option>
+                @for (unit of units(); track unit.id) {
+                  <option [ngValue]="unit.id">{{ unit.name }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn" (click)="closeNewUser()" [disabled]="savingNewUser()">{{ t('common.cancel') }}</button>
+          <button type="submit" class="btn btn-primary" [disabled]="savingNewUser()">
+            {{ savingNewUser() ? 'Creating…' : t('usersAdmin.submitNewUser') }}
+          </button>
+        </div>
+      </form>
     </div>
-  }
-</section>
+  </div>
+}
 
 <section class="card">
   <h3>{{ t('usersAdmin.allUsers') }}</h3>
   @if (loading()) {
     <p class="muted">Loading…</p>
-  } @else if (activeUsers().length === 0) {
+  } @else if (allUsers().length === 0) {
     <p class="muted">{{ t('usersAdmin.noUsers') }}</p>
   } @else {
     <div class="table-wrap">
@@ -82,23 +144,29 @@
             <th>{{ t('usersAdmin.email') }}</th>
             <th>{{ t('usersAdmin.phone') }}</th>
             <th>{{ t('usersAdmin.employeeId') }}</th>
+            <th>{{ t('usersAdmin.registeredBy') }}</th>
             <th>{{ t('usersAdmin.status') }}</th>
             <th>{{ t('usersAdmin.actions') }}</th>
           </tr>
         </thead>
         <tbody>
-          @for (user of activeUsers(); track user.id) {
+          @for (user of allUsers(); track user.id) {
             <tr>
               <td>{{ user.fullName }}</td>
               <td>{{ user.email ?? '—' }}</td>
               <td>{{ user.phoneNumber ?? '—' }}</td>
               <td>{{ user.employeeId }}</td>
+              <td>{{ user.createdByName ?? '—' }}</td>
               <td>
-                <app-status-badge [label]="t('usersAdmin.active')" tone="success" />
+                @if (user.enabled) {
+                  <app-status-badge [label]="t('usersAdmin.active')" tone="success" />
+                } @else {
+                  <app-status-badge [label]="t('usersAdmin.disabled')" tone="danger" />
+                }
               </td>
               <td>
                 @if (!isCurrentUser(user)) {
-                  <button type="button" class="btn btn-sm" (click)="deactivate(user)">{{ t('usersAdmin.deactivate') }}</button>
+                  <button type="button" class="btn btn-sm" (click)="user.enabled ? deactivate(user) : activateUser(user)">{{ user.enabled ? t('usersAdmin.deactivate') : t('common.activate') }}</button>
                   <button type="button" class="btn btn-sm btn-danger" (click)="remove(user)">{{ t('usersAdmin.delete') }}</button>
                 } @else {
                   <span class="muted">—</span>

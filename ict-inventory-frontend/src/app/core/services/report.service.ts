@@ -2,48 +2,47 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../env';
-import { Asset } from '../models/asset.model';
-import { ReportResponse, ReportSummary } from '../models/report.model';
+import {
+  ReportFilterOptions,
+  ReportQuery,
+  ReportResponse,
+} from '../models/report.model';
 
 @Injectable({ providedIn: 'root' })
 export class ReportService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/admin/reports`;
 
-  getSummary(search?: string): Observable<ReportSummary> {
-    return this.http.get<ReportSummary>(`${this.base}/summary`, { params: this.params({ search }) });
-  }
-
-  getInventory(search?: string): Observable<Asset[]> {
-    return this.http.get<Asset[]>(`${this.base}/inventory`, {
-      params: this.params({ search }),
+  getData(query: ReportQuery): Observable<ReportResponse> {
+    return this.http.get<ReportResponse>(`${this.base}/data`, {
+      params: this.params(query),
     });
   }
 
-  getByZone(search?: string): Observable<ReportResponse> {
-    return this.http.get<ReportResponse>(`${this.base}/by-zone`, { params: this.params({ search }) });
+  getFilterOptions(): Observable<ReportFilterOptions> {
+    return this.http.get<ReportFilterOptions>(`${this.base}/filter-options`);
   }
 
-  getByDeviceType(search?: string): Observable<ReportResponse> {
-    return this.http.get<ReportResponse>(`${this.base}/by-device-type`, { params: this.params({ search }) });
-  }
-
-  getByStatus(search?: string): Observable<ReportResponse> {
-    return this.http.get<ReportResponse>(`${this.base}/by-status`, { params: this.params({ search }) });
-  }
-
-  getByOwnership(search?: string): Observable<ReportResponse> {
-    return this.http.get<ReportResponse>(`${this.base}/by-ownership`, { params: this.params({ search }) });
-  }
-
-  exportCsv(search?: string): Observable<Blob> {
-    return this.http.get(`${this.base}/inventory/export/csv`, {
-      params: this.params({ search }),
+  exportCsv(query: ReportQuery = {}): Observable<Blob> {
+    const params = {
+      search: query.search,
+      deviceTypeId: query.deviceTypeId,
+      status: query.status,
+      ownershipType: query.ownershipType,
+      zoneId: query.zoneId,
+      office: query.office,
+      userOfAsset: query.userOfAsset,
+      registeredBy: query.registeredBy,
+      from: query.from,
+      to: query.to,
+    };
+    return this.http.get(`${this.base}/export/csv`, {
+      params: this.params(params),
       responseType: 'blob',
     });
   }
 
-  private params(values: Record<string, string | number | null | undefined>): HttpParams {
+  private params(values: object): HttpParams {
     let params = new HttpParams();
     Object.entries(values).forEach(([key, value]) => {
       if (value !== null && value !== undefined && value !== '') {

@@ -3,11 +3,9 @@ import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
 import { AdminLayout } from './features/layout/admin-layout/admin-layout';
 import { Login } from './features/auth/login/login';
-import { Register } from './features/auth/register/register';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
-  { path: 'register', component: Register },
   {
     path: 'admin',
     component: AdminLayout,

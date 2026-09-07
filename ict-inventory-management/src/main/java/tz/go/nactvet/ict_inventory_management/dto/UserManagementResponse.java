@@ -20,6 +20,9 @@ public class UserManagementResponse {
     private String approvedByName;
     private LocalDateTime approvedAt;
 
+    private Long createdById;
+    private String createdByName;
+
     private Long directorateId;
     private String directorateName;
 
@@ -182,5 +185,21 @@ public class UserManagementResponse {
 
     public void setApprovedAt(LocalDateTime approvedAt) {
         this.approvedAt = approvedAt;
+    }
+
+    public Long getCreatedById() {
+        return createdById;
+    }
+
+    public void setCreatedById(Long createdById) {
+        this.createdById = createdById;
+    }
+
+    public String getCreatedByName() {
+        return createdByName;
+    }
+
+    public void setCreatedByName(String createdByName) {
+        this.createdByName = createdByName;
     }
 }

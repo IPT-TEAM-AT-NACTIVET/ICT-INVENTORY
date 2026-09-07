@@ -48,10 +48,5 @@
     <button type="submit" class="btn btn-primary btn-block" [disabled]="loading()">
       {{ loading() ? 'Signing in…' : t('login.submit') }}
     </button>
-
-    <p class="login-alt">
-      {{ t('login.noAccount') }}
-      <a routerLink="/register">{{ t('login.register') }}</a>
-    </p>
   </form>
 </div>

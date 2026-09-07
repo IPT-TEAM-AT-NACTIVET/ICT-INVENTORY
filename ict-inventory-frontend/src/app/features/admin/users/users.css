@@ -1,11 +1,11 @@
-.filter-bar {
+.toolbar {
   display: flex;
   align-items: flex-end;
   gap: 0.75rem;
   flex-wrap: wrap;
 }
 
-.filter-bar .form-field {
+.search-field {
   flex: 1;
   min-width: 240px;
 }
@@ -15,11 +15,10 @@
   gap: 0.5rem;
 }
 
-.new-password {
-  font-family: monospace;
-  font-size: 1.05rem;
-  font-weight: 700;
-  word-break: break-all;
+.toolbar-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
 }
 
 section.card + section.card {
@@ -28,4 +27,69 @@ section.card + section.card {
 
 h3 {
   margin-top: 0;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 640px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+  padding: 1.5rem;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.modal-header h3 {
+  margin: 0;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.form-section {
+  margin-bottom: 1.25rem;
+}
+
+.form-section h4 {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
 }

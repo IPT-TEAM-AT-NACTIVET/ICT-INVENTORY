@@ -19,6 +19,8 @@ import jakarta.validation.Valid;
 import tz.go.nactvet.ict_inventory_management.dto.UserManagementCreateRequest;
 import tz.go.nactvet.ict_inventory_management.dto.UserManagementResponse;
 import tz.go.nactvet.ict_inventory_management.dto.UserManagementUpdateRequest;
+import tz.go.nactvet.ict_inventory_management.exception.BadRequestException;
+import tz.go.nactvet.ict_inventory_management.repository.UserRepository;
 import tz.go.nactvet.ict_inventory_management.service.UserManagementService;
 
 @RestController
@@ -26,15 +28,23 @@ import tz.go.nactvet.ict_inventory_management.service.UserManagementService;
 public class UserController {
 
     private final UserManagementService userManagementService;
+    private final UserRepository userRepository;
 
-    public UserController(UserManagementService userManagementService) {
+    public UserController(UserManagementService userManagementService, UserRepository userRepository) {
         this.userManagementService = userManagementService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping
     public ResponseEntity<UserManagementResponse> create(
-            @Valid @RequestBody UserManagementCreateRequest request) {
-        return ResponseEntity.ok(userManagementService.create(request));
+            @Valid @RequestBody UserManagementCreateRequest request,
+            Authentication authentication) {
+        Long actorId = actorId(authentication);
+        if (actorId == null) {
+            throw new BadRequestException("Authentication required.");
+        }
+        requireActiveActor(actorId);
+        return ResponseEntity.ok(userManagementService.create(request, actorId));
     }
 
     @GetMapping
@@ -56,32 +66,53 @@ public class UserController {
 
     @PatchMapping("/{id}/toggle-enabled")
     public ResponseEntity<Void> toggleEnabled(@PathVariable Long id, Authentication authentication) {
-        userManagementService.toggleEnabled(id, actorId(authentication));
+        Long actorId = actorId(authentication);
+        requireActiveActor(actorId);
+        userManagementService.toggleEnabled(id, actorId);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/activate")
     public ResponseEntity<Void> activate(@PathVariable Long id, Authentication authentication) {
-        userManagementService.activate(id, actorId(authentication));
+        Long actorId = actorId(authentication);
+        requireActiveActor(actorId);
+        userManagementService.activate(id, actorId);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/deactivate")
     public ResponseEntity<Void> deactivate(@PathVariable Long id, Authentication authentication) {
-        userManagementService.deactivate(id, actorId(authentication));
+        Long actorId = actorId(authentication);
+        requireActiveActor(actorId);
+        userManagementService.deactivate(id, actorId);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/approve")
     public ResponseEntity<UserManagementResponse> approve(@PathVariable Long id, Authentication authentication) {
-        userManagementService.activate(id, actorId(authentication));
+        Long actorId = actorId(authentication);
+        requireActiveActor(actorId);
+        userManagementService.activate(id, actorId);
         return ResponseEntity.ok(userManagementService.findById(id));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id, Authentication authentication) {
-        userManagementService.delete(id, actorId(authentication));
+        Long actorId = actorId(authentication);
+        requireActiveActor(actorId);
+        userManagementService.delete(id, actorId);
         return ResponseEntity.noContent().build();
+    }
+
+    private void requireActiveActor(Long actorId) {
+        if (actorId == null) {
+            throw new BadRequestException("Authentication required.");
+        }
+        var user = userRepository.findById(actorId)
+                .orElseThrow(() -> new BadRequestException("User not found."));
+        if (!user.isEnabled()) {
+            throw new BadRequestException("Your account is not active. You cannot perform this action.");
+        }
     }
 
     private Long actorId(Authentication authentication) {
