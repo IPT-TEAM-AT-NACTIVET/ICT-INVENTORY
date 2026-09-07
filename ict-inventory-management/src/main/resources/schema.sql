@@ -209,3 +209,40 @@ END $$;
 @@
 CREATE INDEX IF NOT EXISTS idx_users_approved_by ON users(approved_by);
 @@
+-- Device status migrated from legacy ACTIVE/DEFECTIVE labels to WORKING/NOT_WORKING.
+-- Runs only when the assets table already exists (fresh databases are created by
+-- Hibernate using the new labels directly). Idempotent.
+DO $$
+DECLARE
+    con RECORD;
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+               WHERE table_schema = current_schema() AND table_name = 'assets') THEN
+        -- Drop any legacy CHECK constraint that still only allows ACTIVE/DEFECTIVE.
+        FOR con IN
+            SELECT conname
+            FROM pg_constraint
+            WHERE conrelid = to_regclass('assets') AND contype = 'c'
+              AND pg_get_constraintdef(oid) ILIKE '%device_status%'
+        LOOP
+            EXECUTE 'ALTER TABLE assets DROP CONSTRAINT ' || quote_ident(con.conname);
+        END LOOP;
+        UPDATE assets SET device_status = 'WORKING' WHERE device_status = 'ACTIVE';
+        UPDATE assets SET device_status = 'NOT_WORKING' WHERE device_status = 'DEFECTIVE';
+        ALTER TABLE assets ADD CONSTRAINT assets_device_status_check
+            CHECK (device_status IN ('WORKING', 'NOT_WORKING'));
+    END IF;
+END $$;
+@@
+-- Rename assets.device_name to device_model. Guarded by column existence so it
+-- works on both fresh databases (Hibernate creates device_model directly) and
+-- legacy databases that still carry the old column. Idempotent.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns
+               WHERE table_schema = current_schema() AND table_name = 'assets'
+                 AND column_name = 'device_name') THEN
+        ALTER TABLE assets RENAME COLUMN device_name TO device_model;
+    END IF;
+END $$;
+@@

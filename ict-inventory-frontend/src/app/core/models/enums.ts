@@ -1,5 +1,5 @@
 export type Role = 'ADMIN';
 
-export type DeviceStatus = 'ACTIVE' | 'DEFECTIVE';
+export type DeviceStatus = 'WORKING' | 'NOT_WORKING';
 
 export type OwnershipType = 'OFFICE' | 'PERSONAL';

@@ -13,10 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import tz.go.nactvet.ict_inventory_management.dto.AssetResponse;
-import tz.go.nactvet.ict_inventory_management.dto.PagedResponse;
 import tz.go.nactvet.ict_inventory_management.dto.ReportResponse;
 import tz.go.nactvet.ict_inventory_management.dto.ReportSummaryResponse;
-import tz.go.nactvet.ict_inventory_management.entity.Asset;
 import tz.go.nactvet.ict_inventory_management.enums.DeviceStatus;
 import tz.go.nactvet.ict_inventory_management.enums.OwnershipType;
 import tz.go.nactvet.ict_inventory_management.repository.AssetRepository;
@@ -29,25 +27,20 @@ public class ReportService {
 
     private final AssetRepository assetRepository;
     private final AssetMapper assetMapper;
+    private final AssetService assetService;
 
-    public ReportService(AssetRepository assetRepository, AssetMapper assetMapper) {
+    public ReportService(AssetRepository assetRepository, AssetMapper assetMapper, AssetService assetService) {
         this.assetRepository = assetRepository;
         this.assetMapper = assetMapper;
+        this.assetService = assetService;
     }
 
     /**
-     * Inventory report with server-side search and pagination. Each asset retains
-     * its audit information (registered by / registered at).
+     * Full (un-paginated) inventory report with the same case-insensitive
+     * search used by the Inventory page, including the registering user.
      */
-    public PagedResponse<AssetResponse> getInventoryReport(String search, int page, int size) {
-        String term = like(search);
-        Page<Asset> assetPage = assetRepository.findBySearch(term,
-                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
-        List<AssetResponse> content = assetPage.getContent().stream()
-                .map(assetMapper::toResponse)
-                .collect(Collectors.toList());
-        return new PagedResponse<>(content, assetPage.getNumber(), assetPage.getSize(),
-                assetPage.getTotalElements(), assetPage.getTotalPages());
+    public List<AssetResponse> getInventoryReport(String search) {
+        return assetService.searchAll(search);
     }
 
     /**
@@ -59,22 +52,22 @@ public class ReportService {
         ReportSummaryResponse response = new ReportSummaryResponse();
         response.setTotalAssets(assetRepository.countWithSearch(term));
 
-        long active = 0;
-        long defective = 0;
+        long working = 0;
+        long notWorking = 0;
         for (Object[] row : assetRepository.countByDeviceStatusGroupedWithSearch(term)) {
             if (row[0] == null) {
                 continue;
             }
             DeviceStatus status = (DeviceStatus) row[0];
             long count = toLong(row[1]);
-            if (status == DeviceStatus.ACTIVE) {
-                active = count;
-            } else if (status == DeviceStatus.DEFECTIVE) {
-                defective = count;
+            if (status == DeviceStatus.WORKING) {
+                working = count;
+            } else if (status == DeviceStatus.NOT_WORKING) {
+                notWorking = count;
             }
         }
-        response.setActiveAssets(active);
-        response.setDefectiveAssets(defective);
+        response.setActiveAssets(working);
+        response.setDefectiveAssets(notWorking);
 
         long office = 0;
         long personal = 0;
@@ -97,10 +90,6 @@ public class ReportService {
 
     public ReportResponse getReportByZone(String search) {
         return buildGroupedReport("by-zone", assetRepository.countByZoneGroupedWithSearch(like(search)));
-    }
-
-    public ReportResponse getReportByOffice(String search) {
-        return buildTwoColumnReport("by-office", assetRepository.countByOfficeGroupedWithSearch(like(search)));
     }
 
     public ReportResponse getReportByDeviceType(String search) {
@@ -126,12 +115,12 @@ public class ReportService {
     public String exportInventoryCsv(String search) {
         List<AssetResponse> assets = getFilteredAssets(search);
         StringBuilder csv = new StringBuilder();
-        csv.append("Asset Number,Serial Number,Device Type,Device Name,User of Asset,Zone,Office,Ownership,Device Status\n");
+        csv.append("Asset Number,Serial Number,Device Type,Device Model,User of Asset,Zone,Office,Ownership,Device Status\n");
         for (AssetResponse asset : assets) {
             csv.append(csv(asset.getAssetNumber())).append(',')
                .append(csv(asset.getSerialNumber())).append(',')
                .append(csv(asset.getDeviceTypeName())).append(',')
-               .append(csv(asset.getDeviceName())).append(',')
+               .append(csv(asset.getDeviceModel())).append(',')
                .append(csv(asset.getUserOfAsset())).append(',')
                .append(csv(asset.getZoneName())).append(',')
                .append(csv(asset.getOffice())).append(',')

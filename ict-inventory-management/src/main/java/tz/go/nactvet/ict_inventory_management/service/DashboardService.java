@@ -34,8 +34,8 @@ public class DashboardService {
         DashboardResponse response = new DashboardResponse();
 
         response.setTotalAssets(assetRepository.count());
-        response.setActiveAssets(assetRepository.countByDeviceStatus(DeviceStatus.ACTIVE));
-        response.setDefectiveAssets(assetRepository.countByDeviceStatus(DeviceStatus.DEFECTIVE));
+        response.setActiveAssets(assetRepository.countByDeviceStatus(DeviceStatus.WORKING));
+        response.setDefectiveAssets(assetRepository.countByDeviceStatus(DeviceStatus.NOT_WORKING));
 
         response.setAssetsByDeviceType(toMap(assetRepository.countByDeviceTypeGrouped()));
         response.setAssetsByZone(toMap(assetRepository.countByZoneGrouped()));
@@ -52,8 +52,8 @@ public class DashboardService {
         UserDashboardResponse response = new UserDashboardResponse();
 
         response.setTotalAssets(assetRepository.count());
-        response.setActiveAssets(assetRepository.countByDeviceStatus(DeviceStatus.ACTIVE));
-        response.setDefectiveAssets(assetRepository.countByDeviceStatus(DeviceStatus.DEFECTIVE));
+        response.setActiveAssets(assetRepository.countByDeviceStatus(DeviceStatus.WORKING));
+        response.setDefectiveAssets(assetRepository.countByDeviceStatus(DeviceStatus.NOT_WORKING));
 
         response.setAssetsByDeviceType(toMap(assetRepository.countByDeviceTypeGrouped()));
         response.setAssetsByZone(toMap(assetRepository.countByZoneGrouped()));

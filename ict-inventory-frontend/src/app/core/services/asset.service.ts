@@ -22,6 +22,14 @@ export class AssetService {
     }
     return this.http.get<Paged<Asset>>(this.base, { params });
   }
+
+  getAllAssets(search?: string): Observable<Asset[]> {
+    let params = new HttpParams();
+    if (search && search.trim()) {
+      params = params.set('search', search.trim());
+    }
+    return this.http.get<Asset[]>(`${this.base}/all`, { params });
+  }
   getAsset(id: number): Observable<Asset> {
     return this.http.get<Asset>(`${this.base}/${id}`);
   }

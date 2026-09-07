@@ -79,7 +79,7 @@ public class AssetService {
         Asset asset = new Asset();
         asset.setAssetNumber(request.getAssetNumber());
         asset.setSerialNumber(request.getSerialNumber());
-        asset.setDeviceName(request.getDeviceName());
+        asset.setDeviceModel(request.getDeviceModel());
         asset.setDeviceType(deviceType);
         asset.setUserOfAsset(normalizeUserOfAsset(request.getUserOfAsset()));
         asset.setCreatedBy(createdBy);
@@ -92,8 +92,8 @@ public class AssetService {
         Asset saved = assetRepository.save(asset);
         String actor = createdBy != null ? createdBy.getUsername() : "system";
         auditLogService.log("CREATE", "ASSET", saved.getId(), actor, createdBy != null ? createdBy.getId() : null,
-                "Asset registered: " + saved.getDeviceName() + " (" + saved.getAssetNumber() + ")");
-        log.info("Asset created: {} ({})", saved.getDeviceName(), saved.getAssetNumber());
+                "Asset registered: " + saved.getDeviceModel() + " (" + saved.getAssetNumber() + ")");
+        log.info("Asset created: {} ({})", saved.getDeviceModel(), saved.getAssetNumber());
         return assetMapper.toResponse(saved);
     }
 
@@ -139,7 +139,7 @@ public class AssetService {
             String actor = createdBy != null ? createdBy.getUsername() : "system";
             auditLogService.log("CREATE", "ASSET", asset.getId(), actor,
                     createdBy != null ? createdBy.getId() : null,
-                    "Asset imported from CSV: " + asset.getDeviceName() + " (" + asset.getAssetNumber() + ")");
+                    "Asset imported from CSV: " + asset.getDeviceModel() + " (" + asset.getAssetNumber() + ")");
         }
         return result;
     }
@@ -149,7 +149,7 @@ public class AssetService {
                                User createdBy) {
         String assetNumber = value(row, header, "assetNumber");
         String serialNumber = value(row, header, "serialNumber");
-        String deviceName = value(row, header, "deviceName");
+        String deviceModel = value(row, header, "deviceModel");
         String deviceTypeName = value(row, header, "deviceType");
         String userOfAsset = value(row, header, "userOfAsset");
         String zoneName = value(row, header, "zone");
@@ -157,8 +157,8 @@ public class AssetService {
         String ownershipRaw = value(row, header, "ownership");
         String statusRaw = value(row, header, "deviceStatus");
 
-        if (deviceName == null || deviceName.isBlank()) {
-            result.addError(rowNumber, "Device Name is required");
+        if (deviceModel == null || deviceModel.isBlank()) {
+            result.addError(rowNumber, "Device Model is required");
             return null;
         }
         if (deviceTypeName == null || deviceTypeName.isBlank()) {
@@ -191,7 +191,7 @@ public class AssetService {
 
         DeviceStatus status = parseStatus(statusRaw);
         if (status == null) {
-            result.addError(rowNumber, "Invalid Device Status: '" + statusRaw + "'. Expected ACTIVE or DEFECTIVE");
+            result.addError(rowNumber, "Invalid Device Status: '" + statusRaw + "'. Expected WORKING or NOT_WORKING");
             return null;
         }
 
@@ -226,7 +226,7 @@ public class AssetService {
         Asset asset = new Asset();
         asset.setAssetNumber(normAssetNumber);
         asset.setSerialNumber(normSerialNumber);
-        asset.setDeviceName(deviceName.trim());
+        asset.setDeviceModel(deviceModel.trim());
         asset.setDeviceType(deviceType);
         asset.setUserOfAsset(normUser);
         asset.setCreatedBy(createdBy);
@@ -352,10 +352,10 @@ public class AssetService {
 
     @Transactional(readOnly = true)
     public PagedResponse<AssetResponse> findFiltered(int page, int size, String assetNumber, String serialNumber,
-            String deviceName, Long deviceTypeId, String userOfAsset, Long zoneId, String office, OwnershipType ownershipType,
+            String deviceModel, Long deviceTypeId, String userOfAsset, Long zoneId, String office, OwnershipType ownershipType,
             DeviceStatus deviceStatus) {
         Page<Asset> assetPage = assetRepository.findByFilters(
-                blankToNull(assetNumber), blankToNull(serialNumber), blankToNull(deviceName),
+                blankToNull(assetNumber), blankToNull(serialNumber), blankToNull(deviceModel),
                 deviceTypeId, blankToNull(userOfAsset),
                 zoneId, blankToNull(office), ownershipType, deviceStatus,
                 PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
@@ -368,9 +368,10 @@ public class AssetService {
 
     @Transactional(readOnly = true)
     public PagedResponse<AssetResponse> findSearch(int page, int size, String search) {
-        String term = search == null || search.isBlank()
-                ? "%"
-                : "%" + search.trim().toLowerCase(Locale.ROOT) + "%";
+        if (search == null || search.isBlank()) {
+            return findAllPaged(page, size);
+        }
+        String term = "%" + search.trim().toLowerCase(Locale.ROOT) + "%";
         Page<Asset> assetPage = assetRepository.findBySearch(term,
                 PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         List<AssetResponse> content = assetPage.getContent().stream()
@@ -378,6 +379,39 @@ public class AssetService {
                 .collect(Collectors.toList());
         return new PagedResponse<>(content, assetPage.getNumber(), assetPage.getSize(),
                 assetPage.getTotalElements(), assetPage.getTotalPages());
+    }
+
+    /**
+     * Un-paginated inventory search. The display value "not working" is mapped to
+     * the stored enum value NOT_WORKING (otherwise the space/underscore difference
+     * would prevent the phrase from ever matching), and "working" is mapped to
+     * WORKING so the search does not also catch NOT_WORKING rows. Any other term
+     * is matched case-insensitively across every asset field, including the
+     * registering user's name.
+     */
+    @Transactional(readOnly = true)
+    public List<AssetResponse> searchAll(String search) {
+        String term = null;
+        List<DeviceStatus> statuses = new ArrayList<>();
+        boolean statusOn = false;
+        if (search != null && !search.isBlank()) {
+            String normalized = search.trim().toLowerCase(Locale.ROOT)
+                    .replace('_', ' ')
+                    .replaceAll("\\s+", " ")
+                    .trim();
+            term = "%" + normalized + "%";
+            if (normalized.contains("not working")) {
+                statuses = List.of(DeviceStatus.NOT_WORKING);
+                statusOn = true;
+            } else if (normalized.contains("working")) {
+                statuses = List.of(DeviceStatus.WORKING);
+                statusOn = true;
+            }
+        }
+        return assetRepository.searchAll(term, statusOn, statuses)
+                .stream()
+                .map(assetMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -418,8 +452,8 @@ public class AssetService {
         Asset saved = assetRepository.save(asset);
         auditLogService.log("UPDATE", "ASSET", saved.getId(),
                 updatedBy != null ? updatedBy.getUsername() : "admin", updatedBy != null ? updatedBy.getId() : null,
-                "Asset updated: " + saved.getDeviceName() + " (" + saved.getAssetNumber() + ")");
-        log.info("Asset updated: {} ({})", saved.getDeviceName(), saved.getAssetNumber());
+                "Asset updated: " + saved.getDeviceModel() + " (" + saved.getAssetNumber() + ")");
+        log.info("Asset updated: {} ({})", saved.getDeviceModel(), saved.getAssetNumber());
         return assetMapper.toResponse(saved);
     }
 
@@ -447,8 +481,8 @@ public class AssetService {
             }
             asset.setSerialNumber(serialNumber);
         }
-        if (request.getDeviceName() != null) {
-            asset.setDeviceName(request.getDeviceName());
+        if (request.getDeviceModel() != null) {
+            asset.setDeviceModel(request.getDeviceModel());
         }
         if (request.getDeviceTypeId() != null) {
             DeviceType deviceType = deviceTypeRepository.findById(request.getDeviceTypeId())

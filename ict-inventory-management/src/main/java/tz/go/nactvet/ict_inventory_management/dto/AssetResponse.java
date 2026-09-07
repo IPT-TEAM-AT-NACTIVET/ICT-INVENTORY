@@ -10,7 +10,7 @@ public class AssetResponse {
     private Long id;
     private String assetNumber;
     private String serialNumber;
-    private String deviceName;
+    private String deviceModel;
 
     private Long deviceTypeId;
     private String deviceTypeName;
@@ -57,12 +57,12 @@ public class AssetResponse {
         this.serialNumber = serialNumber;
     }
 
-    public String getDeviceName() {
-        return deviceName;
+    public String getDeviceModel() {
+        return deviceModel;
     }
 
-    public void setDeviceName(String deviceName) {
-        this.deviceName = deviceName;
+    public void setDeviceModel(String deviceModel) {
+        this.deviceModel = deviceModel;
     }
 
     public Long getDeviceTypeId() {

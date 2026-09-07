@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../env';
-import { Asset, Paged } from '../models/asset.model';
+import { Asset } from '../models/asset.model';
 import { ReportResponse, ReportSummary } from '../models/report.model';
 
 @Injectable({ providedIn: 'root' })
@@ -14,14 +14,10 @@ export class ReportService {
     return this.http.get<ReportSummary>(`${this.base}/summary`, { params: this.params({ search }) });
   }
 
-  getInventory(search: string | undefined, page: number, size: number): Observable<Paged<Asset>> {
-    return this.http.get<Paged<Asset>>(`${this.base}/inventory`, {
-      params: this.params({ search, page, size }),
+  getInventory(search?: string): Observable<Asset[]> {
+    return this.http.get<Asset[]>(`${this.base}/inventory`, {
+      params: this.params({ search }),
     });
-  }
-
-  getByOffice(search?: string): Observable<ReportResponse> {
-    return this.http.get<ReportResponse>(`${this.base}/by-office`, { params: this.params({ search }) });
   }
 
   getByZone(search?: string): Observable<ReportResponse> {

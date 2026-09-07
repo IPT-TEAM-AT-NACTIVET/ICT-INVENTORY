@@ -205,11 +205,11 @@ class TwoRoleWorkflowTest {
         String assetBody = "{"
                 + "\"assetNumber\":\"AST-001\","
                 + "\"serialNumber\":\"SN-001\","
-                + "\"deviceName\":\"ICT Laptop\","
+                + "\"deviceModel\":\"ICT Laptop\","
                 + "\"deviceTypeId\":" + deviceTypeId + ","
                 + "\"userOfAsset\":\"Philip Tyson\","
                 + "\"ownershipType\":\"OFFICE\","
-                + "\"deviceStatus\":\"ACTIVE\","
+                + "\"deviceStatus\":\"WORKING\","
                 + "\"zoneId\":" + zoneId + ","
                 + "\"office\":\"B12\""
                 + "}";
@@ -235,7 +235,7 @@ class TwoRoleWorkflowTest {
                         .param("search", "ict lap"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.content[0].deviceName").value("ICT Laptop"));
+                .andExpect(jsonPath("$.content[0].deviceModel").value("ICT Laptop"));
 
         mockMvc.perform(get("/admin/assets")
                         .header("Authorization", "Bearer " + officerToken)
@@ -279,11 +279,11 @@ class TwoRoleWorkflowTest {
         String assetBody = "{"
                 + "\"assetNumber\":\"AST-002\","
                 + "\"serialNumber\":\"SN-002\","
-                + "\"deviceName\":\"Monitor\","
+                + "\"deviceModel\":\"Monitor\","
                 + "\"deviceTypeId\":" + deviceTypeId + ","
                 + "\"userOfAsset\":\"Mary Johnson\","
                 + "\"ownershipType\":\"OFFICE\","
-                + "\"deviceStatus\":\"ACTIVE\","
+                + "\"deviceStatus\":\"WORKING\","
                 + "\"zoneId\":" + zoneId + ","
                 + "\"office\":\"B12\""
                 + "}";

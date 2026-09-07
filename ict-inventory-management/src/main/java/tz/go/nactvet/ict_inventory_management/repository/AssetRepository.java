@@ -1,5 +1,6 @@
 package tz.go.nactvet.ict_inventory_management.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,37 +66,19 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
     @Query("SELECT a.ownershipType, COUNT(a) FROM Asset a GROUP BY a.ownershipType")
     List<Object[]> countByOwnershipGrouped();
 
-    @Query("SELECT a.assetNumber, a.deviceName, a.deviceType.name, a.userOfAsset, " +
+    @Query("SELECT a.assetNumber, a.deviceModel, a.deviceType.name, a.userOfAsset, " +
            "a.zone.name, a.office, cb.fullName, a.createdAt " +
            "FROM Asset a " +
            "LEFT JOIN a.createdBy cb " +
            "ORDER BY a.createdAt DESC")
     List<Object[]> findRecentRegistrations(Pageable pageable);
 
-    @Query("SELECT a.office, COUNT(a) FROM Asset a WHERE a.office IS NOT NULL GROUP BY a.office")
-    List<Object[]> countByOfficeGrouped();
-
-    @Query("SELECT a.office, COUNT(a) FROM Asset a " +
-           "WHERE a.office IS NOT NULL AND (" +
-           "  (:s IS NULL) OR " +
-           "  LOWER(COALESCE(a.assetNumber,'')) LIKE :s OR " +
-           "  LOWER(COALESCE(a.serialNumber,'')) LIKE :s OR " +
-           "  LOWER(a.deviceName) LIKE :s OR " +
-           "  LOWER(COALESCE(a.userOfAsset,'')) LIKE :s OR " +
-           "  LOWER(COALESCE(a.office,'')) LIKE :s OR " +
-           "  LOWER(a.zone.name) LIKE :s OR " +
-           "  LOWER(a.deviceType.name) LIKE :s OR " +
-           "  LOWER(CAST(a.ownershipType AS string)) LIKE :s OR " +
-           "  LOWER(CAST(a.deviceStatus AS string)) LIKE :s " +
-           ") GROUP BY a.office")
-    List<Object[]> countByOfficeGroupedWithSearch(@Param("s") String search);
-
     @Query("SELECT a.zone.id, a.zone.name, COUNT(a) FROM Asset a " +
            "WHERE a.zone IS NOT NULL AND (" +
            "  (:s IS NULL) OR " +
            "  LOWER(COALESCE(a.assetNumber,'')) LIKE :s OR " +
            "  LOWER(COALESCE(a.serialNumber,'')) LIKE :s OR " +
-           "  LOWER(a.deviceName) LIKE :s OR " +
+           "  LOWER(a.deviceModel) LIKE :s OR " +
            "  LOWER(COALESCE(a.userOfAsset,'')) LIKE :s OR " +
            "  LOWER(COALESCE(a.office,'')) LIKE :s OR " +
            "  LOWER(a.zone.name) LIKE :s OR " +
@@ -110,7 +93,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            "  (:s IS NULL) OR " +
            "  LOWER(COALESCE(a.assetNumber,'')) LIKE :s OR " +
            "  LOWER(COALESCE(a.serialNumber,'')) LIKE :s OR " +
-           "  LOWER(a.deviceName) LIKE :s OR " +
+           "  LOWER(a.deviceModel) LIKE :s OR " +
            "  LOWER(COALESCE(a.userOfAsset,'')) LIKE :s OR " +
            "  LOWER(COALESCE(a.office,'')) LIKE :s OR " +
            "  LOWER(a.zone.name) LIKE :s OR " +
@@ -125,7 +108,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            "  (:s IS NULL) OR " +
            "  LOWER(COALESCE(a.assetNumber,'')) LIKE :s OR " +
            "  LOWER(COALESCE(a.serialNumber,'')) LIKE :s OR " +
-           "  LOWER(a.deviceName) LIKE :s OR " +
+           "  LOWER(a.deviceModel) LIKE :s OR " +
            "  LOWER(COALESCE(a.userOfAsset,'')) LIKE :s OR " +
            "  LOWER(COALESCE(a.office,'')) LIKE :s OR " +
            "  LOWER(a.zone.name) LIKE :s OR " +
@@ -140,7 +123,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            "  (:s IS NULL) OR " +
            "  LOWER(COALESCE(a.assetNumber,'')) LIKE :s OR " +
            "  LOWER(COALESCE(a.serialNumber,'')) LIKE :s OR " +
-           "  LOWER(a.deviceName) LIKE :s OR " +
+           "  LOWER(a.deviceModel) LIKE :s OR " +
            "  LOWER(COALESCE(a.userOfAsset,'')) LIKE :s OR " +
            "  LOWER(COALESCE(a.office,'')) LIKE :s OR " +
            "  LOWER(a.zone.name) LIKE :s OR " +
@@ -154,7 +137,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            "  (:s IS NULL) OR " +
            "  LOWER(COALESCE(a.assetNumber,'')) LIKE :s OR " +
            "  LOWER(COALESCE(a.serialNumber,'')) LIKE :s OR " +
-           "  LOWER(a.deviceName) LIKE :s OR " +
+           "  LOWER(a.deviceModel) LIKE :s OR " +
            "  LOWER(COALESCE(a.userOfAsset,'')) LIKE :s OR " +
            "  LOWER(COALESCE(a.office,'')) LIKE :s OR " +
            "  LOWER(a.zone.name) LIKE :s OR " +
@@ -167,12 +150,13 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
     @EntityGraph(attributePaths = {"zone", "deviceType"})
     Page<Asset> findByOrderByCreatedAtDesc(Pageable pageable);
 
-    @Query("SELECT a FROM Asset a " +
+@Query("SELECT a FROM Asset a " +
            "LEFT JOIN FETCH a.zone " +
            "LEFT JOIN FETCH a.deviceType " +
+           "LEFT JOIN FETCH a.createdBy " +
            "WHERE LOWER(COALESCE(a.assetNumber, '')) LIKE :search " +
            "OR LOWER(COALESCE(a.serialNumber, '')) LIKE :search " +
-           "OR LOWER(a.deviceName) LIKE :search " +
+           "OR LOWER(a.deviceModel) LIKE :search " +
            "OR LOWER(a.userOfAsset) LIKE :search " +
            "OR LOWER(COALESCE(a.office, '')) LIKE :search " +
            "OR LOWER(CAST(a.ownershipType AS string)) LIKE :search " +
@@ -184,10 +168,30 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
 
     @Query("SELECT a FROM Asset a " +
            "LEFT JOIN FETCH a.zone " +
+           "LEFT JOIN FETCH a.deviceType " +
+           "LEFT JOIN FETCH a.createdBy " +
+           "WHERE (:term IS NULL) " +
+           "OR LOWER(COALESCE(a.assetNumber, '')) LIKE :term " +
+           "OR LOWER(COALESCE(a.serialNumber, '')) LIKE :term " +
+           "OR LOWER(a.deviceModel) LIKE :term " +
+           "OR LOWER(COALESCE(a.userOfAsset, '')) LIKE :term " +
+           "OR LOWER(COALESCE(a.office, '')) LIKE :term " +
+           "OR LOWER(COALESCE(a.createdBy.fullName, '')) LIKE :term " +
+           "OR LOWER(a.zone.name) LIKE :term " +
+           "OR LOWER(a.deviceType.name) LIKE :term " +
+           "OR LOWER(CAST(a.ownershipType AS string)) LIKE :term " +
+           "OR (:statusOn = true AND a.deviceStatus IN :statuses) " +
+           "ORDER BY a.createdAt DESC")
+    List<Asset> searchAll(@Param("term") String term,
+                          @Param("statusOn") boolean statusOn,
+                          @Param("statuses") Collection<DeviceStatus> statuses);
+
+    @Query("SELECT a FROM Asset a " +
+           "LEFT JOIN FETCH a.zone " +
            "LEFT JOIN FETCH a.deviceType WHERE " +
            "(:assetNumber IS NULL OR a.assetNumber LIKE %:assetNumber%) AND " +
            "(:serialNumber IS NULL OR a.serialNumber LIKE %:serialNumber%) AND " +
-           "(:deviceName IS NULL OR a.deviceName LIKE %:deviceName%) AND " +
+           "(:deviceModel IS NULL OR a.deviceModel LIKE %:deviceModel%) AND " +
            "(:deviceTypeId IS NULL OR a.deviceType.id = :deviceTypeId) AND " +
            "(:userOfAsset IS NULL OR a.userOfAsset LIKE %:userOfAsset%) AND " +
            "(:zoneId IS NULL OR a.zone.id = :zoneId) AND " +
@@ -198,7 +202,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
     Page<Asset> findByFilters(
            @Param("assetNumber") String assetNumber,
            @Param("serialNumber") String serialNumber,
-           @Param("deviceName") String deviceName,
+           @Param("deviceModel") String deviceModel,
            @Param("deviceTypeId") Long deviceTypeId,
            @Param("userOfAsset") String userOfAsset,
            @Param("zoneId") Long zoneId,

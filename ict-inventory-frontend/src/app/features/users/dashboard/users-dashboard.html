@@ -16,7 +16,7 @@
     </div>
     <div class="stat-card">
       <div class="stat-value stat-danger">{{ stats.defectiveAssets }}</div>
-      <div class="stat-label">Faulty</div>
+      <div class="stat-label">Not Working</div>
     </div>
   </div>
 
@@ -62,7 +62,7 @@
       <div class="bars">
         @for (item of entries(stats.assetsByDeviceStatus); track item.key) {
           <div class="bar-row">
-            <span class="bar-label">{{ item.key }}</span>
+            <span class="bar-label">{{ statusLabel(item.key) }}</span>
             <div class="bar-track">
               <div class="bar-fill" [style.width.%]="(item.value / maxBar(stats.assetsByDeviceStatus)) * 100"></div>
             </div>
@@ -110,7 +110,7 @@
             @for (asset of stats.recentAssets; track $index) {
               <tr>
                 <td>{{ asset.assetNumber ?? '—' }}</td>
-                <td>{{ asset.deviceName }}</td>
+                <td>{{ asset.deviceModel }}</td>
                 <td>{{ asset.deviceType ?? '—' }}</td>
                 <td>{{ asset.userOfAsset || '—' }}</td>
                 <td>{{ asset.zone ?? '—' }}</td>

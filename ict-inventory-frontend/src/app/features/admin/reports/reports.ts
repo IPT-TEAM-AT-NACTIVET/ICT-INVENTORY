@@ -20,7 +20,6 @@ import { delay, finalize, retry } from 'rxjs';
 export type ReportType =
   | 'inventory'
   | 'by-zone'
-  | 'by-office'
   | 'by-device-type'
   | 'by-status'
   | 'by-ownership';
@@ -43,7 +42,6 @@ export class Reports implements OnInit {
   readonly reportTypes: ReportType[] = [
     'inventory',
     'by-zone',
-    'by-office',
     'by-device-type',
     'by-status',
     'by-ownership',
@@ -55,9 +53,6 @@ export class Reports implements OnInit {
   readonly report = signal<ReportResponse | null>(null);
   readonly assets = signal<Asset[]>([]);
   readonly totalElements = signal(0);
-  readonly totalPages = signal(0);
-  page = 0;
-  readonly pageSize = 10;
   readonly loading = signal(true);
   readonly error = signal('');
 
@@ -68,13 +63,11 @@ export class Reports implements OnInit {
 
   setType(type: ReportType): void {
     this.reportType = type;
-    this.page = 0;
     this.error.set('');
     this.loadReport();
   }
 
   applySearch(): void {
-    this.page = 0;
     this.error.set('');
     this.loadSummary();
     this.loadReport();
@@ -82,17 +75,8 @@ export class Reports implements OnInit {
 
   resetSearch(): void {
     this.search.setValue('');
-    this.page = 0;
     this.error.set('');
     this.loadSummary();
-    this.loadReport();
-  }
-
-  goToPage(target: number): void {
-    if (target < 0 || target >= this.totalPages() || target === this.page) {
-      return;
-    }
-    this.page = target;
     this.loadReport();
   }
 
@@ -157,9 +141,6 @@ export class Reports implements OnInit {
       case 'by-zone':
         op = this.reportService.getByZone(term);
         break;
-      case 'by-office':
-        op = this.reportService.getByOffice(term);
-        break;
       case 'by-device-type':
         op = this.reportService.getByDeviceType(term);
         break;
@@ -190,17 +171,15 @@ export class Reports implements OnInit {
 
   private loadInventory(term: string | undefined): void {
     this.reportService
-      .getInventory(term, this.page, this.pageSize)
+      .getInventory(term)
       .pipe(
         retry({ count: 1, delay: 400 }),
         finalize(() => this.loading.set(false)),
       )
       .subscribe({
-        next: (paged) => {
-          this.assets.set(paged.content);
-          this.totalElements.set(paged.totalElements);
-          this.totalPages.set(paged.totalPages);
-          this.page = paged.page;
+        next: (list) => {
+          this.assets.set(list);
+          this.totalElements.set(list.length);
           this.report.set(null);
         },
         error: (err) => {

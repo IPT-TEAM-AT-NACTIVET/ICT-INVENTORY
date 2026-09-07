@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import tz.go.nactvet.ict_inventory_management.dto.AssetResponse;
-import tz.go.nactvet.ict_inventory_management.dto.PagedResponse;
 import tz.go.nactvet.ict_inventory_management.dto.ReportResponse;
 import tz.go.nactvet.ict_inventory_management.dto.ReportSummaryResponse;
 import tz.go.nactvet.ict_inventory_management.service.ReportService;
@@ -34,23 +33,15 @@ public class ReportController {
     }
 
     @GetMapping("/inventory")
-    public ResponseEntity<PagedResponse<AssetResponse>> getInventoryReport(
-            @RequestParam(required = false) String search,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(reportService.getInventoryReport(search, page, size));
+    public ResponseEntity<List<AssetResponse>> getInventoryReport(
+            @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(reportService.getInventoryReport(search));
     }
 
     @GetMapping("/by-zone")
     public ResponseEntity<ReportResponse> getReportByZone(
             @RequestParam(required = false) String search) {
         return ResponseEntity.ok(reportService.getReportByZone(search));
-    }
-
-    @GetMapping("/by-office")
-    public ResponseEntity<ReportResponse> getReportByOffice(
-            @RequestParam(required = false) String search) {
-        return ResponseEntity.ok(reportService.getReportByOffice(search));
     }
 
     @GetMapping("/by-device-type")

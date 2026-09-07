@@ -13,8 +13,8 @@ public class AssetRequest {
 
     private String serialNumber;
 
-    @NotBlank(message = "deviceName: must not be blank")
-    private String deviceName;
+    @NotBlank(message = "deviceModel: must not be blank")
+    private String deviceModel;
 
     @NotNull(message = "deviceTypeId: must not be null")
     private Long deviceTypeId;
@@ -52,12 +52,12 @@ public class AssetRequest {
         this.serialNumber = serialNumber;
     }
 
-    public String getDeviceName() {
-        return deviceName;
+    public String getDeviceModel() {
+        return deviceModel;
     }
 
-    public void setDeviceName(String deviceName) {
-        this.deviceName = deviceName;
+    public void setDeviceModel(String deviceModel) {
+        this.deviceModel = deviceModel;
     }
 
     public Long getDeviceTypeId() {

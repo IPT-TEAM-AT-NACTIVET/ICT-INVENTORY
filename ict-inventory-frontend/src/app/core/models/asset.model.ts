@@ -4,7 +4,7 @@ export interface Asset {
   id: number;
   assetNumber: string | null;
   serialNumber: string | null;
-  deviceName: string;
+  deviceModel: string;
   deviceTypeId: number;
   deviceTypeName: string;
   userOfAsset: string;
@@ -32,7 +32,7 @@ export interface Paged<T> {
 export interface AssetRequest {
   assetNumber?: string;
   serialNumber?: string;
-  deviceName: string;
+  deviceModel: string;
   deviceTypeId: number;
   userOfAsset?: string;
   ownershipType: OwnershipType;
@@ -44,7 +44,7 @@ export interface AssetRequest {
 export interface AssetUpdateRequest {
   assetNumber?: string;
   serialNumber?: string;
-  deviceName?: string;
+  deviceModel?: string;
   deviceTypeId?: number;
   userOfAsset?: string;
   deviceStatus?: DeviceStatus;
@@ -56,7 +56,7 @@ export interface AssetUpdateRequest {
 export interface AssetFilter {
   assetNumber?: string;
   serialNumber?: string;
-  deviceName?: string;
+  deviceModel?: string;
   deviceTypeId?: number | null;
   userOfAsset?: string;
   zoneId?: number | null;

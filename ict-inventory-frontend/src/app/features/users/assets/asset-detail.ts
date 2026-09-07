@@ -5,6 +5,7 @@ import { StatusBadge } from '../../../shared/components/status-badge/status-badg
 import { AssetService } from '../../../core/services/asset.service';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
 import { Asset } from '../../../core/models/asset.model';
+import { DeviceStatus } from '../../../core/models/enums';
 import { DEVICE_STATUS_LABELS, OWNERSHIP_TYPE_LABELS, deviceStatusTone } from '../../../shared/utils/enum-labels';
 import { delay, finalize, retry } from 'rxjs';
 
@@ -42,7 +43,7 @@ export class AssetDetail implements OnInit {
       });
   }
 
-  protected deviceTone(status: 'ACTIVE' | 'DEFECTIVE'): 'success' | 'danger' {
+  protected deviceTone(status: DeviceStatus): 'success' | 'danger' {
     return deviceStatusTone(status);
   }
 }

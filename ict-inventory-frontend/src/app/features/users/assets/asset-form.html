@@ -22,10 +22,10 @@
         <input id="serialNumber" type="text" formControlName="serialNumber" />
       </div>
       <div class="form-field">
-        <label for="deviceName">Device Name *</label>
-        <input id="deviceName" type="text" formControlName="deviceName" />
-        @if (form.controls.deviceName.touched && form.controls.deviceName.invalid) {
-          <div class="field-error">Device name is required.</div>
+        <label for="deviceModel">Device Model *</label>
+        <input id="deviceModel" type="text" formControlName="deviceModel" />
+        @if (form.controls.deviceModel.touched && form.controls.deviceModel.invalid) {
+          <div class="field-error">Device model is required.</div>
         }
       </div>
       <div class="form-field">

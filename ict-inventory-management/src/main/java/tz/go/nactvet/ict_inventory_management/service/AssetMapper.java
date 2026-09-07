@@ -13,7 +13,7 @@ public class AssetMapper {
         response.setId(asset.getId());
         response.setAssetNumber(asset.getAssetNumber());
         response.setSerialNumber(asset.getSerialNumber());
-        response.setDeviceName(asset.getDeviceName());
+        response.setDeviceModel(asset.getDeviceModel());
         response.setOwnershipType(asset.getOwnershipType());
         response.setDeviceStatus(asset.getDeviceStatus());
         response.setUserOfAsset(asset.getUserOfAsset());

@@ -27,7 +27,7 @@ export class AssetForm implements OnInit {
   readonly form = this.fb.nonNullable.group({
     assetNumber: [''],
     serialNumber: [''],
-    deviceName: ['', Validators.required],
+    deviceModel: ['', Validators.required],
     deviceTypeId: [0, Validators.required],
     userOfAsset: ['', Validators.required],
     ownershipType: ['', Validators.required],
@@ -61,7 +61,7 @@ export class AssetForm implements OnInit {
         this.form.patchValue({
           assetNumber: asset.assetNumber ?? '',
           serialNumber: asset.serialNumber ?? '',
-          deviceName: asset.deviceName,
+          deviceModel: asset.deviceModel,
           deviceTypeId: asset.deviceTypeId,
           userOfAsset: asset.userOfAsset ?? '',
           ownershipType: asset.ownershipType,
@@ -91,7 +91,7 @@ export class AssetForm implements OnInit {
     const payload = {
       assetNumber: raw.assetNumber || undefined,
       serialNumber: raw.serialNumber || undefined,
-      deviceName: raw.deviceName,
+      deviceModel: raw.deviceModel,
       deviceTypeId: Number(raw.deviceTypeId),
       userOfAsset: raw.userOfAsset.trim(),
       ownershipType: raw.ownershipType as OwnershipType,

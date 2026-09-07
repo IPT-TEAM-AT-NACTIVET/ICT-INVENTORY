@@ -1,8 +1,8 @@
 import { DeviceStatus, OwnershipType } from '../../core/models/enums';
 
 export const DEVICE_STATUS_LABELS: Record<DeviceStatus, string> = {
-  ACTIVE: 'Active',
-  DEFECTIVE: 'Defective',
+  WORKING: 'Working',
+  NOT_WORKING: 'Not Working',
 };
 
 export const OWNERSHIP_TYPE_LABELS: Record<OwnershipType, string> = {
@@ -33,5 +33,5 @@ export function recordEntries(record: Record<string, number>): KeyValue[] {
 }
 
 export function deviceStatusTone(status: DeviceStatus): 'success' | 'danger' {
-  return status === 'ACTIVE' ? 'success' : 'danger';
+  return status === 'WORKING' ? 'success' : 'danger';
 }

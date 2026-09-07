@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { DashboardService } from '../../../core/services/dashboard.service';
-import { recordEntries } from '../../../shared/utils/enum-labels';
+import { recordEntries, DEVICE_STATUS_LABELS } from '../../../shared/utils/enum-labels';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
 import { DashboardResponse } from '../../../core/models/dashboard.model';
 import { RouterLink } from '@angular/router';
@@ -45,6 +45,10 @@ export class AdminDashboard implements OnInit {
   }
 
   entries = recordEntries;
+
+  protected statusLabel(key: string): string {
+    return (DEVICE_STATUS_LABELS as Record<string, string>)[key] ?? key;
+  }
 
   maxBar(values: Record<string, number>): number {
     const max = Math.max(1, ...Object.values(values));

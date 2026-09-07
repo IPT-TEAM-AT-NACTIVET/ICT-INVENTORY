@@ -35,8 +35,16 @@
         <app-language-switcher />
         <app-theme-toggle />
         <div class="topbar-user">
-          <span class="topbar-name">{{ auth.user()?.fullName }}</span>
-          <button type="button" class="btn btn-ghost btn-sm" (click)="logout()">{{ t('common.logout') }}</button>
+          <button type="button" class="btn btn-ghost btn-sm user-menu-trigger" (click)="menuOpen.set(!menuOpen())">
+            <span class="topbar-name">{{ auth.user()?.fullName }}</span>
+            <span class="caret">&#9662;</span>
+          </button>
+          @if (menuOpen()) {
+            <div class="user-menu">
+              <button type="button" class="user-menu-item" (click)="goToProfile()">{{ t('nav.profile') }}</button>
+              <button type="button" class="user-menu-item" (click)="logout()">{{ t('common.logout') }}</button>
+            </div>
+          }
         </div>
       </div>
     </header>

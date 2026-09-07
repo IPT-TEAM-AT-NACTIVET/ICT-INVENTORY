@@ -38,7 +38,7 @@
     </div>
     <div class="stat-card">
       <div class="stat-value stat-danger">{{ summary.defectiveAssets }}</div>
-      <div class="stat-label">{{ t('reports.faulty') }}</div>
+      <div class="stat-label">{{ t('reports.notWorking') }}</div>
     </div>
     <div class="stat-card">
       <div class="stat-value stat-warning">{{ summary.officeAssets }}</div>
@@ -100,7 +100,7 @@
               <tr>
                 <td>{{ asset.assetNumber ?? '—' }}</td>
                 <td>{{ asset.serialNumber ?? '—' }}</td>
-                <td>{{ asset.deviceName }}</td>
+                <td>{{ asset.deviceModel }}</td>
                 <td>{{ asset.deviceTypeName }}</td>
                 <td>{{ asset.userOfAsset || '—' }}</td>
                 <td>{{ ownershipLabels[asset.ownershipType] }}</td>
@@ -123,13 +123,6 @@
         </tbody>
       </table>
     </div>
-    @if (totalPages() > 1) {
-      <div class="pagination">
-        <button type="button" class="btn btn-sm" [disabled]="page === 0" (click)="goToPage(page - 1)">Prev</button>
-        <span>{{ t('reports.page') }} {{ page + 1 }} / {{ totalPages() }}</span>
-        <button type="button" class="btn btn-sm" [disabled]="page >= totalPages() - 1" (click)="goToPage(page + 1)">Next</button>
-      </div>
-    }
   </div>
 } @else if (report(); as report) {
   <div class="card">

@@ -6,6 +6,7 @@ import { DashboardService } from '../../../core/services/dashboard.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
 import { UserDashboardResponse } from '../../../core/models/dashboard.model';
+import { DEVICE_STATUS_LABELS } from '../../../shared/utils/enum-labels';
 import { delay, finalize, retry } from 'rxjs';
 
 @Component({
@@ -51,6 +52,10 @@ export class UsersDashboard implements OnInit {
     return Object.entries(record)
       .map(([key, value]) => ({ key, value }))
       .sort((a, b) => b.value - a.value);
+  }
+
+  protected statusLabel(key: string): string {
+    return (DEVICE_STATUS_LABELS as Record<string, string>)[key] ?? key;
   }
 
   protected maxBar(record: Record<string, number> | undefined): number {

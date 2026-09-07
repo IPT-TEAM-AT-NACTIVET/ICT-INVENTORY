@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { TranslationService } from '../../../core/services/translation.service';
 import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/theme-toggle.component';
@@ -19,13 +19,14 @@ interface NavItem {
 export class AdminLayout {
   readonly auth = inject(AuthService);
   readonly translation = inject(TranslationService);
+  private readonly router = inject(Router);
 
   readonly open = signal(false);
+  readonly menuOpen = signal(false);
 
   readonly navItems: NavItem[] = [
     { path: '/admin/dashboard', labelKey: 'nav.dashboard' },
     { path: '/admin/inventory', labelKey: 'nav.inventory' },
-    { path: '/admin/register-asset', labelKey: 'nav.registerAsset' },
     { path: '/admin/reports', labelKey: 'nav.reports' },
     { path: '/admin/users', labelKey: 'nav.users' },
     { path: '/admin/directorates', labelKey: 'nav.directorates' },
@@ -33,7 +34,6 @@ export class AdminLayout {
     { path: '/admin/units', labelKey: 'nav.units' },
     { path: '/admin/zones', labelKey: 'nav.zones' },
     { path: '/admin/device-types', labelKey: 'nav.deviceTypes' },
-    { path: '/admin/profile', labelKey: 'nav.profile' },
   ];
 
   t(key: string): string {
@@ -44,7 +44,14 @@ export class AdminLayout {
     this.open.update((v) => !v);
   }
 
+  goToProfile(): void {
+    this.menuOpen.set(false);
+    const section = this.router.url.startsWith('/users') ? '/users' : '/admin';
+    void this.router.navigate([section, 'profile']);
+  }
+
   logout(): void {
+    this.menuOpen.set(false);
     this.auth.logout();
   }
 }

@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 public class RecentAssetDto {
 
     private String assetNumber;
-    private String deviceName;
+    private String deviceModel;
     private String deviceType;
     private String userOfAsset;
     private String zone;
@@ -16,10 +16,10 @@ public class RecentAssetDto {
     public RecentAssetDto() {
     }
 
-    public RecentAssetDto(String assetNumber, String deviceName, String deviceType, String userOfAsset,
+    public RecentAssetDto(String assetNumber, String deviceModel, String deviceType, String userOfAsset,
                           String zone, String office, String registeredBy, LocalDateTime registeredAt) {
         this.assetNumber = assetNumber;
-        this.deviceName = deviceName;
+        this.deviceModel = deviceModel;
         this.deviceType = deviceType;
         this.userOfAsset = userOfAsset;
         this.zone = zone;
@@ -36,12 +36,12 @@ public class RecentAssetDto {
         this.assetNumber = assetNumber;
     }
 
-    public String getDeviceName() {
-        return deviceName;
+    public String getDeviceModel() {
+        return deviceModel;
     }
 
-    public void setDeviceName(String deviceName) {
-        this.deviceName = deviceName;
+    public void setDeviceModel(String deviceModel) {
+        this.deviceModel = deviceModel;
     }
 
     public String getDeviceType() {

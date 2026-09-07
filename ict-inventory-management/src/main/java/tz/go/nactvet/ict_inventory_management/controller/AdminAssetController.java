@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 import tz.go.nactvet.ict_inventory_management.dto.AssetRequest;
@@ -62,6 +63,12 @@ public class AdminAssetController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String search) {
         return ResponseEntity.ok(assetService.findSearch(page, size, search));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<AssetResponse>> findAllForInventory(
+            @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(assetService.searchAll(search));
     }
 
     @GetMapping("/{id}")

@@ -1,6 +1,6 @@
 export interface RecentAsset {
   assetNumber: string | null;
-  deviceName: string;
+  deviceModel: string;
   deviceType: string | null;
   userOfAsset: string;
   zone: string | null;

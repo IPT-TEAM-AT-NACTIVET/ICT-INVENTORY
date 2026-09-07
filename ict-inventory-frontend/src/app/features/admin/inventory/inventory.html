@@ -1,8 +1,8 @@
-<app-page-header title="Inventory" subtitle="All registered ICT assets" />
+<app-page-header title="Total Inventory" subtitle="All registered ICT assets" />
 
 <div class="toolbar">
   <div>
-    <button type="button" class="btn btn-primary" (click)="openCreateForm()">Register Asset</button>
+    <button type="button" class="btn btn-primary" (click)="openCreateForm()">{{ t('nav.new') }}</button>
     <button type="button" class="btn" (click)="downloadCsv()">Export CSV</button>
     <button type="button" class="btn" [disabled]="importing()" (click)="fileInput.click()">
       {{ importing() ? 'Importing…' : 'Import CSV' }}
@@ -28,8 +28,8 @@
     </p>
     @if (result.errors.length > 0) {
       <p class="muted">
-        CSV columns (header): Asset Number, Serial Number, Device Type, Device Name, User of Asset, Zone, Office,
-        Ownership (OFFICE/PERSONAL), Device Status (ACTIVE/DEFECTIVE).
+        CSV columns (header): Asset Number, Serial Number, Device Type, Device Model, User of Asset, Zone, Office,
+        Ownership (OFFICE/PERSONAL), Device Status (WORKING/NOT_WORKING).
       </p>
       <table class="table">
         <thead>
@@ -73,7 +73,7 @@
 
 @if (showAssetForm) {
   <div class="card">
-    <h3>{{ editing ? 'Edit Asset' : 'Register Asset' }}</h3>
+    <h3>{{ editing ? 'Edit Asset' : 'New' }}</h3>
     <form [formGroup]="assetForm" (ngSubmit)="submitAssetForm()">
       <div class="form-grid">
         <div class="form-field">
@@ -85,10 +85,10 @@
           <input id="serialNumber" type="text" formControlName="serialNumber" />
         </div>
         <div class="form-field">
-          <label for="deviceName">Device Name *</label>
-          <input id="deviceName" type="text" formControlName="deviceName" />
-          @if (assetForm.controls.deviceName.touched && assetForm.controls.deviceName.invalid) {
-            <div class="field-error">Device name is required.</div>
+          <label for="deviceModel">Device Model *</label>
+          <input id="deviceModel" type="text" formControlName="deviceModel" />
+          @if (assetForm.controls.deviceModel.touched && assetForm.controls.deviceModel.invalid) {
+            <div class="field-error">Device model is required.</div>
           }
         </div>
         <div class="form-field">
@@ -104,9 +104,8 @@
           }
         </div>
         <div class="form-field">
-          <label for="userOfAsset">User of Asset</label>
-          <input id="userOfAsset" type="text" formControlName="userOfAsset" placeholder="Optional — leave blank for servers, access points, etc." maxlength="255" />
-          <span class="field-hint">Leave blank if the asset has no direct user (e.g. servers, access points).</span>
+          <label for="userOfAsset">Assigned to</label>
+          <input id="userOfAsset" type="text" formControlName="userOfAsset" placeholder="Optional" maxlength="255" />
         </div>
         <div class="form-field">
           <label for="ownershipType">Ownership *</label>
@@ -145,9 +144,8 @@
           }
         </div>
         <div class="form-field">
-          <label for="office">Office</label>
-          <input id="office" type="text" formControlName="office" placeholder="Optional — leave blank for servers, access points, etc." maxlength="100" />
-          <span class="field-hint">Leave blank if the asset has no specific office (e.g. servers, access points).</span>
+          <label for="office">Room</label>
+          <input id="office" type="text" formControlName="office" placeholder="Optional" maxlength="100" />
         </div>
       </div>
       <div class="form-actions">
@@ -164,11 +162,11 @@
       <tr>
         <th>Asset #</th>
         <th>Serial</th>
-        <th>Device</th>
+        <th>Device Model</th>
         <th>Type</th>
-        <th>User of Asset</th>
+        <th>Assigned to</th>
         <th>Zone</th>
-        <th>Office</th>
+        <th>Room</th>
         <th>Ownership</th>
         <th>Device Status</th>
         <th>Actions</th>
@@ -181,14 +179,14 @@
         </tr>
       } @else if (assets().length === 0) {
         <tr>
-          <td colspan="10" class="empty">No assets match the current filters.</td>
+          <td colspan="10" class="empty">No assets found.</td>
         </tr>
       } @else {
         @for (item of assets(); track item.id) {
           <tr>
             <td>{{ item.assetNumber ?? '—' }}</td>
             <td>{{ item.serialNumber ?? '—' }}</td>
-            <td>{{ item.deviceName }}</td>
+            <td>{{ item.deviceModel }}</td>
             <td>{{ item.deviceTypeName }}</td>
             <td>{{ item.userOfAsset || '—' }}</td>
             <td>{{ item.zoneName ?? '—' }}</td>
@@ -207,11 +205,3 @@
     </tbody>
   </table>
 </div>
-
-@if (totalPages() > 1) {
-  <div class="pagination">
-    <button type="button" class="btn btn-sm" [disabled]="page === 0" (click)="goToPage(page - 1)">Prev</button>
-    <span>Page {{ page + 1 }} of {{ totalPages() }} ({{ totalElements() }} total)</span>
-    <button type="button" class="btn btn-sm" [disabled]="page >= totalPages() - 1" (click)="goToPage(page + 1)">Next</button>
-  </div>
-}

@@ -29,8 +29,8 @@ public class Asset {
     private String serialNumber;
 
     @NotBlank
-    @Column(name = "device_name", nullable = false)
-    private String deviceName;
+    @Column(name = "device_model", nullable = false)
+    private String deviceModel;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "device_type_id", nullable = false)
@@ -106,12 +106,12 @@ public class Asset {
         this.serialNumber = serialNumber;
     }
 
-    public String getDeviceName() {
-        return deviceName;
+    public String getDeviceModel() {
+        return deviceModel;
     }
 
-    public void setDeviceName(String deviceName) {
-        this.deviceName = deviceName;
+    public void setDeviceModel(String deviceModel) {
+        this.deviceModel = deviceModel;
     }
 
     public DeviceType getDeviceType() {
