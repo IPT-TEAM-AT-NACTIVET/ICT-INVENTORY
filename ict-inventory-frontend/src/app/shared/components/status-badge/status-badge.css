@@ -14,21 +14,21 @@
 }
 
 .tone-info {
-  background: #e0ecff;
-  color: #1d4ed8;
+  background: var(--info-bg);
+  color: var(--accent);
 }
 
 .tone-success {
-  background: #d9fbe8;
-  color: #047857;
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 .tone-warning {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--warning-bg);
+  color: var(--warning-text);
 }
 
 .tone-danger {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--danger-bg);
+  color: var(--danger);
 }

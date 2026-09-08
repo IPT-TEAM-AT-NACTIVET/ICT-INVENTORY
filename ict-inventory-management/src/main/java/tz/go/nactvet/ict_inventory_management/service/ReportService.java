@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -257,16 +258,16 @@ public class ReportService {
         AssetService.SearchParams sp = AssetService.normalizeSearch(search);
         String termLike = sp.term() != null ? sp.term() : "%%";
         DeviceStatus statusFilter = parseStatus(status);
-        String officeLike = likeOrMatchAll(office);
-        String userOfAssetLike = likeOrMatchAll(userOfAsset);
-        String registeredByLike = likeOrMatchAll(registeredBy);
-        LocalDateTime fromDt = from != null ? from.atStartOfDay() : LocalDateTime.of(1, 1, 1, 0, 0);
-        LocalDateTime toDt = to != null ? to.plusDays(1).atStartOfDay() : LocalDateTime.of(9999, 12, 31, 23, 59, 59);
+        String officePattern = likeOrEmpty(office);
+        String userOfAssetPattern = likeOrEmpty(userOfAsset);
+        String registeredByPattern = likeOrEmpty(registeredBy);
+        LocalDateTime fromDt = from != null ? from.atStartOfDay() : null;
+        LocalDateTime toDt = to != null ? to.plusDays(1).atStartOfDay() : null;
 
         return assetRepository.findForReport(
                         termLike, sp.statusOn(), sp.statuses(),
                         deviceTypeId, statusFilter,
-                        zoneId, officeLike, userOfAssetLike, registeredByLike, fromDt, toDt)
+                        zoneId, officePattern, userOfAssetPattern, registeredByPattern, fromDt, toDt)
                 .stream()
                 .map(assetMapper::toResponse)
                 .collect(Collectors.toList());
@@ -342,15 +343,15 @@ public class ReportService {
     }
 
     /**
-     * LIKE pattern that, when unfiltered, becomes {@code %%} (matches everything)
-     * instead of {@code null}. This avoids PostgreSQL's "could not determine data
-     * type of parameter" error, which occurs when a LIKE bound-parameter is null.
+     * LIKE pattern for an optional filter. Returns an empty string when the
+     * filter is not selected so the query condition is simply skipped, and a
+     * case-insensitive match-all pattern otherwise.
      */
-    private String likeOrMatchAll(String value) {
+    private String likeOrEmpty(String value) {
         if (value == null || value.isBlank()) {
-            return "%%";
+            return "";
         }
-        return "%" + value.trim().toLowerCase() + "%";
+        return "%" + value.trim().toLowerCase(Locale.ROOT) + "%";
     }
 
     private String csv(String value) {

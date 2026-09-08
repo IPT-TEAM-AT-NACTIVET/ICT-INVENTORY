@@ -171,6 +171,45 @@ class ReportServiceTest {
     }
 
     @Test
+    void optionalFilters_blankOrNull_areCompletelyIgnored() {
+        ReportResponse r = reportService.getReportData(null, null, null, null, "", "", "", null, null, "overview");
+
+        assertThat(r.getAssets()).hasSize(5);
+        assertThat(r.getSummary().getTotalAssets()).isEqualTo(5);
+    }
+
+    @Test
+    void multiFilter_allSelectedConditionsMustBeTrue() {
+        ReportResponse r = reportService.getReportData(null, laptopType.getId(), "WORKING", zone.getId(), "A100", null,
+                "Alice Mwangi", null, null, "overview");
+
+        assertThat(r.getAssets()).hasSize(1);
+        assertThat(r.getAssets().get(0).getAssetNumber()).isEqualTo("NCT-001");
+        assertThat(r.getSummary().getTotalAssets()).isEqualTo(1);
+        assertThat(r.getSummary().getActiveAssets()).isEqualTo(1);
+    }
+
+    @Test
+    void registeredByFilter_combinesWithStatusAndZone() {
+        ReportResponse r = reportService.getReportData(null, null, "WORKING", zone.getId(), null, null,
+                "Alice Mwangi", null, null, "overview");
+
+        assertThat(r.getAssets()).hasSize(2);
+        assertThat(r.getAssets()).extracting(a -> a.getAssetNumber())
+                .containsExactlyInAnyOrder("NCT-001", "NCT-004");
+    }
+
+    @Test
+    void dateRange_singleBound_appliesOnlyTheProvidedBound() {
+        ReportResponse r = reportService.getReportData(null, null, null, null, null, null, null,
+                LocalDate.of(2026, 3, 1), null, "overview");
+
+        assertThat(r.getAssets()).hasSize(3); // NCT-003, NCT-004, NCT-005
+        assertThat(r.getAssets()).extracting(a -> a.getAssetNumber())
+                .containsExactlyInAnyOrder("NCT-003", "NCT-004", "NCT-005");
+    }
+
+    @Test
     void filterByZoneAndStatus_combine() {
         ReportResponse r = reportService.getReportData(null, null, "WORKING", zone.getId(), null, null, null, null, null, "overview");
 

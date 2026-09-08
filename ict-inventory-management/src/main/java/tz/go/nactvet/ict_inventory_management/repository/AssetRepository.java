@@ -198,27 +198,31 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            "LEFT JOIN FETCH a.deviceType " +
            "LEFT JOIN FETCH a.directorate " +
            "LEFT JOIN FETCH a.createdBy " +
- "WHERE (:statusOn = true AND a.deviceStatus IN :statuses) " +
-            "OR (:statusOn = false AND (" +
-            "  LOWER(COALESCE(a.assetNumber,'')) LIKE :term OR " +
-            "  LOWER(COALESCE(a.serialNumber,'')) LIKE :term OR " +
-            "  LOWER(a.deviceModel) LIKE :term OR " +
-            "  LOWER(COALESCE(a.userOfAsset,'')) LIKE :term OR " +
-            "  LOWER(COALESCE(a.office,'')) LIKE :term OR " +
-            "  LOWER(a.zone.name) LIKE :term OR " +
-            "  LOWER(COALESCE(a.directorate.name,'')) LIKE :term OR " +
-            "  LOWER(a.deviceType.name) LIKE :term OR " +
-            "  LOWER(CAST(a.deviceStatus AS string)) LIKE :term OR " +
-            "  LOWER(COALESCE(a.createdBy.fullName,'')) LIKE :term)) " +
-            "AND (:deviceTypeId IS NULL OR a.deviceType.id = :deviceTypeId) " +
-            "AND (:explicitStatus IS NULL OR a.deviceStatus = :explicitStatus) " +
-            "AND (:zoneId IS NULL OR a.zone.id = :zoneId) " +
-            "AND LOWER(COALESCE(a.office,'')) LIKE :office " +
-            "AND LOWER(COALESCE(a.userOfAsset,'')) LIKE :userOfAsset " +
-            "AND LOWER(COALESCE(a.createdBy.fullName,'')) LIKE :registeredBy " +
-            "AND a.createdAt >= :fromDt " +
-            "AND a.createdAt <= :toDt " +
-            "ORDER BY a.createdAt DESC")
+           "WHERE (" +
+           "  (:statusOn = true AND a.deviceStatus IN :statuses) " +
+           "  OR " +
+           "  (:statusOn = false AND (" +
+           "    LOWER(COALESCE(a.assetNumber,'')) LIKE :term OR " +
+           "    LOWER(COALESCE(a.serialNumber,'')) LIKE :term OR " +
+           "    LOWER(a.deviceModel) LIKE :term OR " +
+           "    LOWER(COALESCE(a.userOfAsset,'')) LIKE :term OR " +
+           "    LOWER(COALESCE(a.office,'')) LIKE :term OR " +
+           "    LOWER(a.zone.name) LIKE :term OR " +
+           "    LOWER(COALESCE(a.directorate.name,'')) LIKE :term OR " +
+           "    LOWER(a.deviceType.name) LIKE :term OR " +
+           "    LOWER(CAST(a.deviceStatus AS string)) LIKE :term OR " +
+           "    LOWER(COALESCE(a.createdBy.fullName,'')) LIKE :term" +
+           "  ))" +
+           ") " +
+           "AND (:deviceTypeId IS NULL OR a.deviceType.id = :deviceTypeId) " +
+           "AND (:explicitStatus IS NULL OR a.deviceStatus = :explicitStatus) " +
+           "AND (:zoneId IS NULL OR a.zone.id = :zoneId) " +
+           "AND (:office = '' OR LOWER(COALESCE(a.office,'')) LIKE :office) " +
+           "AND (:userOfAsset = '' OR LOWER(COALESCE(a.userOfAsset,'')) LIKE :userOfAsset) " +
+           "AND (:registeredBy = '' OR LOWER(COALESCE(a.createdBy.fullName,'')) LIKE :registeredBy) " +
+           "AND a.createdAt >= COALESCE(:fromDt, a.createdAt) " +
+           "AND a.createdAt <= COALESCE(:toDt, a.createdAt) " +
+           "ORDER BY a.createdAt DESC")
     List<Asset> findForReport(
            @Param("term") String term,
            @Param("statusOn") boolean statusOn,
