@@ -261,3 +261,39 @@ BEGIN
     END IF;
 END $$;
 @@
+-- Asset directorate: optional ManyToOne to directorates table (Standard field
+-- arrangement: ... Zone -> Directorate (optional) -> ...). Added before Hibernate
+-- so the nullable FK column exists for existing rows. Idempotent.
+ALTER TABLE assets ADD COLUMN IF NOT EXISTS directorate_id BIGINT;
+@@
+CREATE INDEX IF NOT EXISTS idx_assets_directorate_id ON assets(directorate_id);
+@@
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'assets_directorate_id_fkey') THEN
+        ALTER TABLE assets ADD CONSTRAINT assets_directorate_id_fkey
+            FOREIGN KEY (directorate_id) REFERENCES directorates(id);
+    END IF;
+END $$;
+@@
+-- Ownership field removed from the asset model. Drop the column (and any check
+-- constraint referencing it). Idempotent.
+DO $$
+DECLARE
+    con RECORD;
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns
+               WHERE table_schema = current_schema() AND table_name = 'assets'
+                 AND column_name = 'ownership_type') THEN
+        FOR con IN
+            SELECT conname
+            FROM pg_constraint
+            WHERE conrelid = to_regclass('assets') AND contype = 'c'
+              AND pg_get_constraintdef(oid) ILIKE '%ownership_type%'
+        LOOP
+            EXECUTE 'ALTER TABLE assets DROP CONSTRAINT ' || quote_ident(con.conname);
+        END LOOP;
+        ALTER TABLE assets DROP COLUMN ownership_type;
+    END IF;
+END $$;
+@@

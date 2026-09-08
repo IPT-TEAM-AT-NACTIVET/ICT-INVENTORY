@@ -13,12 +13,23 @@ import {
   ReportSummary,
 } from '../../../core/models/report.model';
 import { DeviceType, Zone } from '../../../core/models/master-data.model';
-import { DeviceStatus, OwnershipType } from '../../../core/models/enums';
-import {
-  DEVICE_STATUS_OPTIONS,
-  OWNERSHIP_TYPE_OPTIONS,
-} from '../../../shared/utils/enum-labels';
+import { DeviceStatus } from '../../../core/models/enums';
+import { DEVICE_STATUS_OPTIONS } from '../../../shared/utils/enum-labels';
 import { finalize, retry } from 'rxjs';
+
+interface FilterOption {
+  value: string;
+  label: string;
+}
+
+interface AppliedFilter {
+  criterion: ReportFilter;
+  value: string;
+  label: string;
+}
+
+const EMPTY_CRITERIA: Record<ReportFilter, boolean> = {} as Record<ReportFilter, boolean>;
+const EMPTY_VALUES: Record<ReportFilter, string> = {} as Record<ReportFilter, string>;
 
 @Component({
   selector: 'app-reports',
@@ -38,14 +49,14 @@ export class Reports implements OnInit {
     'by-office',
     'by-device-type',
     'by-status',
-    'by-ownership',
     'by-user',
     'by-registered-by',
   ];
 
   readonly filterOpen = signal(false);
-  readonly criterion = signal<ReportFilter | null>(null);
-  readonly criterionValue = signal('');
+  readonly draftCriteria = signal<Record<ReportFilter, boolean>>(EMPTY_CRITERIA);
+  readonly draftValues = signal<Record<ReportFilter, string>>(EMPTY_VALUES);
+  readonly activeFilters = signal<AppliedFilter[]>([]);
 
   readonly zones = signal<Zone[]>([]);
   readonly deviceTypes = signal<DeviceType[]>([]);
@@ -54,6 +65,8 @@ export class Reports implements OnInit {
   readonly report = signal<ReportResponse | null>(null);
   readonly loading = signal(true);
   readonly error = signal('');
+
+  readonly enabledDrafts = computed(() => this.criteria.filter((c) => this.draftCriteria()[c]));
 
   ngOnInit(): void {
     this.reference.getZones().subscribe({
@@ -68,16 +81,14 @@ export class Reports implements OnInit {
     this.loadData();
   }
 
-  readonly valueOptions = computed(() => {
-    switch (this.criterion()) {
+  optionsFor(c: ReportFilter): FilterOption[] {
+    switch (c) {
       case 'by-zone':
         return this.zones().map((z) => ({ value: String(z.id), label: z.name }));
       case 'by-device-type':
         return this.deviceTypes().map((d) => ({ value: String(d.id), label: d.name }));
       case 'by-status':
         return DEVICE_STATUS_OPTIONS;
-      case 'by-ownership':
-        return OWNERSHIP_TYPE_OPTIONS;
       case 'by-office':
         return (this.filterOptions()?.offices ?? []).map((o) => ({ value: o, label: o }));
       case 'by-user':
@@ -87,55 +98,90 @@ export class Reports implements OnInit {
       default:
         return [];
     }
-  });
+  }
 
-  readonly activeFilter = computed(() => {
-    const c = this.criterion();
-    if (!c || !this.criterionValue()) {
-      return null;
-    }
-    const label =
-      this.valueOptions().find((v) => v.value === this.criterionValue())?.label ??
-      this.criterionValue();
-    return { criterion: c, label };
-  });
+  draftEnabled(c: ReportFilter): boolean {
+    return !!this.draftCriteria()[c];
+  }
 
-  summary(): ReportSummary | null {
-    return this.report()?.summary ?? null;
+  draftValue(c: ReportFilter): string {
+    return this.draftValues()[c] ?? '';
   }
 
   toggleFilter(): void {
     this.filterOpen.set(!this.filterOpen());
   }
 
-  selectCriterion(c: ReportFilter): void {
-    this.criterion.set(this.criterion() === c ? null : c);
-    this.criterionValue.set('');
+  toggleDraft(c: ReportFilter): void {
+    this.draftCriteria.update((m) => ({ ...m, [c]: !m[c] }));
   }
 
-  applyFilter(): void {
-    if (!this.criterion() || !this.criterionValue()) {
-      return;
+  setDraftValue(c: ReportFilter, value: string): void {
+    this.draftValues.update((m) => ({ ...m, [c]: value }));
+  }
+
+  applyFilters(): void {
+    const added: AppliedFilter[] = [];
+    for (const c of this.criteria) {
+      if (this.draftCriteria()[c]) {
+        const value = (this.draftValues()[c] ?? '').trim();
+        if (value) {
+          added.push({ criterion: c, value, label: this.labelFor(c, value) });
+        }
+      }
     }
+    if (added.length > 0) {
+      this.activeFilters.update((current) => {
+        const next = current.filter((f) => !added.some((a) => a.criterion === f.criterion));
+        return [...next, ...added];
+      });
+    }
+    this.draftCriteria.set(EMPTY_CRITERIA);
+    this.draftValues.set(EMPTY_VALUES);
+    this.filterOpen.set(false);
+    if (added.length > 0) {
+      this.loadData();
+    }
+  }
+
+  removeFilter(criterion: ReportFilter): void {
+    this.activeFilters.update((current) => current.filter((f) => f.criterion !== criterion));
+    this.loadData();
+  }
+
+  clearFilters(): void {
+    this.activeFilters.set([]);
+    this.draftCriteria.set(EMPTY_CRITERIA);
+    this.draftValues.set(EMPTY_VALUES);
     this.filterOpen.set(false);
     this.loadData();
   }
 
-  resetFilter(): void {
-    this.criterion.set(null);
-    this.criterionValue.set('');
-    this.filterOpen.set(false);
-    this.loadData();
+  summary(): ReportSummary | null {
+    return this.report()?.summary ?? null;
   }
 
-  downloadCsv(): void {
+  readonly exportOpen = signal(false);
+
+  readonly exportFormats: { value: 'csv' | 'xlsx' | 'pdf'; label: string; file: string }[] = [
+    { value: 'xlsx', label: 'Excel (.xlsx)', file: 'ict-inventory-report.xlsx' },
+    { value: 'pdf', label: 'PDF (.pdf)', file: 'ict-inventory-report.pdf' },
+    { value: 'csv', label: 'CSV (.csv)', file: 'ict-inventory-report.csv' },
+  ];
+
+  toggleExport(): void {
+    this.exportOpen.set(!this.exportOpen());
+  }
+
+  download(format: 'csv' | 'xlsx' | 'pdf', filename: string): void {
+    this.exportOpen.set(false);
     this.error.set('');
-    this.reportService.exportCsv(this.buildQuery()).subscribe({
+    this.reportService.exportReport(this.buildQuery(), format).subscribe({
       next: (blob) => {
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement('a');
         anchor.href = url;
-        anchor.download = 'ict-inventory-report.csv';
+        anchor.download = filename;
         anchor.click();
         URL.revokeObjectURL(url);
       },
@@ -145,35 +191,33 @@ export class Reports implements OnInit {
     });
   }
 
+  private labelFor(c: ReportFilter, value: string): string {
+    return this.optionsFor(c).find((o) => o.value === value)?.label ?? value;
+  }
+
   private buildQuery(): ReportQuery {
     const query: ReportQuery = {};
-    const c = this.criterion();
-    const v = this.criterionValue();
-    if (!c || !v) {
-      return query;
-    }
-    switch (c) {
-      case 'by-zone':
-        query.zoneId = Number(v);
-        break;
-      case 'by-device-type':
-        query.deviceTypeId = Number(v);
-        break;
-      case 'by-status':
-        query.status = v as DeviceStatus;
-        break;
-      case 'by-ownership':
-        query.ownershipType = v as OwnershipType;
-        break;
-      case 'by-office':
-        query.office = v;
-        break;
-      case 'by-user':
-        query.userOfAsset = v;
-        break;
-      case 'by-registered-by':
-        query.registeredBy = v;
-        break;
+    for (const f of this.activeFilters()) {
+      switch (f.criterion) {
+        case 'by-zone':
+          query.zoneId = Number(f.value);
+          break;
+        case 'by-device-type':
+          query.deviceTypeId = Number(f.value);
+          break;
+        case 'by-status':
+          query.status = f.value as DeviceStatus;
+          break;
+        case 'by-office':
+          query.office = f.value;
+          break;
+        case 'by-user':
+          query.userOfAsset = f.value;
+          break;
+        case 'by-registered-by':
+          query.registeredBy = f.value;
+          break;
+      }
     }
     return query;
   }

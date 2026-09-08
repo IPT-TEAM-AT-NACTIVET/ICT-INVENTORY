@@ -16,7 +16,6 @@ export interface DashboardResponse {
   assetsByDeviceType: Record<string, number>;
   assetsByZone: Record<string, number>;
   assetsByDeviceStatus: Record<string, number>;
-  assetsByOwnership: Record<string, number>;
   recentAssets: RecentAsset[];
 }
 
@@ -27,6 +26,5 @@ export interface UserDashboardResponse {
   assetsByDeviceType: Record<string, number>;
   assetsByZone: Record<string, number>;
   assetsByDeviceStatus: Record<string, number>;
-  assetsByOwnership: Record<string, number>;
   recentAssets: RecentAsset[];
 }

@@ -1,13 +1,8 @@
-import { DeviceStatus, OwnershipType } from '../../core/models/enums';
+import { DeviceStatus } from '../../core/models/enums';
 
 export const DEVICE_STATUS_LABELS: Record<DeviceStatus, string> = {
   WORKING: 'Working',
   NOT_WORKING: 'Not Working',
-};
-
-export const OWNERSHIP_TYPE_LABELS: Record<OwnershipType, string> = {
-  OFFICE: 'Office',
-  PERSONAL: 'Personal',
 };
 
 export interface SelectOption {
@@ -16,10 +11,6 @@ export interface SelectOption {
 }
 
 export const DEVICE_STATUS_OPTIONS: SelectOption[] = Object.entries(DEVICE_STATUS_LABELS).map(
-  ([value, label]) => ({ value, label }),
-);
-
-export const OWNERSHIP_TYPE_OPTIONS: SelectOption[] = Object.entries(OWNERSHIP_TYPE_LABELS).map(
   ([value, label]) => ({ value, label }),
 );
 

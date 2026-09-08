@@ -1,12 +1,11 @@
 import { Asset } from './asset.model';
-import { DeviceStatus, OwnershipType } from './enums';
+import { DeviceStatus } from './enums';
 
 export type ReportFilter =
   | 'by-zone'
   | 'by-office'
   | 'by-device-type'
   | 'by-status'
-  | 'by-ownership'
   | 'by-user'
   | 'by-registered-by';
 
@@ -14,7 +13,6 @@ export interface ReportQuery {
   search?: string;
   deviceTypeId?: number | null;
   status?: DeviceStatus | '';
-  ownershipType?: OwnershipType | '';
   zoneId?: number | null;
   office?: string;
   userOfAsset?: string;
@@ -28,8 +26,6 @@ export interface ReportSummary {
   totalAssets: number;
   activeAssets: number;
   defectiveAssets: number;
-  officeAssets: number;
-  personalAssets: number;
 }
 
 export interface ReportResponse {

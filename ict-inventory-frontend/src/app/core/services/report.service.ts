@@ -23,12 +23,12 @@ export class ReportService {
     return this.http.get<ReportFilterOptions>(`${this.base}/filter-options`);
   }
 
-  exportCsv(query: ReportQuery = {}): Observable<Blob> {
+  exportReport(query: ReportQuery = {}, format: 'csv' | 'xlsx' | 'pdf' = 'csv'): Observable<Blob> {
     const params = {
+      format,
       search: query.search,
       deviceTypeId: query.deviceTypeId,
       status: query.status,
-      ownershipType: query.ownershipType,
       zoneId: query.zoneId,
       office: query.office,
       userOfAsset: query.userOfAsset,
@@ -36,7 +36,7 @@ export class ReportService {
       from: query.from,
       to: query.to,
     };
-    return this.http.get(`${this.base}/export/csv`, {
+    return this.http.get(`${this.base}/export`, {
       params: this.params(params),
       responseType: 'blob',
     });

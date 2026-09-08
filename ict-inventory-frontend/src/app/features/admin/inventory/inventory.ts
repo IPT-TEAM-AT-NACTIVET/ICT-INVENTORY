@@ -4,19 +4,16 @@ import { Router } from '@angular/router';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { StatusBadge } from '../../../shared/components/status-badge/status-badge';
 import { AssetService } from '../../../core/services/asset.service';
-import { ReportService } from '../../../core/services/report.service';
 import { ReferenceService } from '../../../shared/services/reference.service';
 import { TranslationService } from '../../../core/services/translation.service';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
 import { Asset, AssetRequest, AssetUpdateRequest, CsvImportResult } from '../../../core/models/asset.model';
-import { DeviceType, Zone } from '../../../core/models/master-data.model';
-import { DeviceStatus, OwnershipType } from '../../../core/models/enums';
+import { DeviceType, Directorate, Zone } from '../../../core/models/master-data.model';
+import { DeviceStatus } from '../../../core/models/enums';
 import { delay, finalize, retry } from 'rxjs';
 import {
   DEVICE_STATUS_LABELS,
   DEVICE_STATUS_OPTIONS,
-  OWNERSHIP_TYPE_LABELS,
-  OWNERSHIP_TYPE_OPTIONS,
   deviceStatusTone,
 } from '../../../shared/utils/enum-labels';
 
@@ -28,7 +25,6 @@ import {
 export class Inventory implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly assetService = inject(AssetService);
-  private readonly reportService = inject(ReportService);
   private readonly reference = inject(ReferenceService);
   private readonly router = inject(Router);
   readonly translation = inject(TranslationService);
@@ -48,30 +44,30 @@ export class Inventory implements OnInit {
   importing = signal(false);
 
   readonly deviceStatusLabels = DEVICE_STATUS_LABELS;
-  readonly ownershipLabels = OWNERSHIP_TYPE_LABELS;
   readonly deviceStatusOptions = DEVICE_STATUS_OPTIONS;
-  readonly ownershipOptions = OWNERSHIP_TYPE_OPTIONS;
 
   readonly search = new FormControl('');
 
   readonly assetForm = this.fb.nonNullable.group({
     assetNumber: [''],
     serialNumber: [''],
-    deviceModel: ['', Validators.required],
-    deviceTypeId: [0, Validators.required],
-    userOfAsset: [''],
-    ownershipType: ['', Validators.required],
-    deviceStatus: ['', Validators.required],
     zoneId: [0, Validators.required],
+    directorateId: [0],
     office: ['', Validators.maxLength(100)],
+    userOfAsset: ['', Validators.maxLength(255)],
+    deviceTypeId: [0, Validators.required],
+    deviceModel: ['', Validators.required],
+    deviceStatus: ['', Validators.required],
   });
 
   readonly deviceTypes = signal<DeviceType[]>([]);
   readonly zones = signal<Zone[]>([]);
+  readonly directorates = signal<Directorate[]>([]);
 
   ngOnInit(): void {
     this.reference.getDeviceTypes().subscribe((items) => this.deviceTypes.set(items));
     this.reference.getZones().subscribe((items) => this.zones.set(items));
+    this.reference.getDirectorates().subscribe((items) => this.directorates.set(items));
     this.load();
   }
 
@@ -104,17 +100,6 @@ export class Inventory implements OnInit {
     this.load();
   }
 
-  downloadCsv(): void {
-    this.reportService.exportCsv().subscribe((blob) => {
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = 'inventory.csv';
-      anchor.click();
-      URL.revokeObjectURL(url);
-    });
-  }
-
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -125,7 +110,7 @@ export class Inventory implements OnInit {
     this.error.set('');
     this.success.set('');
     this.importsResult.set(null);
-    this.assetService.importCsv(file).subscribe({
+    this.assetService.importFile(file).subscribe({
       next: (result) => {
         this.importsResult.set(result);
         this.importing.set(false);
@@ -136,7 +121,7 @@ export class Inventory implements OnInit {
       },
       error: () => {
         this.importing.set(false);
-        this.error.set('Failed to import CSV. Check the file and try again.');
+        this.error.set('Failed to import the file. Check the file and try again.');
       },
       complete: () => {
         input.value = '';
@@ -155,13 +140,13 @@ export class Inventory implements OnInit {
     this.assetForm.reset({
       assetNumber: item.assetNumber ?? '',
       serialNumber: item.serialNumber ?? '',
-      deviceModel: item.deviceModel,
-      deviceTypeId: item.deviceTypeId,
-      userOfAsset: item.userOfAsset,
-      ownershipType: item.ownershipType,
-      deviceStatus: item.deviceStatus,
       zoneId: item.zoneId ?? 0,
+      directorateId: item.directorateId ?? 0,
       office: item.office ?? '',
+      userOfAsset: item.userOfAsset ?? '',
+      deviceTypeId: item.deviceTypeId,
+      deviceModel: item.deviceModel,
+      deviceStatus: item.deviceStatus,
     });
   }
 
@@ -218,48 +203,48 @@ export class Inventory implements OnInit {
   private updateRequest(raw: {
     assetNumber: string;
     serialNumber: string;
-    deviceModel: string;
-    deviceTypeId: number;
-    userOfAsset: string;
-    ownershipType: string;
-    deviceStatus: string;
     zoneId: number;
+    directorateId: number;
     office: string;
+    userOfAsset: string;
+    deviceTypeId: number;
+    deviceModel: string;
+    deviceStatus: string;
   }): AssetUpdateRequest {
     return {
       assetNumber: raw.assetNumber || undefined,
       serialNumber: raw.serialNumber || undefined,
-      deviceModel: raw.deviceModel,
-      deviceTypeId: Number(raw.deviceTypeId),
-      userOfAsset: raw.userOfAsset?.trim() || undefined,
-      ownershipType: raw.ownershipType as OwnershipType,
-      deviceStatus: raw.deviceStatus as DeviceStatus,
       zoneId: Number(raw.zoneId),
+      directorateId: raw.directorateId ? Number(raw.directorateId) : null,
       office: raw.office?.trim() || undefined,
+      userOfAsset: raw.userOfAsset?.trim() || undefined,
+      deviceTypeId: Number(raw.deviceTypeId),
+      deviceModel: raw.deviceModel,
+      deviceStatus: raw.deviceStatus as DeviceStatus,
     };
   }
 
   private createRequest(raw: {
     assetNumber: string;
     serialNumber: string;
-    deviceModel: string;
-    deviceTypeId: number;
-    userOfAsset: string;
-    ownershipType: string;
-    deviceStatus: string;
     zoneId: number;
+    directorateId: number;
     office: string;
+    userOfAsset: string;
+    deviceTypeId: number;
+    deviceModel: string;
+    deviceStatus: string;
   }): AssetRequest {
     return {
       assetNumber: raw.assetNumber || undefined,
       serialNumber: raw.serialNumber || undefined,
-      deviceModel: raw.deviceModel,
-      deviceTypeId: Number(raw.deviceTypeId),
-      userOfAsset: raw.userOfAsset?.trim() || undefined,
-      ownershipType: raw.ownershipType as OwnershipType,
-      deviceStatus: raw.deviceStatus as DeviceStatus,
       zoneId: Number(raw.zoneId),
+      directorateId: raw.directorateId ? Number(raw.directorateId) : null,
       office: raw.office?.trim() || undefined,
+      userOfAsset: raw.userOfAsset?.trim() || undefined,
+      deviceTypeId: Number(raw.deviceTypeId),
+      deviceModel: raw.deviceModel,
+      deviceStatus: raw.deviceStatus as DeviceStatus,
     };
   }
 }

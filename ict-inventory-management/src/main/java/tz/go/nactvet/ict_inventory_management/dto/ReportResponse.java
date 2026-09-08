@@ -57,8 +57,6 @@ public class ReportResponse {
         private long count;
         private long working;
         private long notWorking;
-        private long officeCount;
-        private long personalCount;
         private List<AssetResponse> assets;
 
         public Long getId() {
@@ -99,22 +97,6 @@ public class ReportResponse {
 
         public void setNotWorking(long notWorking) {
             this.notWorking = notWorking;
-        }
-
-        public long getOfficeCount() {
-            return officeCount;
-        }
-
-        public void setOfficeCount(long officeCount) {
-            this.officeCount = officeCount;
-        }
-
-        public long getPersonalCount() {
-            return personalCount;
-        }
-
-        public void setPersonalCount(long personalCount) {
-            this.personalCount = personalCount;
         }
 
         public List<AssetResponse> getAssets() {

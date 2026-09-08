@@ -6,7 +6,7 @@ import { AssetService } from '../../../core/services/asset.service';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
 import { Asset } from '../../../core/models/asset.model';
 import { DeviceStatus } from '../../../core/models/enums';
-import { DEVICE_STATUS_LABELS, OWNERSHIP_TYPE_LABELS, deviceStatusTone } from '../../../shared/utils/enum-labels';
+import { DEVICE_STATUS_LABELS, deviceStatusTone } from '../../../shared/utils/enum-labels';
 import { delay, finalize, retry } from 'rxjs';
 
 @Component({
@@ -23,7 +23,6 @@ export class AssetDetail implements OnInit {
   readonly error = signal('');
 
   readonly deviceStatusLabels = DEVICE_STATUS_LABELS;
-  readonly ownershipLabels = OWNERSHIP_TYPE_LABELS;
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));

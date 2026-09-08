@@ -22,11 +22,33 @@
         <input id="serialNumber" type="text" formControlName="serialNumber" />
       </div>
       <div class="form-field">
-        <label for="deviceModel">Device Model *</label>
-        <input id="deviceModel" type="text" formControlName="deviceModel" />
-        @if (form.controls.deviceModel.touched && form.controls.deviceModel.invalid) {
-          <div class="field-error">Device model is required.</div>
+        <label for="zone">Zone *</label>
+        <select id="zone" formControlName="zoneId">
+          <option [ngValue]="0" disabled>Select zone</option>
+          @for (zone of zones(); track zone.id) {
+            <option [ngValue]="zone.id">{{ zone.name }}</option>
+          }
+        </select>
+        @if (form.controls.zoneId.touched && form.controls.zoneId.invalid) {
+          <div class="field-error">Zone is required.</div>
         }
+      </div>
+      <div class="form-field">
+        <label for="directorate">Department/Directorate (Optional)</label>
+        <select id="directorate" formControlName="directorateId">
+          <option [ngValue]="0">None</option>
+          @for (item of directorates(); track item.id) {
+            <option [ngValue]="item.id">{{ item.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="office">Room/Office (Optional)</label>
+        <input id="office" type="text" formControlName="office" placeholder="Optional" maxlength="100" />
+      </div>
+      <div class="form-field">
+        <label for="userOfAsset">Assigned To (Optional)</label>
+        <input id="userOfAsset" type="text" formControlName="userOfAsset" placeholder="Enter full name" maxlength="255" />
       </div>
       <div class="form-field">
         <label for="deviceTypeId">Device Type *</label>
@@ -41,22 +63,10 @@
         }
       </div>
       <div class="form-field">
-        <label for="userOfAsset">Assigned User *</label>
-        <input id="userOfAsset" type="text" formControlName="userOfAsset" placeholder="Enter full name" maxlength="255" />
-        @if (form.controls.userOfAsset.touched && form.controls.userOfAsset.invalid) {
-          <div class="field-error">Assigned user is required.</div>
-        }
-      </div>
-      <div class="form-field">
-        <label for="ownershipType">Ownership *</label>
-        <select id="ownershipType" formControlName="ownershipType">
-          <option value="" disabled>Select ownership</option>
-          @for (opt of ownershipOptions; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
-          }
-        </select>
-        @if (form.controls.ownershipType.touched && form.controls.ownershipType.invalid) {
-          <div class="field-error">Ownership is required.</div>
+        <label for="deviceModel">Device Model *</label>
+        <input id="deviceModel" type="text" formControlName="deviceModel" />
+        @if (form.controls.deviceModel.touched && form.controls.deviceModel.invalid) {
+          <div class="field-error">Device model is required.</div>
         }
       </div>
       <div class="form-field">
@@ -69,25 +79,6 @@
         </select>
         @if (form.controls.deviceStatus.touched && form.controls.deviceStatus.invalid) {
           <div class="field-error">Device status is required.</div>
-        }
-      </div>
-      <div class="form-field">
-        <label for="zone">Zone *</label>
-        <select id="zone" formControlName="zoneId">
-          <option [ngValue]="0" disabled>Select zone</option>
-          @for (zone of zones(); track zone.id) {
-            <option [ngValue]="zone.id">{{ zone.name }}</option>
-          }
-        </select>
-        @if (form.controls.zoneId.touched && form.controls.zoneId.invalid) {
-          <div class="field-error">Zone is required.</div>
-        }
-      </div>
-      <div class="form-field">
-        <label for="office">Office *</label>
-        <input id="office" type="text" formControlName="office" placeholder="Enter office code" maxlength="100" />
-        @if (form.controls.office.touched && form.controls.office.invalid) {
-          <div class="field-error">Office is required.</div>
         }
       </div>
     </div>

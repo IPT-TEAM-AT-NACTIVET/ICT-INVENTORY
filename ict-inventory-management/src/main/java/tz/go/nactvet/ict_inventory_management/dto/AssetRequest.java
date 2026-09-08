@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import tz.go.nactvet.ict_inventory_management.enums.DeviceStatus;
-import tz.go.nactvet.ict_inventory_management.enums.OwnershipType;
 
 public class AssetRequest {
 
@@ -13,28 +12,24 @@ public class AssetRequest {
 
     private String serialNumber;
 
-    @NotBlank(message = "deviceModel: must not be blank")
-    private String deviceModel;
+    private Long zoneId;
+
+    private Long directorateId;
+
+    @Size(max = 100, message = "office: must not exceed 100 characters")
+    private String office;
+
+    @Size(max = 255, message = "userOfAsset: must not exceed 255 characters")
+    private String userOfAsset;
 
     @NotNull(message = "deviceTypeId: must not be null")
     private Long deviceTypeId;
 
-    @NotBlank(message = "userOfAsset: must not be blank")
-    @Size(max = 255, message = "userOfAsset: must not exceed 255 characters")
-    private String userOfAsset;
-
-    @NotNull(message = "ownershipType: must not be null")
-    private OwnershipType ownershipType;
+    @NotBlank(message = "deviceModel: must not be blank")
+    private String deviceModel;
 
     @NotNull(message = "deviceStatus: must not be null")
     private DeviceStatus deviceStatus;
-
-    @NotNull(message = "zoneId: must not be null")
-    private Long zoneId;
-
-    @NotBlank(message = "office: must not be blank")
-    @Size(max = 100, message = "office: must not exceed 100 characters")
-    private String office;
 
     public String getAssetNumber() {
         return assetNumber;
@@ -52,20 +47,28 @@ public class AssetRequest {
         this.serialNumber = serialNumber;
     }
 
-    public String getDeviceModel() {
-        return deviceModel;
+    public Long getZoneId() {
+        return zoneId;
     }
 
-    public void setDeviceModel(String deviceModel) {
-        this.deviceModel = deviceModel;
+    public void setZoneId(Long zoneId) {
+        this.zoneId = zoneId;
     }
 
-    public Long getDeviceTypeId() {
-        return deviceTypeId;
+    public Long getDirectorateId() {
+        return directorateId;
     }
 
-    public void setDeviceTypeId(Long deviceTypeId) {
-        this.deviceTypeId = deviceTypeId;
+    public void setDirectorateId(Long directorateId) {
+        this.directorateId = directorateId;
+    }
+
+    public String getOffice() {
+        return office;
+    }
+
+    public void setOffice(String office) {
+        this.office = office;
     }
 
     public String getUserOfAsset() {
@@ -76,12 +79,20 @@ public class AssetRequest {
         this.userOfAsset = userOfAsset;
     }
 
-    public OwnershipType getOwnershipType() {
-        return ownershipType;
+    public Long getDeviceTypeId() {
+        return deviceTypeId;
     }
 
-    public void setOwnershipType(OwnershipType ownershipType) {
-        this.ownershipType = ownershipType;
+    public void setDeviceTypeId(Long deviceTypeId) {
+        this.deviceTypeId = deviceTypeId;
+    }
+
+    public String getDeviceModel() {
+        return deviceModel;
+    }
+
+    public void setDeviceModel(String deviceModel) {
+        this.deviceModel = deviceModel;
     }
 
     public DeviceStatus getDeviceStatus() {
@@ -90,21 +101,5 @@ public class AssetRequest {
 
     public void setDeviceStatus(DeviceStatus deviceStatus) {
         this.deviceStatus = deviceStatus;
-    }
-
-    public Long getZoneId() {
-        return zoneId;
-    }
-
-    public void setZoneId(Long zoneId) {
-        this.zoneId = zoneId;
-    }
-
-    public String getOffice() {
-        return office;
-    }
-
-    public void setOffice(String office) {
-        this.office = office;
     }
 }

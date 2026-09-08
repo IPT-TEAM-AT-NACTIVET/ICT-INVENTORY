@@ -12,7 +12,6 @@ public class DashboardResponse {
     private Map<String, Long> assetsByDeviceType;
     private Map<String, Long> assetsByZone;
     private Map<String, Long> assetsByDeviceStatus;
-    private Map<String, Long> assetsByOwnership;
     private List<RecentAssetDto> recentAssets = new ArrayList<>();
 
     public long getTotalAssets() {
@@ -61,14 +60,6 @@ public class DashboardResponse {
 
     public void setAssetsByDeviceStatus(Map<String, Long> assetsByDeviceStatus) {
         this.assetsByDeviceStatus = assetsByDeviceStatus;
-    }
-
-    public Map<String, Long> getAssetsByOwnership() {
-        return assetsByOwnership;
-    }
-
-    public void setAssetsByOwnership(Map<String, Long> assetsByOwnership) {
-        this.assetsByOwnership = assetsByOwnership;
     }
 
     public List<RecentAssetDto> getRecentAssets() {

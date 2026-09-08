@@ -5,9 +5,9 @@ import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { ReferenceService } from '../../../shared/services/reference.service';
 import { AssetService } from '../../../core/services/asset.service';
 import { Asset } from '../../../core/models/asset.model';
-import { DeviceType, Zone } from '../../../core/models/master-data.model';
-import { DeviceStatus, OwnershipType } from '../../../core/models/enums';
-import { DEVICE_STATUS_OPTIONS, OWNERSHIP_TYPE_OPTIONS, deviceStatusTone } from '../../../shared/utils/enum-labels';
+import { DeviceType, Directorate, Zone } from '../../../core/models/master-data.model';
+import { DeviceStatus } from '../../../core/models/enums';
+import { DEVICE_STATUS_OPTIONS, deviceStatusTone } from '../../../shared/utils/enum-labels';
 
 @Component({
   selector: 'app-asset-form',
@@ -21,23 +21,23 @@ export class AssetForm implements OnInit {
   private readonly reference = inject(ReferenceService);
   private readonly assetService = inject(AssetService);
 
-  readonly ownershipOptions = OWNERSHIP_TYPE_OPTIONS;
   readonly deviceStatusOptions = DEVICE_STATUS_OPTIONS;
 
   readonly form = this.fb.nonNullable.group({
     assetNumber: [''],
     serialNumber: [''],
-    deviceModel: ['', Validators.required],
-    deviceTypeId: [0, Validators.required],
-    userOfAsset: ['', Validators.required],
-    ownershipType: ['', Validators.required],
-    deviceStatus: ['', Validators.required],
     zoneId: [0, Validators.required],
-    office: ['', [Validators.required, Validators.maxLength(100)]],
+    directorateId: [0],
+    office: ['', Validators.maxLength(100)],
+    userOfAsset: ['', Validators.maxLength(255)],
+    deviceTypeId: [0, Validators.required],
+    deviceModel: ['', Validators.required],
+    deviceStatus: ['', Validators.required],
   });
 
   readonly deviceTypes = signal<DeviceType[]>([]);
   readonly zones = signal<Zone[]>([]);
+  readonly directorates = signal<Directorate[]>([]);
   assetId: number | null = null;
   readonly existing = signal<Asset | undefined>(undefined);
   readonly error = signal('');
@@ -49,6 +49,7 @@ export class AssetForm implements OnInit {
     this.assetId = idParam ? Number(idParam) : null;
     this.reference.getDeviceTypes().subscribe((items) => this.deviceTypes.set(items));
     this.reference.getZones().subscribe((items) => this.zones.set(items));
+    this.reference.getDirectorates().subscribe((items) => this.directorates.set(items));
     if (this.assetId) {
       this.loadExisting();
     }
@@ -61,13 +62,13 @@ export class AssetForm implements OnInit {
         this.form.patchValue({
           assetNumber: asset.assetNumber ?? '',
           serialNumber: asset.serialNumber ?? '',
-          deviceModel: asset.deviceModel,
-          deviceTypeId: asset.deviceTypeId,
-          userOfAsset: asset.userOfAsset ?? '',
-          ownershipType: asset.ownershipType,
-          deviceStatus: asset.deviceStatus,
           zoneId: asset.zoneId ?? 0,
+          directorateId: asset.directorateId ?? 0,
           office: asset.office ?? '',
+          userOfAsset: asset.userOfAsset ?? '',
+          deviceTypeId: asset.deviceTypeId,
+          deviceModel: asset.deviceModel,
+          deviceStatus: asset.deviceStatus,
         });
       },
       error: () => {
@@ -91,13 +92,13 @@ export class AssetForm implements OnInit {
     const payload = {
       assetNumber: raw.assetNumber || undefined,
       serialNumber: raw.serialNumber || undefined,
-      deviceModel: raw.deviceModel,
-      deviceTypeId: Number(raw.deviceTypeId),
-      userOfAsset: raw.userOfAsset.trim(),
-      ownershipType: raw.ownershipType as OwnershipType,
-      deviceStatus: raw.deviceStatus as DeviceStatus,
       zoneId: Number(raw.zoneId),
-      office: raw.office.trim(),
+      directorateId: raw.directorateId ? Number(raw.directorateId) : null,
+      office: raw.office?.trim() || undefined,
+      userOfAsset: raw.userOfAsset?.trim() || undefined,
+      deviceTypeId: Number(raw.deviceTypeId),
+      deviceModel: raw.deviceModel,
+      deviceStatus: raw.deviceStatus as DeviceStatus,
     };
     const op = this.assetId
       ? this.assetService.update(this.assetId, payload)

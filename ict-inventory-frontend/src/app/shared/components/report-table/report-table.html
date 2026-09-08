@@ -4,12 +4,12 @@
       <tr>
         <th>{{ t('reports.assetNo') }}</th>
         <th>{{ t('reports.serial') }}</th>
-        <th>{{ t('reports.device') }}</th>
-        <th>{{ t('reports.type') }}</th>
-        <th>{{ t('reports.user') }}</th>
         <th>{{ t('reports.zone') }}</th>
+        <th>{{ t('reports.directorate') }}</th>
         <th>{{ t('reports.officeCol') }}</th>
-        <th>{{ t('reports.ownership') }}</th>
+        <th>{{ t('reports.user') }}</th>
+        <th>{{ t('reports.type') }}</th>
+        <th>{{ t('reports.device') }}</th>
         <th>{{ t('reports.status') }}</th>
         <th>{{ t('reports.registeredBy') }}</th>
         <th>{{ t('reports.registeredAt') }}</th>
@@ -25,12 +25,12 @@
           <tr>
             <td>{{ asset.assetNumber ?? '—' }}</td>
             <td>{{ asset.serialNumber ?? '—' }}</td>
-            <td>{{ asset.deviceModel }}</td>
-            <td>{{ asset.deviceTypeName }}</td>
-            <td>{{ asset.userOfAsset || '—' }}</td>
             <td>{{ asset.zoneName ?? '—' }}</td>
+            <td>{{ asset.directorateName ?? '—' }}</td>
             <td>{{ asset.office ?? '—' }}</td>
-            <td>{{ ownershipLabels[asset.ownershipType] }}</td>
+            <td>{{ asset.userOfAsset || '—' }}</td>
+            <td>{{ asset.deviceTypeName }}</td>
+            <td>{{ asset.deviceModel }}</td>
             <td>
               <app-status-badge
                 [label]="deviceStatusLabels[asset.deviceStatus]"

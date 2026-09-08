@@ -168,20 +168,24 @@ CREATE TABLE assets (
     asset_number      VARCHAR(255) UNIQUE,
     serial_number     VARCHAR(255) UNIQUE,
     device_model      VARCHAR(255) NOT NULL,
-    ownership_type    VARCHAR(255) NOT NULL,   -- OFFICE, PERSONAL
     device_status     VARCHAR(255) NOT NULL,   -- WORKING, NOT_WORKING
     device_type_id    BIGINT NOT NULL REFERENCES device_types (id),
-    user_id           BIGINT NOT NULL REFERENCES users (id),
+    user_of_asset     VARCHAR(255),
+    directorate_id    BIGINT REFERENCES directorates (id),
     zone_id           BIGINT REFERENCES zones (id),
-    office               VARCHAR(100) NOT NULL,
+    office            VARCHAR(100),
+    created_by        BIGINT REFERENCES users (id),
+    updated_by        BIGINT REFERENCES users (id),
     created_at        TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     updated_at        TIMESTAMP WITHOUT TIME ZONE NOT NULL
 );
 
-CREATE INDEX idx_assets_user_id              ON assets (user_id);
 CREATE INDEX idx_assets_device_type_id       ON assets (device_type_id);
+CREATE INDEX idx_assets_created_by           ON assets (created_by);
+CREATE INDEX idx_assets_updated_by           ON assets (updated_by);
 CREATE INDEX idx_assets_zone_id              ON assets (zone_id);
 CREATE INDEX idx_assets_device_status        ON assets (device_status);
+CREATE INDEX idx_assets_directorate_id       ON assets (directorate_id);
 
 -- ---------------------------------------------------------------------------
 -- Audit logs

@@ -13,15 +13,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import tz.go.nactvet.ict_inventory_management.entity.Asset;
 import tz.go.nactvet.ict_inventory_management.entity.DeviceType;
+import tz.go.nactvet.ict_inventory_management.entity.Directorate;
 import tz.go.nactvet.ict_inventory_management.entity.Section;
 import tz.go.nactvet.ict_inventory_management.entity.Unit;
 import tz.go.nactvet.ict_inventory_management.entity.User;
 import tz.go.nactvet.ict_inventory_management.entity.Zone;
 import tz.go.nactvet.ict_inventory_management.enums.DeviceStatus;
-import tz.go.nactvet.ict_inventory_management.enums.OwnershipType;
 import tz.go.nactvet.ict_inventory_management.enums.Role;
 import tz.go.nactvet.ict_inventory_management.repository.AssetRepository;
 import tz.go.nactvet.ict_inventory_management.repository.DeviceTypeRepository;
+import tz.go.nactvet.ict_inventory_management.repository.DirectorateRepository;
 import tz.go.nactvet.ict_inventory_management.repository.SectionRepository;
 import tz.go.nactvet.ict_inventory_management.repository.UnitRepository;
 import tz.go.nactvet.ict_inventory_management.repository.UserRepository;
@@ -71,7 +72,7 @@ public class DataSeedInitializer implements CommandLineRunner {
             "Lake Zone", "Southern Highlands Zone", "Southern Zone"
     };
 
-    // Asset columns: assetNumber, serialNumber, deviceModel, ownershipType,
+    // Asset columns: assetNumber, serialNumber, deviceModel, (ownershipType skipped),
     // deviceStatus, legacyVerificationStatus, office, deviceTypeName, staffEmail, zoneName
     private static final String[][] ASSETS = {
             {"NCT-ICT-001-01", "NCTSER-001-01", "Laptop - 01-01", "OFFICE", "WORKING", "VERIFIED", "A2", "Laptop", "amani.juma@example.com", "Central Zone"},
@@ -290,6 +291,7 @@ public class DataSeedInitializer implements CommandLineRunner {
     private final SectionRepository sectionRepository;
     private final UnitRepository unitRepository;
     private final ZoneRepository zoneRepository;
+    private final DirectorateRepository directorateRepository;
     private final JdbcTemplate jdbcTemplate;
 
     private static final String[] ASSET_DEVICE_TYPES = {
@@ -304,6 +306,7 @@ public class DataSeedInitializer implements CommandLineRunner {
                                SectionRepository sectionRepository,
                                UnitRepository unitRepository,
                                ZoneRepository zoneRepository,
+                               DirectorateRepository directorateRepository,
                                JdbcTemplate jdbcTemplate) {
         this.userRepository = userRepository;
         this.assetRepository = assetRepository;
@@ -311,6 +314,7 @@ public class DataSeedInitializer implements CommandLineRunner {
         this.sectionRepository = sectionRepository;
         this.unitRepository = unitRepository;
         this.zoneRepository = zoneRepository;
+        this.directorateRepository = directorateRepository;
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -400,6 +404,7 @@ public class DataSeedInitializer implements CommandLineRunner {
         for (Zone z : zones) {
             zoneByName.put(z.getName(), z);
         }
+        List<Directorate> directorates = directorateRepository.findAll();
 
         for (String[] row : ASSETS) {
             if (assetRepository.existsByAssetNumber(row[0])) {
@@ -409,7 +414,6 @@ public class DataSeedInitializer implements CommandLineRunner {
             asset.setAssetNumber(row[0]);
             asset.setSerialNumber(row[1]);
             asset.setDeviceModel(row[2]);
-            asset.setOwnershipType(OwnershipType.valueOf(row[3]));
             asset.setDeviceStatus(DeviceStatus.valueOf(row[4]));
             asset.setOffice(row[6]);
             asset.setDeviceType(typeByName.get(row[7]));
@@ -418,6 +422,9 @@ public class DataSeedInitializer implements CommandLineRunner {
             asset.setCreatedBy(registrar);
             asset.setUpdatedBy(registrar);
             asset.setZone(zoneByName.get(row[9]));
+            if (!directorates.isEmpty()) {
+                asset.setDirectorate(directorates.get(Math.floorMod(asset.getAssetNumber().hashCode(), directorates.size())));
+            }
             assetRepository.save(asset);
         }
     }

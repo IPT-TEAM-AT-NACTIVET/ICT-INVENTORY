@@ -2,6 +2,7 @@ package tz.go.nactvet.ict_inventory_management.controller;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
@@ -31,7 +32,6 @@ public class ReportController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Long deviceTypeId,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String ownershipType,
             @RequestParam(required = false) Long zoneId,
             @RequestParam(required = false) String office,
             @RequestParam(required = false) String userOfAsset,
@@ -40,7 +40,7 @@ public class ReportController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate to,
             @RequestParam(defaultValue = "overview") String groupBy) {
         return ResponseEntity.ok(reportService.getReportData(
-                search, deviceTypeId, status, ownershipType, zoneId,
+                search, deviceTypeId, status, zoneId,
                 office, userOfAsset, registeredBy, from, to, groupBy));
     }
 
@@ -49,25 +49,47 @@ public class ReportController {
         return ResponseEntity.ok(reportService.getFilterOptions());
     }
 
-    @GetMapping("/export/csv")
-    public ResponseEntity<byte[]> exportCsv(
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exportReport(
+            @RequestParam(required = false) String format,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Long deviceTypeId,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String ownershipType,
             @RequestParam(required = false) Long zoneId,
             @RequestParam(required = false) String office,
             @RequestParam(required = false) String userOfAsset,
             @RequestParam(required = false) String registeredBy,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate to) {
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate to) throws Exception {
 
-        String csv = reportService.exportCsv(search, deviceTypeId, status, ownershipType,
-                zoneId, office, userOfAsset, registeredBy, from, to);
+        String fmt = (format != null && !format.isBlank()) ? format.trim().toLowerCase() : "csv";
+        if (!List.of("csv", "xlsx", "pdf").contains(fmt)) {
+            fmt = "csv";
+        }
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ict-inventory-report.csv")
-                .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
-                .body(csv.getBytes(StandardCharsets.UTF_8));
+        byte[] data = reportService.exportReport(search, deviceTypeId, status,
+                zoneId, office, userOfAsset, registeredBy, from, to, fmt);
+
+        switch (fmt) {
+            case "xlsx" -> {
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ict-inventory-report.xlsx")
+                        .contentType(MediaType.parseMediaType(
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                        .body(data);
+            }
+            case "pdf" -> {
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ict-inventory-report.pdf")
+                        .contentType(MediaType.APPLICATION_PDF)
+                        .body(data);
+            }
+            default -> {
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ict-inventory-report.csv")
+                        .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+                        .body(data);
+            }
+        }
     }
 }

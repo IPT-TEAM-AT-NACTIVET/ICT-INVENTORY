@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
 import tz.go.nactvet.ict_inventory_management.enums.DeviceStatus;
-import tz.go.nactvet.ict_inventory_management.enums.OwnershipType;
 
 @Entity
 @Table(name = "assets", indexes = {
@@ -14,7 +13,8 @@ import tz.go.nactvet.ict_inventory_management.enums.OwnershipType;
         @Index(name = "idx_assets_created_by", columnList = "created_by"),
         @Index(name = "idx_assets_updated_by", columnList = "updated_by"),
         @Index(name = "idx_assets_zone_id", columnList = "zone_id"),
-        @Index(name = "idx_assets_device_status", columnList = "device_status")
+        @Index(name = "idx_assets_device_status", columnList = "device_status"),
+        @Index(name = "idx_assets_directorate_id", columnList = "directorate_id")
 })
 public class Asset {
 
@@ -48,15 +48,15 @@ public class Asset {
     private User updatedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "directorate_id")
+    private Directorate directorate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "zone_id")
     private Zone zone;
 
     @Column(name = "office", nullable = true, length = 100)
     private String office;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "ownership_type", nullable = false)
-    private OwnershipType ownershipType;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "device_status", nullable = false)
@@ -154,20 +154,20 @@ public class Asset {
         this.zone = zone;
     }
 
+    public Directorate getDirectorate() {
+        return directorate;
+    }
+
+    public void setDirectorate(Directorate directorate) {
+        this.directorate = directorate;
+    }
+
     public String getOffice() {
         return office;
     }
 
     public void setOffice(String office) {
         this.office = office;
-    }
-
-    public OwnershipType getOwnershipType() {
-        return ownershipType;
-    }
-
-    public void setOwnershipType(OwnershipType ownershipType) {
-        this.ownershipType = ownershipType;
     }
 
     public DeviceStatus getDeviceStatus() {

@@ -38,7 +38,7 @@ export class AssetService {
     return this.http.post<Asset>(this.base, request);
   }
 
-  importCsv(file: File): Observable<CsvImportResult> {
+  importFile(file: File): Observable<CsvImportResult> {
     const formData = new FormData();
     formData.append('file', file, file.name);
     return this.http.post<CsvImportResult>(`${this.base}/import`, formData);

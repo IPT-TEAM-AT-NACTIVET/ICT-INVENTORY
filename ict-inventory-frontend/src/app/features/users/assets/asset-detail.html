@@ -20,34 +20,34 @@
         <dd>{{ asset.serialNumber ?? '—' }}</dd>
       </div>
       <div class="detail-item">
-        <dt>Device Model</dt>
-        <dd>{{ asset.deviceModel }}</dd>
+        <dt>Zone</dt>
+        <dd>{{ asset.zoneName ?? '—' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Department/Directorate</dt>
+        <dd>{{ asset.directorateName ?? '—' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Room/Office</dt>
+        <dd>{{ asset.office ?? '—' }}</dd>
+      </div>
+      <div class="detail-item">
+        <dt>Assigned To</dt>
+        <dd>{{ asset.userOfAsset || '—' }}</dd>
       </div>
       <div class="detail-item">
         <dt>Device Type</dt>
         <dd>{{ asset.deviceTypeName }}</dd>
       </div>
       <div class="detail-item">
-        <dt>Ownership</dt>
-        <dd>{{ ownershipLabels[asset.ownershipType] }}</dd>
+        <dt>Device Model</dt>
+        <dd>{{ asset.deviceModel }}</dd>
       </div>
       <div class="detail-item">
         <dt>Device Status</dt>
         <dd>
           <app-status-badge [label]="deviceStatusLabels[asset.deviceStatus]" [tone]="deviceTone(asset.deviceStatus)" />
         </dd>
-      </div>
-      <div class="detail-item">
-        <dt>User of Asset</dt>
-        <dd>{{ asset.userOfAsset || '—' }}</dd>
-      </div>
-      <div class="detail-item">
-        <dt>Zone</dt>
-        <dd>{{ asset.zoneName ?? '—' }}</dd>
-      </div>
-      <div class="detail-item">
-        <dt>Office</dt>
-        <dd>{{ asset.office ?? '—' }}</dd>
       </div>
       <div class="detail-item">
         <dt>Registered By</dt>

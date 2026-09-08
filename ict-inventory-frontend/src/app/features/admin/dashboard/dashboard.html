@@ -70,20 +70,6 @@
         }
       </div>
     </div>
-    <div class="card">
-      <h3>Assets by Ownership</h3>
-      <div class="bars">
-        @for (item of entries(stats.assetsByOwnership); track item.key) {
-          <div class="bar-row">
-            <span class="bar-label">{{ item.key }}</span>
-            <div class="bar-track">
-              <div class="bar-fill" [style.width.%]="(item.value / maxBar(stats.assetsByOwnership)) * 100"></div>
-            </div>
-            <span class="bar-value">{{ item.value }}</span>
-          </div>
-        }
-      </div>
-    </div>
   </div>
 
   <div class="card">

@@ -12,7 +12,10 @@
       [class.active]="filterOpen()"
       (click)="toggleFilter()"
     >
-      {{ activeFilter()?.label ?? t('reports.filter') }} ▾
+      {{ t('reports.filter') }} ▾
+      @if (activeFilters().length > 0) {
+        <span class="filter-count">{{ activeFilters().length }}</span>
+      }
     </button>
 
     @if (filterOpen()) {
@@ -23,51 +26,87 @@
             <button
               type="button"
               class="filter-criterion"
-              [class.active]="criterion() === c"
-              (click)="selectCriterion(c)"
+              [class.active]="draftEnabled(c)"
+              (click)="toggleDraft(c)"
             >
               {{ t('reports.criteria.' + c) }}
             </button>
           }
         </div>
 
-        @if (criterion(); as c) {
+        @for (c of enabledDrafts(); track c) {
           <div class="filter-menu-value">
-            <label for="reportFilterValue">{{ t('reports.criteria.' + c) }}</label>
-            <select
-              id="reportFilterValue"
-              [value]="criterionValue()"
-              (change)="criterionValue.set($any($event.target).value)"
-            >
-              <option value="">{{ t('reports.selectValue') }}</option>
-              @for (opt of valueOptions(); track opt.value) {
-                <option [value]="opt.value">{{ opt.label }}</option>
-              }
-            </select>
-            <div class="filter-menu-actions">
-              <button
-                type="button"
-                class="btn btn-primary"
-                [disabled]="!criterionValue()"
-                (click)="applyFilter()"
+            <label for="reportFilter-{{ c }}">{{ t('reports.criteria.' + c) }}</label>
+            <div class="select-wrap">
+              <select
+                id="reportFilter-{{ c }}"
+                [value]="draftValue(c)"
+                (change)="setDraftValue(c, $any($event.target).value)"
               >
-                {{ t('reports.apply') }}
-              </button>
-              <button type="button" class="btn" (click)="resetFilter()">{{ t('reports.reset') }}</button>
+                <option value="">{{ t('reports.selectValue') }}</option>
+                @for (opt of optionsFor(c); track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
             </div>
           </div>
         }
+
+        <div class="filter-menu-actions">
+          <button type="button" class="btn btn-primary" (click)="applyFilters()">
+            {{ t('reports.applyFilters') }}
+          </button>
+          <button type="button" class="btn" (click)="clearFilters()">
+            {{ t('reports.clearFilters') }}
+          </button>
+        </div>
       </div>
     }
   </div>
 
-  <button type="button" class="btn btn-primary" (click)="downloadCsv()" [disabled]="loading()">
-    {{ t('reports.export') }}
-  </button>
-
-  @if (activeFilter()) {
-    <button type="button" class="btn" (click)="resetFilter()">{{ t('reports.reset') }}</button>
+  @if (activeFilters().length > 0) {
+    <div class="active-filters">
+      @for (f of activeFilters(); track f.criterion) {
+        <span class="filter-chip">
+          {{ f.label }}
+          <button
+            type="button"
+            class="chip-remove"
+            (click)="removeFilter(f.criterion)"
+            aria-label="Remove filter"
+          >
+            ×
+          </button>
+        </span>
+      }
+    </div>
   }
+
+  <div class="export-wrap">
+    <button
+      type="button"
+      class="btn btn-primary"
+      [class.active]="exportOpen()"
+      [disabled]="loading()"
+      (click)="toggleExport()"
+    >
+      {{ t('reports.export') }} ▾
+    </button>
+
+    @if (exportOpen()) {
+      <div class="export-menu card">
+        @for (opts of exportFormats; track opts.value) {
+          <button
+            type="button"
+            class="export-option"
+            (click)="download(opts.value, opts.file)"
+          >
+            {{ opts.label }}
+          </button>
+        }
+      </div>
+    }
+  </div>
 </div>
 
 @if (summary(); as summary) {
@@ -83,14 +122,6 @@
     <div class="stat-card">
       <div class="stat-value stat-danger">{{ summary.defectiveAssets }}</div>
       <div class="stat-label">{{ t('reports.notWorking') }}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value stat-warning">{{ summary.officeAssets }}</div>
-      <div class="stat-label">{{ t('reports.office') }}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">{{ summary.personalAssets }}</div>
-      <div class="stat-label">{{ t('reports.personal') }}</div>
     </div>
   </div>
 }

@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
@@ -27,7 +26,6 @@ import tz.go.nactvet.ict_inventory_management.dto.AssetUpdateRequest;
 import tz.go.nactvet.ict_inventory_management.dto.CsvImportResult;
 import tz.go.nactvet.ict_inventory_management.dto.PagedResponse;
 import tz.go.nactvet.ict_inventory_management.enums.DeviceStatus;
-import tz.go.nactvet.ict_inventory_management.enums.OwnershipType;
 import tz.go.nactvet.ict_inventory_management.security.CustomUserDetailsService;
 import tz.go.nactvet.ict_inventory_management.service.AssetService;
 
@@ -50,11 +48,10 @@ public class AdminAssetController {
     }
 
     @PostMapping("/import")
-    public ResponseEntity<CsvImportResult> importCsv(@RequestPart("file") MultipartFile file,
-                                                     Authentication authentication) throws IOException {
+    public ResponseEntity<CsvImportResult> importAssets(@RequestPart("file") MultipartFile file,
+                                                        Authentication authentication) throws IOException {
         CustomUserDetailsService.UserPrincipal principal = (CustomUserDetailsService.UserPrincipal) authentication.getPrincipal();
-        String csvContent = new String(file.getBytes(), StandardCharsets.UTF_8);
-        return ResponseEntity.ok(assetService.importCsv(csvContent, principal.getId()));
+        return ResponseEntity.ok(assetService.importFile(file, principal.getId()));
     }
 
     @GetMapping

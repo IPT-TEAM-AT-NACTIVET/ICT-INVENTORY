@@ -40,7 +40,6 @@ public class DashboardService {
         response.setAssetsByDeviceType(toMap(assetRepository.countByDeviceTypeGrouped()));
         response.setAssetsByZone(toMap(assetRepository.countByZoneGrouped()));
         response.setAssetsByDeviceStatus(toSimpleMap(assetRepository.countByDeviceStatusGrouped()));
-        response.setAssetsByOwnership(toSimpleMap(assetRepository.countByOwnershipGrouped()));
 
         response.setRecentAssets(toRecentAssets(assetRepository.findRecentRegistrations(
                 PageRequest.of(0, RECENT_ASSETS_LIMIT))));
@@ -58,7 +57,6 @@ public class DashboardService {
         response.setAssetsByDeviceType(toMap(assetRepository.countByDeviceTypeGrouped()));
         response.setAssetsByZone(toMap(assetRepository.countByZoneGrouped()));
         response.setAssetsByDeviceStatus(toSimpleMap(assetRepository.countByDeviceStatusGrouped()));
-        response.setAssetsByOwnership(toSimpleMap(assetRepository.countByOwnershipGrouped()));
 
         response.setRecentAssets(toRecentAssets(assetRepository.findRecentRegistrations(
                 PageRequest.of(0, RECENT_ASSETS_LIMIT))));

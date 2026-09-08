@@ -1,5 +1,8 @@
 package tz.go.nactvet.ict_inventory_management.service;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -8,6 +11,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.poi.EncryptedDocumentException;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -15,6 +25,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import tz.go.nactvet.ict_inventory_management.dto.AssetRequest;
 import tz.go.nactvet.ict_inventory_management.dto.AssetResponse;
@@ -23,15 +34,16 @@ import tz.go.nactvet.ict_inventory_management.dto.CsvImportResult;
 import tz.go.nactvet.ict_inventory_management.dto.PagedResponse;
 import tz.go.nactvet.ict_inventory_management.entity.Asset;
 import tz.go.nactvet.ict_inventory_management.entity.DeviceType;
+import tz.go.nactvet.ict_inventory_management.entity.Directorate;
 import tz.go.nactvet.ict_inventory_management.entity.User;
 import tz.go.nactvet.ict_inventory_management.entity.Zone;
 import tz.go.nactvet.ict_inventory_management.enums.DeviceStatus;
-import tz.go.nactvet.ict_inventory_management.enums.OwnershipType;
 import tz.go.nactvet.ict_inventory_management.exception.BadRequestException;
 import tz.go.nactvet.ict_inventory_management.exception.ConflictException;
 import tz.go.nactvet.ict_inventory_management.exception.ResourceNotFoundException;
 import tz.go.nactvet.ict_inventory_management.repository.AssetRepository;
 import tz.go.nactvet.ict_inventory_management.repository.DeviceTypeRepository;
+import tz.go.nactvet.ict_inventory_management.repository.DirectorateRepository;
 import tz.go.nactvet.ict_inventory_management.repository.UserRepository;
 import tz.go.nactvet.ict_inventory_management.repository.ZoneRepository;
 
@@ -45,6 +57,7 @@ public class AssetService {
     private final DeviceTypeRepository deviceTypeRepository;
     private final UserRepository userRepository;
     private final ZoneRepository zoneRepository;
+    private final DirectorateRepository directorateRepository;
     private final AuditLogService auditLogService;
     private final AssetMapper assetMapper;
 
@@ -52,12 +65,14 @@ public class AssetService {
                         DeviceTypeRepository deviceTypeRepository,
                         UserRepository userRepository,
                         ZoneRepository zoneRepository,
+                        DirectorateRepository directorateRepository,
                         AuditLogService auditLogService,
                         AssetMapper assetMapper) {
         this.assetRepository = assetRepository;
         this.deviceTypeRepository = deviceTypeRepository;
         this.userRepository = userRepository;
         this.zoneRepository = zoneRepository;
+        this.directorateRepository = directorateRepository;
         this.auditLogService = auditLogService;
         this.assetMapper = assetMapper;
     }
@@ -76,17 +91,23 @@ public class AssetService {
         Zone zone = zoneRepository.findById(request.getZoneId())
                 .orElseThrow(() -> new ResourceNotFoundException("Zone not found with id: " + request.getZoneId()));
 
+        Directorate directorate = null;
+        if (request.getDirectorateId() != null) {
+            directorate = directorateRepository.findById(request.getDirectorateId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Directorate not found with id: " + request.getDirectorateId()));
+        }
+
         Asset asset = new Asset();
         asset.setAssetNumber(request.getAssetNumber());
         asset.setSerialNumber(request.getSerialNumber());
-        asset.setDeviceModel(request.getDeviceModel());
-        asset.setDeviceType(deviceType);
+        asset.setZone(zone);
+        asset.setDirectorate(directorate);
+        asset.setOffice(normalizeOffice(request.getOffice()));
         asset.setUserOfAsset(normalizeUserOfAsset(request.getUserOfAsset()));
+        asset.setDeviceType(deviceType);
+        asset.setDeviceModel(request.getDeviceModel());
         asset.setCreatedBy(createdBy);
         asset.setUpdatedBy(createdBy);
-        asset.setZone(zone);
-        asset.setOffice(normalizeOffice(request.getOffice()));
-        asset.setOwnershipType(request.getOwnershipType());
         asset.setDeviceStatus(request.getDeviceStatus());
 
         Asset saved = assetRepository.save(asset);
@@ -98,20 +119,39 @@ public class AssetService {
     }
 
     public CsvImportResult importCsv(String csvContent, Long currentUserId) {
-        CsvImportResult result = new CsvImportResult();
         if (csvContent == null || csvContent.isBlank()) {
-            result.setImported(0);
-            return result;
+            return new CsvImportResult();
         }
+        return processRows(parseCsv(csvContent), currentUserId);
+    }
 
-        List<List<String>> rows = parseCsv(csvContent);
+    public CsvImportResult importFile(MultipartFile file, Long currentUserId) throws IOException {
+        if (file == null || file.isEmpty()) {
+            return new CsvImportResult();
+        }
+        String name = file.getOriginalFilename() == null ? "" : file.getOriginalFilename().toLowerCase(Locale.ROOT);
+        boolean excel = name.endsWith(".xlsx") || name.endsWith(".xls")
+                || "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet".equalsIgnoreCase(file.getContentType())
+                || "application/vnd.ms-excel".equalsIgnoreCase(file.getContentType());
+        if (excel) {
+            try (InputStream in = file.getInputStream()) {
+                return processRows(parseExcel(in), currentUserId);
+            } catch (EncryptedDocumentException | IOException e) {
+                throw new BadRequestException("Could not read the spreadsheet file. Please provide a valid .xlsx or .xls file.");
+            }
+        }
+        return importCsv(new String(file.getBytes(), StandardCharsets.UTF_8), currentUserId);
+    }
+
+    private CsvImportResult processRows(List<List<String>> rows, Long currentUserId) {
+        CsvImportResult result = new CsvImportResult();
         if (rows.isEmpty()) {
             return result;
         }
 
         Map<String, Integer> header = indexHeaders(rows.get(0));
         if (header.isEmpty()) {
-            result.addError(1, "CSV is missing the required header row");
+            result.addError(1, "File is missing the required header row");
             return result;
         }
 
@@ -134,12 +174,12 @@ public class AssetService {
 
         List<Asset> saved = assetRepository.saveAll(toSave);
         result.setImported(saved.size());
-        log.info("CSV import: {} assets by user id {}", saved.size(), currentUserId);
+        log.info("File import: {} assets by user id {}", saved.size(), currentUserId);
         for (Asset asset : saved) {
             String actor = createdBy != null ? createdBy.getUsername() : "system";
             auditLogService.log("CREATE", "ASSET", asset.getId(), actor,
                     createdBy != null ? createdBy.getId() : null,
-                    "Asset imported from CSV: " + asset.getDeviceModel() + " (" + asset.getAssetNumber() + ")");
+                    "Asset imported from file: " + asset.getDeviceModel() + " (" + asset.getAssetNumber() + ")");
         }
         return result;
     }
@@ -153,8 +193,8 @@ public class AssetService {
         String deviceTypeName = value(row, header, "deviceType");
         String userOfAsset = value(row, header, "userOfAsset");
         String zoneName = value(row, header, "zone");
+        String directorateName = value(row, header, "directorate");
         String office = value(row, header, "office");
-        String ownershipRaw = value(row, header, "ownership");
         String statusRaw = value(row, header, "deviceStatus");
 
         if (deviceModel == null || deviceModel.isBlank()) {
@@ -183,10 +223,13 @@ public class AssetService {
             return null;
         }
 
-        OwnershipType ownership = parseOwnership(ownershipRaw);
-        if (ownership == null) {
-            result.addError(rowNumber, "Invalid Ownership: '" + ownershipRaw + "'. Expected OFFICE or PERSONAL");
-            return null;
+        Directorate directorate = null;
+        if (directorateName != null && !directorateName.isBlank()) {
+            directorate = directorateRepository.findByName(directorateName.trim()).orElse(null);
+            if (directorate == null) {
+                result.addError(rowNumber, "Unknown Directorate: " + directorateName);
+                return null;
+            }
         }
 
         DeviceStatus status = parseStatus(statusRaw);
@@ -226,28 +269,16 @@ public class AssetService {
         Asset asset = new Asset();
         asset.setAssetNumber(normAssetNumber);
         asset.setSerialNumber(normSerialNumber);
-        asset.setDeviceModel(deviceModel.trim());
-        asset.setDeviceType(deviceType);
+        asset.setZone(zone);
+        asset.setDirectorate(directorate);
+        asset.setOffice(normOffice);
         asset.setUserOfAsset(normUser);
+        asset.setDeviceType(deviceType);
+        asset.setDeviceModel(deviceModel.trim());
         asset.setCreatedBy(createdBy);
         asset.setUpdatedBy(createdBy);
-        asset.setZone(zone);
-        asset.setOffice(normOffice);
-        asset.setOwnershipType(ownership);
         asset.setDeviceStatus(status);
         return asset;
-    }
-
-    private OwnershipType parseOwnership(String raw) {
-        if (raw == null) {
-            return null;
-        }
-        String s = raw.trim().toUpperCase(Locale.ROOT);
-        try {
-            return OwnershipType.valueOf(s);
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
     }
 
     private DeviceStatus parseStatus(String raw) {
@@ -272,6 +303,12 @@ public class AssetService {
             String col = headerRow.get(i).trim().toLowerCase(Locale.ROOT).replace(" ", "");
             index.putIfAbsent(col, i);
         }
+        if (!index.containsKey("devicename") && index.containsKey("devicemodel")) {
+            index.put("devicename", index.get("devicemodel"));
+        }
+        if (!index.containsKey("devicemodel") && index.containsKey("devicename")) {
+            index.put("devicemodel", index.get("devicename"));
+        }
         Set<String> required = Set.of("devicename", "devicetype", "zone");
         if (!index.keySet().containsAll(required)) {
             return Map.of();
@@ -286,6 +323,27 @@ public class AssetService {
         }
         String v = row.get(idx);
         return v == null || v.isBlank() ? null : v.trim();
+    }
+
+    private List<List<String>> parseExcel(InputStream inputStream) throws IOException {
+        List<List<String>> rows = new ArrayList<>();
+        try (Workbook workbook = WorkbookFactory.create(inputStream)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            DataFormatter formatter = new DataFormatter();
+            for (Row row : sheet) {
+                List<String> cells = new ArrayList<>();
+                if (row.getLastCellNum() > 0) {
+                    for (int c = 0; c < row.getLastCellNum(); c++) {
+                        Cell cell = row.getCell(c);
+                        cells.add(cell == null ? "" : formatter.formatCellValue(cell));
+                    }
+                }
+                if (!cells.isEmpty() && !(cells.size() == 1 && cells.get(0).isBlank())) {
+                    rows.add(cells);
+                }
+            }
+        }
+        return rows;
     }
 
     private List<List<String>> parseCsv(String content) {
@@ -352,12 +410,12 @@ public class AssetService {
 
     @Transactional(readOnly = true)
     public PagedResponse<AssetResponse> findFiltered(int page, int size, String assetNumber, String serialNumber,
-            String deviceModel, Long deviceTypeId, String userOfAsset, Long zoneId, String office, OwnershipType ownershipType,
+            String deviceModel, Long deviceTypeId, String userOfAsset, Long zoneId, String office,
             DeviceStatus deviceStatus) {
         Page<Asset> assetPage = assetRepository.findByFilters(
                 blankToNull(assetNumber), blankToNull(serialNumber), blankToNull(deviceModel),
                 deviceTypeId, blankToNull(userOfAsset),
-                zoneId, blankToNull(office), ownershipType, deviceStatus,
+                zoneId, blankToNull(office), deviceStatus,
                 PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         List<AssetResponse> content = assetPage.getContent().stream()
                 .map(assetMapper::toResponse)
@@ -495,30 +553,32 @@ public class AssetService {
             }
             asset.setSerialNumber(serialNumber);
         }
-        if (request.getDeviceModel() != null) {
-            asset.setDeviceModel(request.getDeviceModel());
+        if (request.getZoneId() != null) {
+            Zone zone = zoneRepository.findById(request.getZoneId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Zone not found with id: " + request.getZoneId()));
+            asset.setZone(zone);
+        }
+        if (request.getDirectorateId() != null) {
+            Directorate directorate = directorateRepository.findById(request.getDirectorateId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Directorate not found with id: " + request.getDirectorateId()));
+            asset.setDirectorate(directorate);
+        }
+        if (request.getOffice() != null) {
+            asset.setOffice(normalizeOffice(request.getOffice()));
+        }
+        if (request.getUserOfAsset() != null) {
+            asset.setUserOfAsset(normalizeUserOfAsset(request.getUserOfAsset()));
         }
         if (request.getDeviceTypeId() != null) {
             DeviceType deviceType = deviceTypeRepository.findById(request.getDeviceTypeId())
                     .orElseThrow(() -> new ResourceNotFoundException("Device type not found with id: " + request.getDeviceTypeId()));
             asset.setDeviceType(deviceType);
         }
+        if (request.getDeviceModel() != null) {
+            asset.setDeviceModel(request.getDeviceModel());
+        }
         if (request.getDeviceStatus() != null) {
             asset.setDeviceStatus(request.getDeviceStatus());
-        }
-        if (request.getZoneId() != null) {
-            Zone zone = zoneRepository.findById(request.getZoneId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Zone not found with id: " + request.getZoneId()));
-            asset.setZone(zone);
-        }
-        if (request.getOffice() != null) {
-            asset.setOffice(normalizeOffice(request.getOffice()));
-        }
-        if (request.getOwnershipType() != null) {
-            asset.setOwnershipType(request.getOwnershipType());
-        }
-        if (request.getUserOfAsset() != null) {
-            asset.setUserOfAsset(normalizeUserOfAsset(request.getUserOfAsset()));
         }
     }
 

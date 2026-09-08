@@ -8,7 +8,6 @@ import { Asset } from '../../../core/models/asset.model';
 import { DeviceStatus } from '../../../core/models/enums';
 import {
   DEVICE_STATUS_LABELS,
-  OWNERSHIP_TYPE_LABELS,
   deviceStatusTone,
 } from '../../../shared/utils/enum-labels';
 import { finalize } from 'rxjs';
@@ -26,7 +25,6 @@ export class AssetsList implements OnInit {
   readonly error = signal('');
 
   readonly deviceStatusLabels = DEVICE_STATUS_LABELS;
-  readonly ownershipLabels = OWNERSHIP_TYPE_LABELS;
 
   ngOnInit(): void {
     this.load();

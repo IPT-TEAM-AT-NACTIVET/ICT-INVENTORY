@@ -13,7 +13,6 @@ public class UserDashboardResponse {
     private Map<String, Long> assetsByDeviceType = new HashMap<>();
     private Map<String, Long> assetsByZone = new HashMap<>();
     private Map<String, Long> assetsByDeviceStatus = new HashMap<>();
-    private Map<String, Long> assetsByOwnership = new HashMap<>();
     private List<RecentAssetDto> recentAssets = new ArrayList<>();
 
     public long getTotalAssets() {
@@ -62,14 +61,6 @@ public class UserDashboardResponse {
 
     public void setAssetsByDeviceStatus(Map<String, Long> assetsByDeviceStatus) {
         this.assetsByDeviceStatus = assetsByDeviceStatus;
-    }
-
-    public Map<String, Long> getAssetsByOwnership() {
-        return assetsByOwnership;
-    }
-
-    public void setAssetsByOwnership(Map<String, Long> assetsByOwnership) {
-        this.assetsByOwnership = assetsByOwnership;
     }
 
     public List<RecentAssetDto> getRecentAssets() {

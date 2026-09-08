@@ -13,8 +13,6 @@ public class AssetMapper {
         response.setId(asset.getId());
         response.setAssetNumber(asset.getAssetNumber());
         response.setSerialNumber(asset.getSerialNumber());
-        response.setDeviceModel(asset.getDeviceModel());
-        response.setOwnershipType(asset.getOwnershipType());
         response.setDeviceStatus(asset.getDeviceStatus());
         response.setUserOfAsset(asset.getUserOfAsset());
         response.setCreatedAt(asset.getCreatedAt());
@@ -24,10 +22,16 @@ public class AssetMapper {
             response.setDeviceTypeId(asset.getDeviceType().getId());
             response.setDeviceTypeName(asset.getDeviceType().getName());
         }
+        response.setDeviceModel(asset.getDeviceModel());
 
         if (asset.getZone() != null) {
             response.setZoneId(asset.getZone().getId());
             response.setZoneName(asset.getZone().getName());
+        }
+
+        if (asset.getDirectorate() != null) {
+            response.setDirectorateId(asset.getDirectorate().getId());
+            response.setDirectorateName(asset.getDirectorate().getName());
         }
         response.setOffice(asset.getOffice());
 

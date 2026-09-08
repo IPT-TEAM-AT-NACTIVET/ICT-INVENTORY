@@ -20,10 +20,12 @@
         <tr>
           <th>Asset #</th>
           <th>Serial</th>
-          <th>Device</th>
-          <th>Type</th>
-          <th>User of Asset</th>
           <th>Zone</th>
+          <th>Directorate</th>
+          <th>Room/Office</th>
+          <th>Assigned To</th>
+          <th>Type</th>
+          <th>Device</th>
           <th>Device Status</th>
           <th></th>
         </tr>
@@ -33,10 +35,12 @@
           <tr>
             <td>{{ item.assetNumber ?? '—' }}</td>
             <td>{{ item.serialNumber ?? '—' }}</td>
-            <td>{{ item.deviceModel }}</td>
-            <td>{{ item.deviceTypeName }}</td>
-            <td>{{ item.userOfAsset || '—' }}</td>
             <td>{{ item.zoneName ?? '—' }}</td>
+            <td>{{ item.directorateName ?? '—' }}</td>
+            <td>{{ item.office ?? '—' }}</td>
+            <td>{{ item.userOfAsset || '—' }}</td>
+            <td>{{ item.deviceTypeName }}</td>
+            <td>{{ item.deviceModel }}</td>
             <td>
               <app-status-badge [label]="deviceStatusLabels[item.deviceStatus]" [tone]="deviceTone(item.deviceStatus)" />
             </td>

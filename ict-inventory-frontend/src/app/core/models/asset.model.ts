@@ -1,17 +1,18 @@
-import { DeviceStatus, OwnershipType } from './enums';
+import { DeviceStatus } from './enums';
 
 export interface Asset {
   id: number;
   assetNumber: string | null;
   serialNumber: string | null;
-  deviceModel: string;
-  deviceTypeId: number;
-  deviceTypeName: string;
-  userOfAsset: string;
   zoneId: number | null;
   zoneName: string | null;
+  directorateId: number | null;
+  directorateName: string | null;
   office: string | null;
-  ownershipType: OwnershipType;
+  userOfAsset: string;
+  deviceTypeId: number;
+  deviceTypeName: string;
+  deviceModel: string;
   deviceStatus: DeviceStatus;
   createdAt: string;
   updatedAt: string;
@@ -32,36 +33,36 @@ export interface Paged<T> {
 export interface AssetRequest {
   assetNumber?: string;
   serialNumber?: string;
-  deviceModel: string;
-  deviceTypeId: number;
-  userOfAsset?: string;
-  ownershipType: OwnershipType;
-  deviceStatus: DeviceStatus;
   zoneId: number;
+  directorateId?: number | null;
   office?: string;
+  userOfAsset?: string;
+  deviceTypeId: number;
+  deviceModel: string;
+  deviceStatus: DeviceStatus;
 }
 
 export interface AssetUpdateRequest {
   assetNumber?: string;
   serialNumber?: string;
-  deviceModel?: string;
-  deviceTypeId?: number;
-  userOfAsset?: string;
-  deviceStatus?: DeviceStatus;
-  ownershipType?: OwnershipType;
   zoneId?: number;
+  directorateId?: number | null;
   office?: string;
+  userOfAsset?: string;
+  deviceTypeId?: number;
+  deviceModel?: string;
+  deviceStatus?: DeviceStatus;
 }
 
 export interface AssetFilter {
   assetNumber?: string;
   serialNumber?: string;
-  deviceModel?: string;
-  deviceTypeId?: number | null;
-  userOfAsset?: string;
   zoneId?: number | null;
+  directorateId?: number | null;
   office?: string;
-  ownershipType?: OwnershipType | '';
+  userOfAsset?: string;
+  deviceTypeId?: number | null;
+  deviceModel?: string;
   deviceStatus?: DeviceStatus | '';
   page?: number;
   size?: number;

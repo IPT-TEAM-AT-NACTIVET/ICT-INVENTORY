@@ -3,19 +3,29 @@ package tz.go.nactvet.ict_inventory_management.dto;
 import java.time.LocalDateTime;
 
 import tz.go.nactvet.ict_inventory_management.enums.DeviceStatus;
-import tz.go.nactvet.ict_inventory_management.enums.OwnershipType;
 
 public class AssetResponse {
 
     private Long id;
     private String assetNumber;
     private String serialNumber;
-    private String deviceModel;
+
+    private Long zoneId;
+    private String zoneName;
+
+    private Long directorateId;
+    private String directorateName;
+
+    private String office;
+
+    private String userOfAsset;
 
     private Long deviceTypeId;
     private String deviceTypeName;
 
-    private String userOfAsset;
+    private String deviceModel;
+
+    private DeviceStatus deviceStatus;
 
     private Long createdById;
     private String createdByName;
@@ -23,13 +33,6 @@ public class AssetResponse {
     private Long updatedById;
     private String updatedByName;
 
-    private Long zoneId;
-    private String zoneName;
-
-    private String office;
-
-    private OwnershipType ownershipType;
-    private DeviceStatus deviceStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -57,12 +60,52 @@ public class AssetResponse {
         this.serialNumber = serialNumber;
     }
 
-    public String getDeviceModel() {
-        return deviceModel;
+    public Long getZoneId() {
+        return zoneId;
     }
 
-    public void setDeviceModel(String deviceModel) {
-        this.deviceModel = deviceModel;
+    public void setZoneId(Long zoneId) {
+        this.zoneId = zoneId;
+    }
+
+    public String getZoneName() {
+        return zoneName;
+    }
+
+    public void setZoneName(String zoneName) {
+        this.zoneName = zoneName;
+    }
+
+    public Long getDirectorateId() {
+        return directorateId;
+    }
+
+    public void setDirectorateId(Long directorateId) {
+        this.directorateId = directorateId;
+    }
+
+    public String getDirectorateName() {
+        return directorateName;
+    }
+
+    public void setDirectorateName(String directorateName) {
+        this.directorateName = directorateName;
+    }
+
+    public String getOffice() {
+        return office;
+    }
+
+    public void setOffice(String office) {
+        this.office = office;
+    }
+
+    public String getUserOfAsset() {
+        return userOfAsset;
+    }
+
+    public void setUserOfAsset(String userOfAsset) {
+        this.userOfAsset = userOfAsset;
     }
 
     public Long getDeviceTypeId() {
@@ -81,44 +124,12 @@ public class AssetResponse {
         this.deviceTypeName = deviceTypeName;
     }
 
-    public String getUserOfAsset() {
-        return userOfAsset;
+    public String getDeviceModel() {
+        return deviceModel;
     }
 
-    public void setUserOfAsset(String userOfAsset) {
-        this.userOfAsset = userOfAsset;
-    }
-
-    public Long getZoneId() {
-        return zoneId;
-    }
-
-    public void setZoneId(Long zoneId) {
-        this.zoneId = zoneId;
-    }
-
-    public String getZoneName() {
-        return zoneName;
-    }
-
-    public void setZoneName(String zoneName) {
-        this.zoneName = zoneName;
-    }
-
-    public String getOffice() {
-        return office;
-    }
-
-    public void setOffice(String office) {
-        this.office = office;
-    }
-
-    public OwnershipType getOwnershipType() {
-        return ownershipType;
-    }
-
-    public void setOwnershipType(OwnershipType ownershipType) {
-        this.ownershipType = ownershipType;
+    public void setDeviceModel(String deviceModel) {
+        this.deviceModel = deviceModel;
     }
 
     public DeviceStatus getDeviceStatus() {

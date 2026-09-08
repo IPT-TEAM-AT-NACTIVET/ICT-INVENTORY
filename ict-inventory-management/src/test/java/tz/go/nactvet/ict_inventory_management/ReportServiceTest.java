@@ -66,11 +66,11 @@ class ReportServiceTest {
         bobId = bob.getId();
 
         LocalDateTime base = LocalDateTime.of(2026, 1, 15, 10, 0);
-        insertAsset("NCT-001", "SN001", "Laptop-001", "John Doe", aliceId, "A100", "OFFICE", "WORKING", base);
-        insertAsset("NCT-002", "SN002", "Laptop-002", "John Doe", aliceId, "A101", "OFFICE", "NOT_WORKING", base.plusMonths(1));
-        insertAsset("NCT-003", "SN003", "Laptop-003", "Jane Smith", bobId, "B200", "PERSONAL", "WORKING", base.plusMonths(2));
-        insertAsset("NCT-004", "SN004", "Laptop-004", "John Doe", aliceId, null, "PERSONAL", "WORKING", base.plusMonths(3));
-        insertAsset("NCT-005", "SN005", "Laptop-005", "Jane Smith", bobId, "A100", "OFFICE", "WORKING", base.plusMonths(4));
+        insertAsset("NCT-001", "SN001", "Laptop-001", "John Doe", aliceId, "A100", "WORKING", base);
+        insertAsset("NCT-002", "SN002", "Laptop-002", "John Doe", aliceId, "A101", "NOT_WORKING", base.plusMonths(1));
+        insertAsset("NCT-003", "SN003", "Laptop-003", "Jane Smith", bobId, "B200", "WORKING", base.plusMonths(2));
+        insertAsset("NCT-004", "SN004", "Laptop-004", "John Doe", aliceId, null, "WORKING", base.plusMonths(3));
+        insertAsset("NCT-005", "SN005", "Laptop-005", "Jane Smith", bobId, "A100", "WORKING", base.plusMonths(4));
     }
 
     private Zone zone(String name) {
@@ -98,19 +98,19 @@ class ReportServiceTest {
     }
 
     private void insertAsset(String assetNumber, String serialNumber, String model, String userOfAsset,
-            Long createdById, String office, String ownershipType, String deviceStatus, LocalDateTime createdAt) {
+            Long createdById, String office, String deviceStatus, LocalDateTime createdAt) {
         jdbcTemplate.update(
                 "INSERT INTO assets (asset_number, serial_number, device_model, device_type_id, user_of_asset,"
-                        + " created_by, zone_id, office, ownership_type, device_status, created_at, updated_at)"
-                        + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                        + " created_by, zone_id, office, device_status, created_at, updated_at)"
+                        + " VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                 assetNumber, serialNumber, model, laptopType.getId(), userOfAsset,
-                createdById, zone.getId(), office, ownershipType, deviceStatus, createdAt, createdAt);
+                createdById, zone.getId(), office, deviceStatus, createdAt, createdAt);
     }
 
     // -------------------------------------------------------------------
 
     private ReportResponse data(String search, String groupBy) {
-        return reportService.getReportData(search, null, null, null, null, null, null, null, null, null, groupBy);
+        return reportService.getReportData(search, null, null, null, null, null, null, null, null, groupBy);
     }
 
     @Test
@@ -122,8 +122,6 @@ class ReportServiceTest {
         assertThat(s.getTotalAssets()).isEqualTo(5);
         assertThat(s.getActiveAssets()).isEqualTo(4);
         assertThat(s.getDefectiveAssets()).isEqualTo(1);
-        assertThat(s.getOfficeAssets()).isEqualTo(3);
-        assertThat(s.getPersonalAssets()).isEqualTo(2);
         assertThat(r.getItems()).isEmpty();
     }
 
@@ -157,7 +155,7 @@ class ReportServiceTest {
 
     @Test
     void filterByStatus_workingOnly() {
-        ReportResponse r = reportService.getReportData(null, null, "WORKING", null, null, null, null, null, null, null, "overview");
+        ReportResponse r = reportService.getReportData(null, null, "WORKING", null, null, null, null, null, null, "overview");
 
         assertThat(r.getAssets()).hasSize(4);
         assertThat(r.getSummary().getActiveAssets()).isEqualTo(4);
@@ -165,17 +163,8 @@ class ReportServiceTest {
     }
 
     @Test
-    void filterByOwnership_officeOnly() {
-        ReportResponse r = reportService.getReportData(null, null, null, "OFFICE", null, null, null, null, null, null, "overview");
-
-        assertThat(r.getAssets()).hasSize(3);
-        assertThat(r.getSummary().getOfficeAssets()).isEqualTo(3);
-        assertThat(r.getSummary().getPersonalAssets()).isZero();
-    }
-
-    @Test
     void filterByOffice_returnsMatchingAssets() {
-        ReportResponse r = reportService.getReportData(null, null, null, null, null, "A100", null, null, null, null, "overview");
+        ReportResponse r = reportService.getReportData(null, null, null, null, "A100", null, null, null, null, "overview");
 
         assertThat(r.getAssets()).hasSize(2);
         assertThat(r.getSummary().getTotalAssets()).isEqualTo(2);
@@ -183,7 +172,7 @@ class ReportServiceTest {
 
     @Test
     void filterByZoneAndStatus_combine() {
-        ReportResponse r = reportService.getReportData(null, null, "WORKING", null, zone.getId(), null, null, null, null, null, "overview");
+        ReportResponse r = reportService.getReportData(null, null, "WORKING", zone.getId(), null, null, null, null, null, "overview");
 
         // All 5 assets are in this zone; filter to WORKING only.
         assertThat(r.getAssets()).hasSize(4);
@@ -194,7 +183,7 @@ class ReportServiceTest {
 
     @Test
     void dateRangeFilter_returnsAssetsInsideRange() {
-        ReportResponse r = reportService.getReportData(null, null, null, null, null, null, null, null,
+        ReportResponse r = reportService.getReportData(null, null, null, null, null, null, null,
                 LocalDate.of(2026, 3, 1), LocalDate.of(2026, 4, 30), "overview");
 
         assertThat(r.getAssets()).hasSize(2);
@@ -210,25 +199,12 @@ class ReportServiceTest {
         assertThat(working.getCount()).isEqualTo(4);
         assertThat(working.getWorking()).isEqualTo(4);
         assertThat(working.getNotWorking()).isZero();
-        assertThat(working.getOfficeCount()).isEqualTo(2);
-        assertThat(working.getPersonalCount()).isEqualTo(2);
         assertThat(working.getAssets()).hasSize(4);
 
         ReportResponse.ReportItem notWorking = itemByName(r, "NOT_WORKING");
         assertThat(notWorking.getCount()).isEqualTo(1);
         assertThat(notWorking.getNotWorking()).isEqualTo(1);
         assertThat(notWorking.getAssets()).hasSize(1);
-    }
-
-    @Test
-    void groupedByOwnership_itemsMatch() {
-        ReportResponse r = data(null, "by-ownership");
-
-        assertThat(r.getItems()).hasSize(2);
-        ReportResponse.ReportItem office = itemByName(r, "OFFICE");
-        assertThat(office.getCount()).isEqualTo(3);
-        assertThat(office.getAssets()).hasSize(3);
-        assertThat(itemByName(r, "PERSONAL").getCount()).isEqualTo(2);
     }
 
     @Test
@@ -277,7 +253,7 @@ class ReportServiceTest {
 
     @Test
     void exportCsv_matchesFilteredAssets() {
-        String csv = reportService.exportCsv("not working", null, null, null, null, null, null, null, null, null);
+        String csv = reportService.exportCsv("not working", null, null, null, null, null, null, null, null);
 
         String[] lines = csv.split("\n");
         assertThat(lines).hasSize(2); // header + 1 asset
@@ -287,11 +263,41 @@ class ReportServiceTest {
 
     @Test
     void exportCsv_containsRegisteredByAndAtColumns() {
-        String csv = reportService.exportCsv(null, null, null, null, null, null, null, null, null, null);
+        String csv = reportService.exportCsv(null, null, null, null, null, null, null, null, null);
 
         String[] lines = csv.split("\n");
         assertThat(lines).hasSize(6); // header + 5 assets
         assertThat(lines[0]).contains("Registered By").contains("Registered At");
+    }
+
+    @Test
+    void exportXlsx_producesValidWorkbook() throws Exception {
+        byte[] bytes = reportService.exportReport(null, null, null, null, null, null, null, null, null, "xlsx");
+
+        try (org.apache.poi.xssf.usermodel.XSSFWorkbook wb =
+                new org.apache.poi.xssf.usermodel.XSSFWorkbook(new java.io.ByteArrayInputStream(bytes))) {
+            org.apache.poi.ss.usermodel.Sheet sheet = wb.getSheet("ICT Assets");
+            assertThat(sheet).isNotNull();
+            assertThat(sheet.getPhysicalNumberOfRows()).isEqualTo(6); // header + 5 assets
+            assertThat(sheet.getRow(0).getCell(0).getStringCellValue()).isEqualTo("Asset Number");
+        }
+    }
+
+    @Test
+    void exportPdf_producesValidPdf() throws Exception {
+        byte[] bytes = reportService.exportReport(null, null, null, null, null, null, null, null, null, "pdf");
+
+        assertThat(bytes).isNotEmpty();
+        // PDF header magic
+        assertThat(new String(bytes, 0, 5, java.nio.charset.StandardCharsets.UTF_8)).isEqualTo("%PDF-");
+    }
+
+    @Test
+    void exportReport_csvIsDefaultWhenFormatUnknown() throws Exception {
+        byte[] bytes = reportService.exportReport(null, null, null, null, null, null, null, null, null, "doc");
+
+        String text = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+        assertThat(text).startsWith("Asset Number,Serial Number,Zone");
     }
 
     private ReportResponse.ReportItem itemByName(ReportResponse r, String name) {
