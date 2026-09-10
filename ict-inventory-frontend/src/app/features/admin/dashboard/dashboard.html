@@ -27,53 +27,23 @@
   <div class="grid-2">
     <div class="card">
       <h3>Assets by Device Type</h3>
-      <div class="bars">
-        @for (item of entries(stats.assetsByDeviceType); track item.key) {
-          <div class="bar-row">
-            <span class="bar-label">{{ item.key }}</span>
-            <div class="bar-track">
-              <div class="bar-fill" [style.width.%]="(item.value / maxBar(stats.assetsByDeviceType)) * 100"></div>
-            </div>
-            <span class="bar-value">{{ item.value }}</span>
-          </div>
-        }
-      </div>
+      <app-pie-chart [slices]="deviceTypeSlices()" />
     </div>
     <div class="card">
       <h3>Assets by Zone</h3>
-      <div class="bars">
-        @for (item of entries(stats.assetsByZone); track item.key) {
-          <div class="bar-row">
-            <span class="bar-label">{{ item.key }}</span>
-            <div class="bar-track">
-              <div class="bar-fill" [style.width.%]="(item.value / maxBar(stats.assetsByZone)) * 100"></div>
-            </div>
-            <span class="bar-value">{{ item.value }}</span>
-          </div>
-        }
-      </div>
+      <app-pie-chart [slices]="zoneSlices()" />
     </div>
   </div>
 
   <div class="grid-2">
     <div class="card">
       <h3>Assets by Device Status</h3>
-      <div class="bars">
-        @for (item of entries(stats.assetsByDeviceStatus); track item.key) {
-          <div class="bar-row">
-            <span class="bar-label">{{ statusLabel(item.key) }}</span>
-            <div class="bar-track">
-              <div class="bar-fill" [style.width.%]="(item.value / maxBar(stats.assetsByDeviceStatus)) * 100"></div>
-            </div>
-            <span class="bar-value">{{ item.value }}</span>
-          </div>
-        }
-      </div>
+      <app-pie-chart [slices]="statusSlices()" />
     </div>
   </div>
 
   <div class="card">
-    <h3>Recent Asset Registrations</h3>
+    <h3>Recent Asset Registered</h3>
     @if (stats.recentAssets.length === 0) {
       <p class="muted">No assets registered yet.</p>
     } @else {

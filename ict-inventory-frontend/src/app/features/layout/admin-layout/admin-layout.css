@@ -75,6 +75,59 @@
   font-weight: 600;
 }
 
+.nav-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-group-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-family: inherit;
+  background: transparent;
+  border: none;
+  text-align: left;
+  color: var(--sidebar-fg);
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+}
+
+.nav-group-header:hover {
+  background: var(--sidebar-hover);
+  color: var(--sidebar-fg);
+}
+
+.nav-group-header.active {
+  background: var(--sidebar-hover);
+  color: var(--sidebar-fg);
+}
+
+.nav-group-arrow {
+  font-size: 0.65rem;
+  color: var(--sidebar-fg);
+  opacity: 0.85;
+  transition: transform 0.2s ease;
+  margin-left: 0.5rem;
+}
+
+.nav-group-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+.nav-submenu {
+  display: flex;
+  flex-direction: column;
+  padding-left: 0.5rem;
+}
+
+.nav-submenu-item {
+  padding-left: 1.6rem;
+  font-size: 0.85rem;
+}
+
 .main {
   flex: 1;
   min-width: 0;

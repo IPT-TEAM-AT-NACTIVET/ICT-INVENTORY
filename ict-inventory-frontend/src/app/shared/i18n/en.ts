@@ -10,8 +10,9 @@ export const en = {
     deviceTypes: 'Device Types',
     inventory: 'Inventory',
     reports: 'Reports',
+    settings: 'Settings',
     profile: 'Profile',
-    new: 'New',
+    new: 'Add Item',
   },
   common: {
     logout: 'Logout',

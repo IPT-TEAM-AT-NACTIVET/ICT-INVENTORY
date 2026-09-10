@@ -18,6 +18,33 @@
           {{ t(item.labelKey) }}
         </a>
       }
+
+      <div class="nav-group" [class.open]="settingsOpen() || hasActiveSettingsChild()">
+        <button
+          type="button"
+          class="nav-link nav-group-header"
+          [class.active]="settingsOpen() || hasActiveSettingsChild()"
+          (click)="toggleSettings()"
+        >
+          <span>{{ t('nav.settings') }}</span>
+          <span class="nav-group-arrow" [class.rotated]="settingsOpen()">&#9662;</span>
+        </button>
+        @if (settingsOpen() || hasActiveSettingsChild()) {
+          <div class="nav-submenu">
+            @for (item of settingsItems; track item.path) {
+              <a
+                class="nav-link nav-submenu-item"
+                [routerLink]="item.path"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: true }"
+                (click)="open.set(false)"
+              >
+                {{ t(item.labelKey) }}
+              </a>
+            }
+          </div>
+        }
+      </div>
     </nav>
   </aside>
   @if (open()) {

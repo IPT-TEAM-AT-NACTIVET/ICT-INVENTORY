@@ -1,16 +1,17 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { DashboardService } from '../../../core/services/dashboard.service';
-import { recordEntries, DEVICE_STATUS_LABELS } from '../../../shared/utils/enum-labels';
+import { DEVICE_STATUS_LABELS } from '../../../shared/utils/enum-labels';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
 import { DashboardResponse } from '../../../core/models/dashboard.model';
 import { RouterLink } from '@angular/router';
+import { PieChart, PieSlice } from '../../../shared/components/pie-chart/pie-chart';
 import { delay, finalize, retry } from 'rxjs';
 
 @Component({
   selector: 'app-admin-dashboard',
-  imports: [PageHeader, RouterLink, DatePipe],
+  imports: [PageHeader, RouterLink, DatePipe, PieChart],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -20,6 +21,10 @@ export class AdminDashboard implements OnInit {
   readonly stats = signal<DashboardResponse | null>(null);
   readonly error = signal('');
   readonly loading = signal(true);
+
+  readonly deviceTypeSlices = computed(() => this.toSlices(this.stats()?.assetsByDeviceType ?? {}));
+  readonly zoneSlices = computed(() => this.toSlices(this.stats()?.assetsByZone ?? {}));
+  readonly statusSlices = computed(() => this.toStatusSlices(this.stats()?.assetsByDeviceStatus ?? {}));
 
   ngOnInit(): void {
     this.load();
@@ -44,14 +49,19 @@ export class AdminDashboard implements OnInit {
       });
   }
 
-  entries = recordEntries;
-
   protected statusLabel(key: string): string {
     return (DEVICE_STATUS_LABELS as Record<string, string>)[key] ?? key;
   }
 
-  maxBar(values: Record<string, number>): number {
-    const max = Math.max(1, ...Object.values(values));
-    return max;
+  private toSlices(record: Record<string, number>): PieSlice[] {
+    return Object.entries(record).map(([key, value]) => ({ label: key, value }));
+  }
+
+  private toStatusSlices(record: Record<string, number>): PieSlice[] {
+    return Object.entries(record).map(([key, value]) => ({
+      label: this.statusLabel(key),
+      value,
+      color: key === 'WORKING' ? 'var(--success)' : key === 'NOT_WORKING' ? 'var(--danger)' : undefined,
+    }));
   }
 }

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { TranslationService } from '../../../core/services/translation.service';
@@ -23,11 +23,15 @@ export class AdminLayout {
 
   readonly open = signal(false);
   readonly menuOpen = signal(false);
+  readonly settingsOpen = signal(false);
 
   readonly navItems: NavItem[] = [
     { path: '/admin/dashboard', labelKey: 'nav.dashboard' },
     { path: '/admin/inventory', labelKey: 'nav.inventory' },
     { path: '/admin/reports', labelKey: 'nav.reports' },
+  ];
+
+  readonly settingsItems: NavItem[] = [
     { path: '/admin/users', labelKey: 'nav.users' },
     { path: '/admin/directorates', labelKey: 'nav.directorates' },
     { path: '/admin/sections', labelKey: 'nav.sections' },
@@ -36,12 +40,26 @@ export class AdminLayout {
     { path: '/admin/device-types', labelKey: 'nav.deviceTypes' },
   ];
 
+  readonly hasActiveSettingsChild = computed(() => {
+    const url = this.router.url;
+    return this.settingsItems.some((item) => url.startsWith(item.path));
+  });
+
   t(key: string): string {
     return this.translation.t(key);
   }
 
   toggleSidebar(): void {
     this.open.update((v) => !v);
+  }
+
+  toggleSettings(): void {
+    const willOpen = !this.settingsOpen();
+    this.settingsOpen.set(willOpen);
+  }
+
+  isSettingsActive(): boolean {
+    return this.hasActiveSettingsChild() || this.settingsOpen();
   }
 
   goToProfile(): void {

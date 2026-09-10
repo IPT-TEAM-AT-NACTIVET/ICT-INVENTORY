@@ -300,7 +300,8 @@ public class AssetService {
     private Map<String, Integer> indexHeaders(List<String> headerRow) {
         Map<String, Integer> index = new LinkedHashMap<>();
         for (int i = 0; i < headerRow.size(); i++) {
-            String col = headerRow.get(i).trim().toLowerCase(Locale.ROOT).replace(" ", "");
+            String col = headerRow.get(i).trim().toLowerCase(Locale.ROOT)
+                    .replaceAll("[^a-z0-9]", "");
             index.putIfAbsent(col, i);
         }
         if (!index.containsKey("devicename") && index.containsKey("devicemodel")) {

@@ -1,0 +1,29 @@
+<div class="pie">
+  <svg class="pie-chart" viewBox="0 0 120 120" role="img" [attr.aria-label]="totalLabel() + ': ' + total()">
+    <circle class="pie-track" cx="60" cy="60" r="42"></circle>
+    @for (seg of segments(); track seg.label) {
+      <circle
+        class="pie-segment"
+        cx="60"
+        cy="60"
+        r="42"
+        [style.stroke]="seg.color"
+        [attr.stroke-dasharray]="seg.dashArray"
+        [attr.stroke-dashoffset]="seg.dashOffset"
+        transform="rotate(-90 60 60)"
+      ></circle>
+    }
+    <text class="pie-value" x="60" y="58">{{ total() }}</text>
+    <text class="pie-label" x="60" y="72">{{ totalLabel() }}</text>
+  </svg>
+  <ul class="pie-legend">
+    @for (seg of segments(); track seg.label) {
+      <li class="pie-legend-item">
+        <span class="pie-legend-dot" [style.background]="seg.color"></span>
+        <span class="pie-legend-name">{{ seg.label }}</span>
+        <span class="pie-legend-count">{{ seg.value }}</span>
+        <span class="pie-legend-percent">{{ formatPercent(seg.percent) }}</span>
+      </li>
+    }
+  </ul>
+</div>

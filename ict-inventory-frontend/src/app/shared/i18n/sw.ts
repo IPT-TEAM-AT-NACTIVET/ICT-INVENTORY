@@ -10,8 +10,9 @@ export const sw = {
     deviceTypes: 'Aina za Vifaa',
     inventory: 'Hesabu ya Vifaa',
     reports: 'Ripoti',
+    settings: 'Mipangilio',
     profile: 'Wasifu',
-    new: 'Mpya',
+    new: 'Ongeza Kifaa',
   },
   common: {
     logout: 'Toka',

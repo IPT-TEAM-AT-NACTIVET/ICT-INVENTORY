@@ -4,7 +4,7 @@
   <div>
     <button type="button" class="btn btn-primary" (click)="openCreateForm()">{{ t('nav.new') }}</button>
     <button type="button" class="btn" [disabled]="importing()" (click)="fileInput.click()">
-      {{ importing() ? 'Importing…' : 'Import CSV / Excel' }}
+      {{ importing() ? 'Importing…' : 'Upload' }}
     </button>
     <input
       #fileInput
@@ -111,7 +111,7 @@
           </select>
         </div>
         <div class="form-field">
-          <label for="office">Room/Office (Optional)</label>
+          <label for="office">Room(Optional)</label>
           <input id="office" type="text" formControlName="office" placeholder="Optional" maxlength="100" />
         </div>
         <div class="form-field">
