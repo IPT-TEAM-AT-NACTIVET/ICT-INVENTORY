@@ -13,6 +13,7 @@ import { DEVICE_STATUS_OPTIONS, deviceStatusTone } from '../../../shared/utils/e
   selector: 'app-asset-form',
   imports: [PageHeader, ReactiveFormsModule],
   templateUrl: './asset-form.html',
+  styleUrl: './asset-form.css',
 })
 export class AssetForm implements OnInit {
   private readonly route = inject(ActivatedRoute);

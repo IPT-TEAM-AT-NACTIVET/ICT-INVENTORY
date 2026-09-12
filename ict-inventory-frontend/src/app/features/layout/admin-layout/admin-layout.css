@@ -5,13 +5,14 @@
 
 .layout {
   display: flex;
+  background: whitesmoke;
   min-height: 100vh;
 }
 
 .sidebar {
   width: 240px;
   flex-shrink: 0;
-  background: var(--sidebar-bg);
+  background: #182643;
   color: var(--sidebar-fg);
   display: flex;
   flex-direction: column;
@@ -36,13 +37,15 @@
 .brand-mark img {
   width: auto;
   height: 40px;
+  border-radius: 50%;
   object-fit: contain;
   display: block;
 }
 
 .brand-name {
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.99rem;
+  color: lab(100% 0.01 -0.01);
   line-height: 1.2;
 }
 
@@ -58,22 +61,22 @@
   display: block;
   padding: 0.55rem 0.85rem;
   border-radius: 8px;
-  color: var(--sidebar-muted);
+  color: #f5f5f5;
   text-decoration: none;
-  font-size: 0.9rem;
-  transition: background 0.15s, color 0.15s;
+  font-size: 1.1rem;
+  transition: background 0.15s, color 0.29s;
 }
 
 .nav-link:hover {
   background: var(--sidebar-hover);
   color: var(--sidebar-fg);
 }
-
+ 
 .nav-link.active {
   background: var(--accent);
   color: #fff;
   font-weight: 600;
-}
+} 
 
 .nav-group {
   display: flex;
@@ -87,16 +90,17 @@
   justify-content: space-between;
   cursor: pointer;
   font-family: inherit;
+  font-size: 1.1rem;
   background: transparent;
   border: none;
   text-align: left;
-  color: var(--sidebar-fg);
+  color: #f5f5f5;
   padding: 0.55rem 0.85rem;
   border-radius: 8px;
 }
 
 .nav-group-header:hover {
-  background: var(--sidebar-hover);
+  background: rgb(137, 148, 244);
   color: var(--sidebar-fg);
 }
 
@@ -120,16 +124,17 @@
 .nav-submenu {
   display: flex;
   flex-direction: column;
+  font-size: 0.99rem;
   padding-left: 0.5rem;
 }
 
 .nav-submenu-item {
   padding-left: 1.6rem;
-  font-size: 0.85rem;
+  font-size: 0.99rem;
 }
 
 .main {
-  flex: 1;
+  flex: 2;
   min-width: 0;
   display: flex;
   flex-direction: column;

@@ -21,6 +21,7 @@ import {
   selector: 'app-inventory',
   imports: [PageHeader, ReactiveFormsModule, StatusBadge],
   templateUrl: './inventory.html',
+  styleUrl: './inventory.css',
 })
 export class Inventory implements OnInit {
   private readonly fb = inject(FormBuilder);
@@ -130,7 +131,20 @@ export class Inventory implements OnInit {
   }
 
   openCreateForm(): void {
-    this.router.navigate(['/admin/register-asset']);
+    this.editing = null;
+    this.error.set('');
+    this.assetForm.reset({
+      assetNumber: '',
+      serialNumber: '',
+      zoneId: 0,
+      directorateId: 0,
+      office: '',
+      userOfAsset: '',
+      deviceTypeId: 0,
+      deviceModel: '',
+      deviceStatus: '',
+    });
+    this.showAssetForm = true;
   }
 
   openEditForm(item: Asset): void {

@@ -77,9 +77,18 @@
 </div>
 
 @if (showAssetForm) {
-  <div class="card">
-    <h3>{{ editing ? 'Edit Asset' : 'New' }}</h3>
-    <form [formGroup]="assetForm" (ngSubmit)="submitAssetForm()">
+  <div class="modal-backdrop" (click)="cancelAssetForm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ editing ? 'Edit Asset' : 'Add New Inventory Item' }}</h3>
+        <button type="button" class="modal-close" (click)="cancelAssetForm()" aria-label="Close">&times;</button>
+      </div>
+
+      @if (error()) {
+        <div class="alert alert-error" role="alert">{{ error() }}</div>
+      }
+
+      <form [formGroup]="assetForm" (ngSubmit)="submitAssetForm()">
       <div class="form-grid">
         <div class="form-field">
           <label for="assetNumber">Asset Number</label>
@@ -150,11 +159,12 @@
           }
         </div>
       </div>
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary">{{ editing ? 'Save Changes' : 'Register' }}</button>
+      <div class="modal-footer">
         <button type="button" class="btn" (click)="cancelAssetForm()">Cancel</button>
+        <button type="submit" class="btn btn-primary">{{ editing ? 'Save Changes' : 'Add Item' }}</button>
       </div>
     </form>
+    </div>
   </div>
 }
 

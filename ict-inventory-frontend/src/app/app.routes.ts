@@ -53,10 +53,6 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/users/users').then((m) => m.Users),
       },
       {
-        path: 'register-asset',
-        loadComponent: () => import('./features/users/assets/asset-form').then((m) => m.AssetForm),
-      },
-      {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile').then((m) => m.ProfilePage),
       },
@@ -83,7 +79,8 @@ export const routes: Routes = [
       },
       {
         path: 'assets/register',
-        loadComponent: () => import('./features/users/assets/asset-form').then((m) => m.AssetForm),
+        redirectTo: 'assets',
+        pathMatch: 'full',
       },
       {
         path: 'assets/:id',
