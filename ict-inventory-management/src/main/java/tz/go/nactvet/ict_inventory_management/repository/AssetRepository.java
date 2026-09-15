@@ -19,16 +19,46 @@ import tz.go.nactvet.ict_inventory_management.enums.DeviceStatus;
 public interface AssetRepository extends JpaRepository<Asset, Long> {
 
     @EntityGraph(attributePaths = {"zone", "deviceType", "directorate"})
-    List<Asset> findAllByOrderByCreatedAtDesc();
+    List<Asset> findAllByDeletedAtIsNullOrderByCreatedAtDesc();
 
     @EntityGraph(attributePaths = {"zone", "deviceType", "directorate"})
-    List<Asset> findByDeviceTypeId(Long deviceTypeId);
+    List<Asset> findByDeviceTypeIdAndDeletedAtIsNull(Long deviceTypeId);
 
     @EntityGraph(attributePaths = {"zone", "deviceType", "directorate"})
-    List<Asset> findByDeviceStatus(DeviceStatus status);
+    List<Asset> findByDeviceStatusAndDeletedAtIsNull(DeviceStatus status);
 
     @EntityGraph(attributePaths = {"zone", "deviceType", "directorate"})
-    Optional<Asset> findWithDetailsById(Long id);
+    Optional<Asset> findByIdAndDeletedAtIsNull(Long id);
+
+    /**
+     * Loads an asset regardless of its soft-delete state. Used by the recycle bin
+     * flows (restore / permanent delete) and by the soft delete itself, where the
+     * row being acted upon is already (or is about to become) marked as deleted.
+     */
+    @Query("SELECT a FROM Asset a " +
+           "LEFT JOIN FETCH a.zone " +
+           "LEFT JOIN FETCH a.deviceType " +
+           "LEFT JOIN FETCH a.directorate " +
+           "LEFT JOIN FETCH a.createdBy " +
+           "LEFT JOIN FETCH a.updatedBy " +
+           "LEFT JOIN FETCH a.deletedBy " +
+           "WHERE a.id = :id")
+    Optional<Asset> findByIdIncludingDeleted(@Param("id") Long id);
+
+    /**
+     * Assets currently in the recycle bin (soft deleted), most recently deleted
+     * first. Used by the Recycle Bin / Deleted Items screen.
+     */
+    @Query("SELECT a FROM Asset a " +
+           "LEFT JOIN FETCH a.zone " +
+           "LEFT JOIN FETCH a.deviceType " +
+           "LEFT JOIN FETCH a.directorate " +
+           "LEFT JOIN FETCH a.createdBy " +
+           "LEFT JOIN FETCH a.updatedBy " +
+           "LEFT JOIN FETCH a.deletedBy " +
+           "WHERE a.deletedAt IS NOT NULL " +
+           "ORDER BY a.deletedAt DESC")
+    List<Asset> findDeletedAssets();
 
     Optional<Asset> findByAssetNumber(String assetNumber);
 
@@ -42,7 +72,11 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
 
     boolean existsBySerialNumberAndIdNot(String serialNumber, Long id);
 
-    long countByDeviceStatus(DeviceStatus status);
+    long countByDeletedAtIsNull();
+
+    long countByDeletedAtIsNotNull();
+
+    long countByDeviceStatusAndDeletedAtIsNull(DeviceStatus status);
 
     long countByDeviceTypeId(Long deviceTypeId);
 
@@ -50,27 +84,32 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
 
     long countByZoneId(Long zoneId);
 
-    @Query("SELECT a.deviceType.id, a.deviceType.name, COUNT(a) FROM Asset a GROUP BY a.deviceType.id, a.deviceType.name")
+    @Query("SELECT a.deviceType.id, a.deviceType.name, COUNT(a) FROM Asset a " +
+           "WHERE a.deletedAt IS NULL GROUP BY a.deviceType.id, a.deviceType.name")
     List<Object[]> countByDeviceTypeGrouped();
 
-    @Query("SELECT a.userOfAsset, COUNT(a) FROM Asset a WHERE a.userOfAsset IS NOT NULL GROUP BY a.userOfAsset")
+    @Query("SELECT a.userOfAsset, COUNT(a) FROM Asset a " +
+           "WHERE a.deletedAt IS NULL AND a.userOfAsset IS NOT NULL GROUP BY a.userOfAsset")
     List<Object[]> countByUserOfAssetGrouped();
 
-    @Query("SELECT a.zone.id, a.zone.name, COUNT(a) FROM Asset a WHERE a.zone IS NOT NULL GROUP BY a.zone.id, a.zone.name")
+    @Query("SELECT a.zone.id, a.zone.name, COUNT(a) FROM Asset a " +
+           "WHERE a.deletedAt IS NULL AND a.zone IS NOT NULL GROUP BY a.zone.id, a.zone.name")
     List<Object[]> countByZoneGrouped();
 
-    @Query("SELECT a.deviceStatus, COUNT(a) FROM Asset a GROUP BY a.deviceStatus")
+    @Query("SELECT a.deviceStatus, COUNT(a) FROM Asset a " +
+           "WHERE a.deletedAt IS NULL GROUP BY a.deviceStatus")
     List<Object[]> countByDeviceStatusGrouped();
 
     @Query("SELECT a.assetNumber, a.deviceModel, a.deviceType.name, a.userOfAsset, " +
            "a.zone.name, a.office, cb.fullName, a.createdAt " +
            "FROM Asset a " +
            "LEFT JOIN a.createdBy cb " +
+           "WHERE a.deletedAt IS NULL " +
            "ORDER BY a.createdAt DESC")
     List<Object[]> findRecentRegistrations(Pageable pageable);
 
     @Query("SELECT a.zone.id, a.zone.name, COUNT(a) FROM Asset a " +
-           "WHERE a.zone IS NOT NULL AND (" +
+           "WHERE a.deletedAt IS NULL AND a.zone IS NOT NULL AND (" +
            "  (:s IS NULL) OR " +
            "  LOWER(COALESCE(a.assetNumber,'')) LIKE :s OR " +
            "  LOWER(COALESCE(a.serialNumber,'')) LIKE :s OR " +
@@ -85,7 +124,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
     List<Object[]> countByZoneGroupedWithSearch(@Param("s") String search);
 
     @Query("SELECT a.deviceType.id, a.deviceType.name, COUNT(a) FROM Asset a " +
-           "WHERE a.deviceType IS NOT NULL AND (" +
+           "WHERE a.deletedAt IS NULL AND a.deviceType IS NOT NULL AND (" +
            "  (:s IS NULL) OR " +
            "  LOWER(COALESCE(a.assetNumber,'')) LIKE :s OR " +
            "  LOWER(COALESCE(a.serialNumber,'')) LIKE :s OR " +
@@ -100,7 +139,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
     List<Object[]> countByDeviceTypeGroupedWithSearch(@Param("s") String search);
 
     @Query("SELECT a.deviceStatus, COUNT(a) FROM Asset a " +
-           "WHERE (" +
+           "WHERE a.deletedAt IS NULL AND (" +
            "  (:s IS NULL) OR " +
            "  LOWER(COALESCE(a.assetNumber,'')) LIKE :s OR " +
            "  LOWER(COALESCE(a.serialNumber,'')) LIKE :s OR " +
@@ -114,7 +153,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            ") GROUP BY a.deviceStatus")
     List<Object[]> countByDeviceStatusGroupedWithSearch(@Param("s") String search);
 
-    @Query("SELECT COUNT(a) FROM Asset a WHERE (" +
+    @Query("SELECT COUNT(a) FROM Asset a WHERE a.deletedAt IS NULL AND (" +
            "  (:s IS NULL) OR " +
            "  LOWER(COALESCE(a.assetNumber,'')) LIKE :s OR " +
            "  LOWER(COALESCE(a.serialNumber,'')) LIKE :s OR " +
@@ -129,14 +168,14 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
     long countWithSearch(@Param("s") String search);
 
     @EntityGraph(attributePaths = {"zone", "deviceType", "directorate"})
-    Page<Asset> findByOrderByCreatedAtDesc(Pageable pageable);
+    Page<Asset> findByDeletedAtIsNullOrderByCreatedAtDesc(Pageable pageable);
 
 @Query("SELECT a FROM Asset a " +
            "LEFT JOIN FETCH a.zone " +
            "LEFT JOIN FETCH a.deviceType " +
            "LEFT JOIN FETCH a.directorate " +
            "LEFT JOIN FETCH a.createdBy " +
-           "WHERE LOWER(COALESCE(a.assetNumber, '')) LIKE :search " +
+           "WHERE a.deletedAt IS NULL AND (LOWER(COALESCE(a.assetNumber, '')) LIKE :search " +
            "OR LOWER(COALESCE(a.serialNumber, '')) LIKE :search " +
            "OR LOWER(a.deviceModel) LIKE :search " +
            "OR LOWER(a.userOfAsset) LIKE :search " +
@@ -144,7 +183,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            "OR LOWER(COALESCE(a.directorate.name, '')) LIKE :search " +
            "OR LOWER(CAST(a.deviceStatus AS string)) LIKE :search " +
            "OR LOWER(a.zone.name) LIKE :search " +
-           "OR LOWER(a.deviceType.name) LIKE :search " +
+           "OR LOWER(a.deviceType.name) LIKE :search) " +
            "ORDER BY a.createdAt DESC")
     Page<Asset> findBySearch(@Param("search") String search, Pageable pageable);
 
@@ -153,7 +192,8 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            "LEFT JOIN FETCH a.deviceType " +
            "LEFT JOIN FETCH a.directorate " +
            "LEFT JOIN FETCH a.createdBy " +
-           "WHERE (:statusOn = true AND a.deviceStatus IN :statuses) " +
+           "WHERE a.deletedAt IS NULL AND (" +
+           "(:statusOn = true AND a.deviceStatus IN :statuses) " +
            "OR (:statusOn = false AND (:term IS NULL " +
            "OR LOWER(COALESCE(a.assetNumber, '')) LIKE :term " +
            "OR LOWER(COALESCE(a.serialNumber, '')) LIKE :term " +
@@ -163,7 +203,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            "OR LOWER(COALESCE(a.createdBy.fullName, '')) LIKE :term " +
            "OR LOWER(a.zone.name) LIKE :term " +
            "OR LOWER(COALESCE(a.directorate.name, '')) LIKE :term " +
-           "OR LOWER(a.deviceType.name) LIKE :term)) " +
+           "OR LOWER(a.deviceType.name) LIKE :term))) " +
            "ORDER BY a.createdAt DESC")
     List<Asset> searchAll(@Param("term") String term,
                           @Param("statusOn") boolean statusOn,
@@ -172,7 +212,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
     @Query("SELECT a FROM Asset a " +
            "LEFT JOIN FETCH a.zone " +
            "LEFT JOIN FETCH a.deviceType " +
-           "LEFT JOIN FETCH a.directorate WHERE " +
+           "LEFT JOIN FETCH a.directorate WHERE a.deletedAt IS NULL AND " +
            "(:assetNumber IS NULL OR a.assetNumber LIKE %:assetNumber%) AND " +
            "(:serialNumber IS NULL OR a.serialNumber LIKE %:serialNumber%) AND " +
            "(:deviceModel IS NULL OR a.deviceModel LIKE %:deviceModel%) AND " +
@@ -198,7 +238,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            "LEFT JOIN FETCH a.deviceType " +
            "LEFT JOIN FETCH a.directorate " +
            "LEFT JOIN FETCH a.createdBy " +
-           "WHERE (" +
+           "WHERE a.deletedAt IS NULL AND (" +
            "  (:statusOn = true AND a.deviceStatus IN :statuses) " +
            "  OR " +
            "  (:statusOn = false AND (" +
@@ -237,15 +277,15 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
            @Param("toDt") java.time.LocalDateTime toDt);
 
     @Query("SELECT DISTINCT a.office FROM Asset a " +
-           "WHERE a.office IS NOT NULL AND a.office <> '' ORDER BY a.office")
+           "WHERE a.deletedAt IS NULL AND a.office IS NOT NULL AND a.office <> '' ORDER BY a.office")
     List<String> findDistinctOffices();
 
     @Query("SELECT DISTINCT a.userOfAsset FROM Asset a " +
-           "WHERE a.userOfAsset IS NOT NULL AND a.userOfAsset <> '' ORDER BY a.userOfAsset")
+           "WHERE a.deletedAt IS NULL AND a.userOfAsset IS NOT NULL AND a.userOfAsset <> '' ORDER BY a.userOfAsset")
     List<String> findDistinctUsersOfAsset();
 
     @Query("SELECT a.createdBy.id, a.createdBy.fullName FROM Asset a " +
-           "WHERE a.createdBy IS NOT NULL " +
+           "WHERE a.deletedAt IS NULL AND a.createdBy IS NOT NULL " +
            "GROUP BY a.createdBy.id, a.createdBy.fullName " +
            "ORDER BY a.createdBy.fullName")
     List<Object[]> findDistinctRegistrars();

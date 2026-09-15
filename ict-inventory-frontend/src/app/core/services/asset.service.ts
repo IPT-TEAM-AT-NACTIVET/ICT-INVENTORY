@@ -30,6 +30,19 @@ export class AssetService {
     }
     return this.http.get<Asset[]>(`${this.base}/all`, { params });
   }
+
+  getDeletedAssets(): Observable<Asset[]> {
+    return this.http.get<Asset[]>(`${this.base}/deleted`);
+  }
+
+  restore(id: number): Observable<Asset> {
+    return this.http.post<Asset>(`${this.base}/${id}/restore`, {});
+  }
+
+  deletePermanent(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${id}/permanent`);
+  }
+
   getAsset(id: number): Observable<Asset> {
     return this.http.get<Asset>(`${this.base}/${id}`);
   }

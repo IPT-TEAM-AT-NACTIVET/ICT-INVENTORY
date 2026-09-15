@@ -45,7 +45,6 @@ describe('Users', () => {
   let service: {
     findAll: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
-    approve: ReturnType<typeof vi.fn>;
     activate: ReturnType<typeof vi.fn>;
     deactivate: ReturnType<typeof vi.fn>;
     delete: ReturnType<typeof vi.fn>;
@@ -63,7 +62,6 @@ describe('Users', () => {
     service = {
       findAll: vi.fn(() => of([pendingUser, activeUser])),
       create: vi.fn((_req: UserCreateRequest) => of(activeUser)),
-      approve: vi.fn(() => of(activeUser)),
       activate: vi.fn(() => of()),
       deactivate: vi.fn(() => of()),
       delete: vi.fn(() => of()),
@@ -96,7 +94,7 @@ describe('Users', () => {
     const fixture = TestBed.createComponent(Users);
     const component = fixture.componentInstance;
     component.ngOnInit();
-    expect(component.allUsers().map((u) => u.id)).toEqual([1, 2]);
+    expect(component.all().map((u) => u.id)).toEqual([1, 2]);
   });
 
   it('should deactivate a user', () => {

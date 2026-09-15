@@ -14,7 +14,8 @@ import tz.go.nactvet.ict_inventory_management.enums.DeviceStatus;
         @Index(name = "idx_assets_updated_by", columnList = "updated_by"),
         @Index(name = "idx_assets_zone_id", columnList = "zone_id"),
         @Index(name = "idx_assets_device_status", columnList = "device_status"),
-        @Index(name = "idx_assets_directorate_id", columnList = "directorate_id")
+        @Index(name = "idx_assets_directorate_id", columnList = "directorate_id"),
+        @Index(name = "idx_assets_deleted_at", columnList = "deleted_at")
 })
 public class Asset {
 
@@ -67,6 +68,13 @@ public class Asset {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "deleted_by")
+    private User deletedBy;
 
     @PrePersist
     protected void onCreate() {
@@ -184,5 +192,21 @@ public class Asset {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public User getDeletedBy() {
+        return deletedBy;
+    }
+
+    public void setDeletedBy(User deletedBy) {
+        this.deletedBy = deletedBy;
     }
 }

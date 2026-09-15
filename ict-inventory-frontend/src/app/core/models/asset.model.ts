@@ -20,6 +20,9 @@ export interface Asset {
   createdByName: string | null;
   updatedById: number | null;
   updatedByName: string | null;
+  deletedById: number | null;
+  deletedByName: string | null;
+  deletedAt: string | null;
 }
 
 export interface Paged<T> {

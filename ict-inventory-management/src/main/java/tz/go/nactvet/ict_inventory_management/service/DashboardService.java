@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import tz.go.nactvet.ict_inventory_management.dto.DashboardResponse;
 import tz.go.nactvet.ict_inventory_management.dto.RecentAssetDto;
-import tz.go.nactvet.ict_inventory_management.dto.UserDashboardResponse;
 import tz.go.nactvet.ict_inventory_management.enums.DeviceStatus;
 import tz.go.nactvet.ict_inventory_management.repository.AssetRepository;
 
@@ -33,26 +32,9 @@ public class DashboardService {
     public DashboardResponse getAdminDashboard() {
         DashboardResponse response = new DashboardResponse();
 
-        response.setTotalAssets(assetRepository.count());
-        response.setActiveAssets(assetRepository.countByDeviceStatus(DeviceStatus.WORKING));
-        response.setDefectiveAssets(assetRepository.countByDeviceStatus(DeviceStatus.NOT_WORKING));
-
-        response.setAssetsByDeviceType(toMap(assetRepository.countByDeviceTypeGrouped()));
-        response.setAssetsByZone(toMap(assetRepository.countByZoneGrouped()));
-        response.setAssetsByDeviceStatus(toSimpleMap(assetRepository.countByDeviceStatusGrouped()));
-
-        response.setRecentAssets(toRecentAssets(assetRepository.findRecentRegistrations(
-                PageRequest.of(0, RECENT_ASSETS_LIMIT))));
-
-        return response;
-    }
-
-    public UserDashboardResponse getUserDashboard(Long userId) {
-        UserDashboardResponse response = new UserDashboardResponse();
-
-        response.setTotalAssets(assetRepository.count());
-        response.setActiveAssets(assetRepository.countByDeviceStatus(DeviceStatus.WORKING));
-        response.setDefectiveAssets(assetRepository.countByDeviceStatus(DeviceStatus.NOT_WORKING));
+        response.setTotalAssets(assetRepository.countByDeletedAtIsNull());
+        response.setActiveAssets(assetRepository.countByDeviceStatusAndDeletedAtIsNull(DeviceStatus.WORKING));
+        response.setDefectiveAssets(assetRepository.countByDeviceStatusAndDeletedAtIsNull(DeviceStatus.NOT_WORKING));
 
         response.setAssetsByDeviceType(toMap(assetRepository.countByDeviceTypeGrouped()));
         response.setAssetsByZone(toMap(assetRepository.countByZoneGrouped()));

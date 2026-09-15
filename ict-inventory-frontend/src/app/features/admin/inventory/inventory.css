@@ -50,3 +50,55 @@
   gap: 0.5rem;
   margin-top: 1.25rem;
 }
+
+/* Import modal */
+.form-section {
+  margin-bottom: 1.25rem;
+}
+
+.form-section h4 {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  color: var(--text-2);
+}
+
+.import-format-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.import-format-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.import-format-option:hover {
+  border-color: var(--accent);
+}
+
+.import-format-option.active {
+  border-color: var(--accent);
+  background: var(--info-bg);
+}
+
+.import-format-option strong {
+  font-size: 1rem;
+}
+
+.import-hint {
+  font-size: 0.82rem;
+  margin-bottom: 0;
+  margin-top: 0.5rem;
+}

@@ -18,13 +18,3 @@ export interface DashboardResponse {
   assetsByDeviceStatus: Record<string, number>;
   recentAssets: RecentAsset[];
 }
-
-export interface UserDashboardResponse {
-  totalAssets: number;
-  activeAssets: number;
-  defectiveAssets: number;
-  assetsByDeviceType: Record<string, number>;
-  assetsByZone: Record<string, number>;
-  assetsByDeviceStatus: Record<string, number>;
-  recentAssets: RecentAsset[];
-}

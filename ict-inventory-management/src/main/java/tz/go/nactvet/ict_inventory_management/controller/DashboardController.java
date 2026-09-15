@@ -1,14 +1,11 @@
 package tz.go.nactvet.ict_inventory_management.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import tz.go.nactvet.ict_inventory_management.dto.DashboardResponse;
-import tz.go.nactvet.ict_inventory_management.dto.UserDashboardResponse;
-import tz.go.nactvet.ict_inventory_management.security.CustomUserDetailsService;
 import tz.go.nactvet.ict_inventory_management.service.DashboardService;
 
 @RestController
@@ -22,13 +19,7 @@ public class DashboardController {
     }
 
     @GetMapping("/admin/dashboard")
-    public ResponseEntity<DashboardResponse> getAdminDashboard() {
+    public ResponseEntity<DashboardResponse> getDashboard() {
         return ResponseEntity.ok(dashboardService.getAdminDashboard());
-    }
-
-    @GetMapping("/users/dashboard")
-    public ResponseEntity<UserDashboardResponse> getUserDashboard(Authentication authentication) {
-        CustomUserDetailsService.UserPrincipal principal = (CustomUserDetailsService.UserPrincipal) authentication.getPrincipal();
-        return ResponseEntity.ok(dashboardService.getUserDashboard(principal.getId()));
     }
 }

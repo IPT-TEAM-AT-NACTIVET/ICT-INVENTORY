@@ -25,10 +25,6 @@ export class UsersService {
     return this.http.get<UserAccount>(`${this.base}/${id}`);
   }
 
-  approve(id: number): Observable<UserAccount> {
-    return this.http.post<UserAccount>(`${this.base}/${id}/approve`, {});
-  }
-
   activate(id: number): Observable<void> {
     return this.http.post<void>(`${this.base}/${id}/activate`, {});
   }

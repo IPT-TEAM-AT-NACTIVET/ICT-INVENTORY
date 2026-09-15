@@ -66,8 +66,10 @@ export class DeviceTypesComponent implements OnInit {
   }
 
   cancelForm(): void {
-    this.showForm = false;
-    this.editing = null;
+    if (!this.saving()) {
+      this.showForm = false;
+      this.editing = null;
+    }
   }
 
   submit(): void {

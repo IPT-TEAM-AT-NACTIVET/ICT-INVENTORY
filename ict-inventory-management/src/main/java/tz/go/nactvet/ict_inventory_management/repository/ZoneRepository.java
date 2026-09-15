@@ -15,6 +15,8 @@ public interface ZoneRepository extends JpaRepository<Zone, Long> {
 
     Optional<Zone> findByName(String name);
 
+    Optional<Zone> findByNameIgnoreCase(String name);
+
     boolean existsByName(String name);
 
     boolean existsByCode(String code);

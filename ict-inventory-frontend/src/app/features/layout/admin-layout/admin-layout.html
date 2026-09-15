@@ -13,7 +13,7 @@
           [routerLink]="item.path"
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: true }"
-          (click)="open.set(false)"
+          (click)="selectTopItem()"
         >
           {{ t(item.labelKey) }}
         </a>

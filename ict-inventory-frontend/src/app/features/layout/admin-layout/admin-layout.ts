@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, HostListener, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { TranslationService } from '../../../core/services/translation.service';
@@ -33,11 +33,13 @@ export class AdminLayout {
 
   readonly settingsItems: NavItem[] = [
     { path: '/admin/users', labelKey: 'nav.users' },
+    { path: '/admin/recycle-bin', labelKey: 'nav.recycleBin' },
     { path: '/admin/directorates', labelKey: 'nav.directorates' },
     { path: '/admin/sections', labelKey: 'nav.sections' },
     { path: '/admin/units', labelKey: 'nav.units' },
     { path: '/admin/zones', labelKey: 'nav.zones' },
     { path: '/admin/device-types', labelKey: 'nav.deviceTypes' },
+    { path: '/admin/audit-logs', labelKey: 'nav.auditLogs' },
   ];
 
   readonly hasActiveSettingsChild = computed(() => {
@@ -47,6 +49,11 @@ export class AdminLayout {
 
   t(key: string): string {
     return this.translation.t(key);
+  }
+
+  selectTopItem(): void {
+    this.open.set(false);
+    this.settingsOpen.set(false);
   }
 
   toggleSidebar(): void {
@@ -64,12 +71,18 @@ export class AdminLayout {
 
   goToProfile(): void {
     this.menuOpen.set(false);
-    const section = this.router.url.startsWith('/users') ? '/users' : '/admin';
-    void this.router.navigate([section, 'profile']);
+    void this.router.navigate(['/admin/profile']);
   }
 
   logout(): void {
     this.menuOpen.set(false);
     this.auth.logout();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!(event.target as HTMLElement).closest('.topbar-user')) {
+      this.menuOpen.set(false);
+    }
   }
 }

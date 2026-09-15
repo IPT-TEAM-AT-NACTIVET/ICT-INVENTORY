@@ -34,7 +34,7 @@ export class AdminDashboard implements OnInit {
     this.loading.set(true);
     this.error.set('');
     this.dashboardService
-      .getAdminDashboard()
+      .getDashboard()
       .pipe(
         retry({ count: 1, delay: 400 }),
         finalize(() => this.loading.set(false)),

@@ -41,8 +41,14 @@ export class Inventory implements OnInit {
   readonly success = signal('');
   editing: Asset | null = null;
   showAssetForm = false;
+  pendingDelete = signal<Asset | null>(null);
   importsResult = signal<CsvImportResult | null>(null);
   importing = signal(false);
+  importOpen = signal(false);
+  importFormat = signal<'csv' | 'excel'>('csv');
+  importFileName = signal('');
+  importError = signal('');
+  selectedImportFile: File | null = null;
 
   readonly deviceStatusLabels = DEVICE_STATUS_LABELS;
   readonly deviceStatusOptions = DEVICE_STATUS_OPTIONS;
@@ -101,20 +107,74 @@ export class Inventory implements OnInit {
     this.load();
   }
 
-  onFileSelected(event: Event): void {
+  openImportForm(): void {
+    this.importFormat.set('csv');
+    this.selectedImportFile = null;
+    this.importFileName.set('');
+    this.importError.set('');
+    this.importsResult.set(null);
+    this.importOpen.set(true);
+  }
+
+  cancelImportForm(): void {
+    if (!this.importing()) {
+      this.importOpen.set(false);
+    }
+  }
+
+  selectImportFormat(format: 'csv' | 'excel'): void {
+    this.importFormat.set(format);
+    this.selectedImportFile = null;
+    this.importFileName.set('');
+    this.importError.set('');
+  }
+
+  protected importAccept(): string {
+    return '.csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  }
+
+  onImportFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
+    this.importError.set('');
     if (!file) {
+      this.selectedImportFile = null;
+      this.importFileName.set('');
+      return;
+    }
+    const name = file.name.toLowerCase();
+    if (name.endsWith('.csv')) {
+      this.importFormat.set('csv');
+    } else if (name.endsWith('.xls') || name.endsWith('.xlsx')) {
+      this.importFormat.set('excel');
+    } else {
+      this.importError.set('Unsupported file type. Please select a CSV (.csv) or Excel (.xls / .xlsx) file.');
+      this.selectedImportFile = null;
+      this.importFileName.set('');
+      input.value = '';
+      return;
+    }
+    this.selectedImportFile = file;
+    this.importFileName.set(file.name);
+  }
+
+  submitImport(): void {
+    const file = this.selectedImportFile;
+    if (!file || this.importing()) {
       return;
     }
     this.importing.set(true);
+    this.importError.set('');
     this.error.set('');
     this.success.set('');
     this.importsResult.set(null);
     this.assetService.importFile(file).subscribe({
       next: (result) => {
-        this.importsResult.set(result);
         this.importing.set(false);
+        this.importOpen.set(false);
+        this.selectedImportFile = null;
+        this.importFileName.set('');
+        this.importsResult.set(result);
         if (result.imported > 0) {
           this.success.set(`Imported ${result.imported} asset(s).`);
           this.load();
@@ -122,10 +182,7 @@ export class Inventory implements OnInit {
       },
       error: () => {
         this.importing.set(false);
-        this.error.set('Failed to import the file. Check the file and try again.');
-      },
-      complete: () => {
-        input.value = '';
+        this.importError.set('Failed to import the file. Check the file and try again.');
       },
     });
   }
@@ -195,13 +252,19 @@ export class Inventory implements OnInit {
     });
   }
 
+  confirmDelete(item: Asset): void {
+    this.pendingDelete.set(item);
+  }
+
+  cancelDelete(): void {
+    this.pendingDelete.set(null);
+  }
+
   remove(item: Asset): void {
-    if (!window.confirm(`Delete asset "${item.deviceModel}" (${item.assetNumber ?? item.serialNumber ?? item.id})?`)) {
-      return;
-    }
+    this.pendingDelete.set(null);
     this.assetService.delete(item.id).subscribe({
       next: () => {
-        this.success.set('Asset deleted.');
+        this.success.set('Asset moved to the recycle bin.');
         this.load();
       },
       error: () => {

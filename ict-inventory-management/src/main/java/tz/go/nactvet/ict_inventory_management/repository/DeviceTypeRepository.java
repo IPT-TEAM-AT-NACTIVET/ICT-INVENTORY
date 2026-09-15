@@ -15,6 +15,8 @@ public interface DeviceTypeRepository extends JpaRepository<DeviceType, Long> {
 
     Optional<DeviceType> findByName(String name);
 
+    Optional<DeviceType> findByNameIgnoreCase(String name);
+
     boolean existsByName(String name);
 
     boolean existsByNameAndIdNot(String name, Long id);

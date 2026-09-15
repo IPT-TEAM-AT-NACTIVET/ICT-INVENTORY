@@ -26,11 +26,4 @@ describe('UsersService', () => {
     expect(req.request.method).toBe('GET');
     req.flush([]);
   });
-
-  it('should approve a user via POST approve', () => {
-    service.approve(5).subscribe();
-    const req = httpMock.expectOne(`${environment.apiUrl}/users/5/approve`);
-    expect(req.request.method).toBe('POST');
-    req.flush({});
-  });
 });

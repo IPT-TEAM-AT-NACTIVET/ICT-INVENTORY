@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { ReportTable } from '../../../shared/components/report-table/report-table';
 import { ReportService } from '../../../core/services/report.service';
@@ -171,6 +171,17 @@ export class Reports implements OnInit {
 
   toggleExport(): void {
     this.exportOpen.set(!this.exportOpen());
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.filter-wrap')) {
+      this.filterOpen.set(false);
+    }
+    if (!target.closest('.export-wrap')) {
+      this.exportOpen.set(false);
+    }
   }
 
   download(format: 'csv' | 'xlsx' | 'pdf', filename: string): void {

@@ -1,0 +1,103 @@
+<app-page-header title="Recycle Bin" subtitle="Deleted assets — restore or permanently remove them" />
+
+<div class="toolbar">
+  <div>
+    <button type="button" class="btn btn-primary" (click)="load()">Refresh</button>
+  </div>
+  <span class="muted">{{ deletedAssets().length }} deleted asset(s)</span>
+</div>
+
+@if (error()) {
+  <div class="alert alert-error" role="alert">{{ error() }}</div>
+}
+@if (success()) {
+  <div class="alert alert-success" role="alert">{{ success() }}</div>
+}
+
+@if (pendingRestore(); as item) {
+  <div class="modal-backdrop" (click)="cancelRestore()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Restore Asset</h3>
+        <button type="button" class="modal-close" (click)="cancelRestore()" aria-label="Close">&times;</button>
+      </div>
+      <p>
+        Restore "<strong>{{ item.deviceModel }}</strong>"
+        ({{ item.assetNumber ?? item.serialNumber ?? item.id }}) to the inventory?
+      </p>
+      <p class="muted">All its original data will be returned unchanged.</p>
+      <div class="modal-footer">
+        <button type="button" class="btn" (click)="cancelRestore()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="restore(item)">Restore</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (pendingPermanentDelete(); as item) {
+  <div class="modal-backdrop" (click)="cancelPermanentDelete()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Permanently Delete Asset</h3>
+        <button type="button" class="modal-close" (click)="cancelPermanentDelete()" aria-label="Close">&times;</button>
+      </div>
+      <p>
+        Permanently delete "<strong>{{ item.deviceModel }}</strong>"
+        ({{ item.assetNumber ?? item.serialNumber ?? item.id }})?
+      </p>
+      <p class="muted text-danger">This action cannot be undone. The asset will be removed from the database.</p>
+      <div class="modal-footer">
+        <button type="button" class="btn" (click)="cancelPermanentDelete()">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="permanentlyDelete(item)">Delete Permanently</button>
+      </div>
+    </div>
+  </div>
+}
+
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Asset #</th>
+        <th>Serial</th>
+        <th>Device Model</th>
+        <th>Type</th>
+        <th>Device Status</th>
+        <th>Deleted By</th>
+        <th>Deleted At</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr>
+          <td colspan="8" class="loading">Loading…</td>
+        </tr>
+      } @else if (deletedAssets().length === 0) {
+        <tr>
+          <td colspan="8" class="empty">The recycle bin is empty.</td>
+        </tr>
+      } @else {
+        @for (item of deletedAssets(); track item.id) {
+          <tr>
+            <td>{{ item.assetNumber ?? '—' }}</td>
+            <td>{{ item.serialNumber ?? '—' }}</td>
+            <td>{{ item.deviceModel }}</td>
+            <td>{{ item.deviceTypeName }}</td>
+            <td>
+              <app-status-badge [label]="deviceStatusLabels[item.deviceStatus]" [tone]="deviceTone(item.deviceStatus)" />
+            </td>
+            <td>{{ item.deletedByName ?? '—' }}</td>
+            <td>{{ formatDateTime(item.deletedAt) }}</td>
+            <td>
+              <button type="button" class="btn btn-sm" (click)="confirmRestore(item)">Restore</button>
+              <button type="button" class="btn btn-sm btn-danger" (click)="confirmPermanentDelete(item)">
+                Delete Permanently
+              </button>
+            </td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>

@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
-import { roleGuard } from './core/guards/role.guard';
 import { AdminLayout } from './features/layout/admin-layout/admin-layout';
 import { Login } from './features/auth/login/login';
 
@@ -9,7 +8,7 @@ export const routes: Routes = [
   {
     path: 'admin',
     component: AdminLayout,
-    canActivate: [authGuard, roleGuard(['ADMIN'])],
+    canActivate: [authGuard],
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       {
@@ -45,8 +44,18 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/inventory/inventory').then((m) => m.Inventory),
       },
       {
+        path: 'recycle-bin',
+        loadComponent: () =>
+          import('./features/admin/recycle-bin/recycle-bin').then((m) => m.RecycleBin),
+      },
+      {
         path: 'reports',
         loadComponent: () => import('./features/admin/reports/reports').then((m) => m.Reports),
+      },
+      {
+        path: 'audit-logs',
+        loadComponent: () =>
+          import('./features/admin/audit-logs/audit-logs').then((m) => m.AuditLogs),
       },
       {
         path: 'users',
@@ -60,41 +69,8 @@ export const routes: Routes = [
   },
   {
     path: 'users',
-    component: AdminLayout,
-    canActivate: [authGuard, roleGuard(['ADMIN'])],
-    children: [
-      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
-      {
-        path: 'dashboard',
-        loadComponent: () =>
-          import('./features/users/dashboard/users-dashboard').then((m) => m.UsersDashboard),
-      },
-      {
-        path: 'setup',
-        loadComponent: () => import('./features/users/setup/setup').then((m) => m.Setup),
-      },
-      {
-        path: 'assets',
-        loadComponent: () => import('./features/users/assets/assets-list').then((m) => m.AssetsList),
-      },
-      {
-        path: 'assets/register',
-        redirectTo: 'assets',
-        pathMatch: 'full',
-      },
-      {
-        path: 'assets/:id',
-        loadComponent: () => import('./features/users/assets/asset-detail').then((m) => m.AssetDetail),
-      },
-      {
-        path: 'assets/:id/edit',
-        loadComponent: () => import('./features/users/assets/asset-form').then((m) => m.AssetForm),
-      },
-      {
-        path: 'profile',
-        loadComponent: () => import('./features/profile/profile').then((m) => m.ProfilePage),
-      },
-    ],
+    redirectTo: '/admin/dashboard',
+    pathMatch: 'full',
   },
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: '**', redirectTo: 'login' },

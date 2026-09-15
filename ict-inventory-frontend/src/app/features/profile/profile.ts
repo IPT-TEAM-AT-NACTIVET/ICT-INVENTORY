@@ -62,6 +62,15 @@ export class ProfilePage implements OnInit {
     return this.translation.t(key);
   }
 
+  openSetupForm(): void {
+    const editForm = document.getElementById('editAccountForm');
+    if (editForm) {
+      editForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    const firstInput = document.querySelector<HTMLInputElement>('#editAccountForm input, #editAccountForm select');
+    firstInput?.focus();
+  }
+
   ngOnInit(): void {
     this.reference.getDirectorates().subscribe((directorates) => this.directorates.set(directorates));
     this.reference.getUnits().subscribe((units) => this.units.set(units));
@@ -125,6 +134,14 @@ export class ProfilePage implements OnInit {
           this.saving.set(false);
           this.profile.set(profile);
           this.success.set('Profile updated successfully.');
+          this.form.patchValue({
+            fullName: profile.fullName,
+            email: profile.email ?? '',
+            phoneNumber: profile.phoneNumber ?? '',
+            directorateId: profile.directorateId ?? 0,
+            sectionId: profile.sectionId ?? 0,
+            unitId: profile.unitId ?? 0,
+          }, { emitEvent: false });
           this.auth.updateStoredUser({
             id: profile.id,
             employeeId: profile.employeeId,

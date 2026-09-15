@@ -297,3 +297,21 @@ BEGIN
     END IF;
 END $$;
 @@
+-- Soft delete: deleted assets keep their row but are flagged. deleted_at is the
+-- marker (NULL = active, non-NULL = in the recycle bin) and deleted_by records
+-- which user sent the asset there. Added before Hibernate so the nullable columns
+-- exist for existing rows. Idempotent.
+ALTER TABLE assets ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP;
+@@
+ALTER TABLE assets ADD COLUMN IF NOT EXISTS deleted_by BIGINT;
+@@
+CREATE INDEX IF NOT EXISTS idx_assets_deleted_at ON assets(deleted_at);
+@@
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'assets_deleted_by_fkey') THEN
+        ALTER TABLE assets ADD CONSTRAINT assets_deleted_by_fkey
+            FOREIGN KEY (deleted_by) REFERENCES users(id);
+    END IF;
+END $$;
+@@

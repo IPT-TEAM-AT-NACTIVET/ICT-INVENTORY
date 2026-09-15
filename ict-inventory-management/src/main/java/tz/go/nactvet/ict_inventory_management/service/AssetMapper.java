@@ -17,6 +17,12 @@ public class AssetMapper {
         response.setUserOfAsset(asset.getUserOfAsset());
         response.setCreatedAt(asset.getCreatedAt());
         response.setUpdatedAt(asset.getUpdatedAt());
+        response.setDeletedAt(asset.getDeletedAt());
+
+        if (asset.getDeletedBy() != null) {
+            response.setDeletedById(asset.getDeletedBy().getId());
+            response.setDeletedByName(asset.getDeletedBy().getFullName());
+        }
 
         if (asset.getDeviceType() != null) {
             response.setDeviceTypeId(asset.getDeviceType().getId());

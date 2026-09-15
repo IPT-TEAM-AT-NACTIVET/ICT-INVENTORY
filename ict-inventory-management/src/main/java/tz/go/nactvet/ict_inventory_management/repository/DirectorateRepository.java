@@ -15,6 +15,8 @@ public interface DirectorateRepository extends JpaRepository<Directorate, Long> 
 
     Optional<Directorate> findByName(String name);
 
+    Optional<Directorate> findByNameIgnoreCase(String name);
+
     boolean existsByName(String name);
 
     boolean existsByCode(String code);

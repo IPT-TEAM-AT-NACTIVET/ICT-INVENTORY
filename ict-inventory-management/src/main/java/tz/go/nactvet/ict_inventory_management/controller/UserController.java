@@ -88,14 +88,6 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/{id}/approve")
-    public ResponseEntity<UserManagementResponse> approve(@PathVariable Long id, Authentication authentication) {
-        Long actorId = actorId(authentication);
-        requireActiveActor(actorId);
-        userManagementService.activate(id, actorId);
-        return ResponseEntity.ok(userManagementService.findById(id));
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id, Authentication authentication) {
         Long actorId = actorId(authentication);

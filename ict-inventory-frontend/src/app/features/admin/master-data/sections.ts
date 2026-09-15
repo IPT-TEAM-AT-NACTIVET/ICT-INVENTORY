@@ -81,8 +81,10 @@ export class SectionsComponent implements OnInit {
   }
 
   cancelForm(): void {
-    this.showForm = false;
-    this.editing = null;
+    if (!this.saving()) {
+      this.showForm = false;
+      this.editing = null;
+    }
   }
 
   submit(): void {

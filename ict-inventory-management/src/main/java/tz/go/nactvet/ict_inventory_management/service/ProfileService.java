@@ -62,36 +62,48 @@ public class ProfileService {
         if (request.getFullName() != null) {
             user.setFullName(request.getFullName());
         }
+
         if (request.getEmail() != null) {
+            if (request.getEmail().isBlank()) {
+                throw new BadRequestException("Email cannot be empty.");
+            }
             if (userRepository.existsByEmailAndIdNot(request.getEmail(), userId)) {
                 throw new ConflictException("Email already in use: " + request.getEmail());
             }
             user.setEmail(request.getEmail());
             user.setUsername(request.getEmail());
         }
-        if (request.getPhoneNumber() != null) {
-            user.setPhoneNumber(request.getPhoneNumber());
-        }
 
-        Directorate directorate = user.getDirectorate();
-        Section section = user.getSection();
-        Unit unit = user.getUnit();
+        user.setPhoneNumber(request.getPhoneNumber() != null && !request.getPhoneNumber().isBlank()
+                ? request.getPhoneNumber().trim()
+                : null);
 
+        Directorate directorate;
         if (request.getDirectorateId() != null) {
             directorate = directorateRepository.findById(request.getDirectorateId())
                     .orElseThrow(() -> new ResourceNotFoundException("Directorate not found with id: " + request.getDirectorateId()));
-            user.setDirectorate(directorate);
+        } else {
+            directorate = null;
         }
+        user.setDirectorate(directorate);
+
+        Section section;
         if (request.getSectionId() != null) {
             section = sectionRepository.findById(request.getSectionId())
                     .orElseThrow(() -> new ResourceNotFoundException("Section not found with id: " + request.getSectionId()));
-            user.setSection(section);
+        } else {
+            section = null;
         }
+        user.setSection(section);
+
+        Unit unit;
         if (request.getUnitId() != null) {
             unit = unitRepository.findById(request.getUnitId())
                     .orElseThrow(() -> new ResourceNotFoundException("Unit not found with id: " + request.getUnitId()));
-            user.setUnit(unit);
+        } else {
+            unit = null;
         }
+        user.setUnit(unit);
 
         organizationalValidator.validate(directorate, section);
         user.setSetupCompleted(isSetupComplete(user));

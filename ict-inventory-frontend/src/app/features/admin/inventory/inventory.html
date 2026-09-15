@@ -3,16 +3,9 @@
 <div class="toolbar">
   <div>
     <button type="button" class="btn btn-primary" (click)="openCreateForm()">{{ t('nav.new') }}</button>
-    <button type="button" class="btn" [disabled]="importing()" (click)="fileInput.click()">
-      {{ importing() ? 'Importing…' : 'Upload' }}
+    <button type="button" class="btn" [disabled]="importing()" (click)="openImportForm()">
+      {{ importing() ? 'Importing…' : 'Import Items' }}
     </button>
-    <input
-      #fileInput
-      type="file"
-      accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-      hidden
-      (change)="onFileSelected($event)"
-    />
   </div>
   <span class="muted">{{ totalElements() }} assets</span>
 </div>
@@ -22,6 +15,59 @@
 }
 @if (success()) {
   <div class="alert alert-success" role="alert">{{ success() }}</div>
+}
+
+@if (importOpen()) {
+  <div class="modal-backdrop" (click)="cancelImportForm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Import Items</h3>
+        <button type="button" class="modal-close" (click)="cancelImportForm()" [disabled]="importing()" aria-label="Close">&times;</button>
+      </div>
+
+      @if (importError()) {
+        <div class="alert alert-error" role="alert">{{ importError() }}</div>
+      }
+
+      <div>
+        <div class="form-section">
+          <h4>File format</h4>
+          <div class="import-format-options">
+            <button type="button" class="import-format-option" [class.active]="importFormat() === 'csv'" (click)="selectImportFormat('csv')">
+              <strong>CSV</strong>
+              <span class="muted">.csv</span>
+            </button>
+            <button type="button" class="import-format-option" [class.active]="importFormat() === 'excel'" (click)="selectImportFormat('excel')">
+              <strong>Excel</strong>
+              <span class="muted">.xls / .xlsx</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h4>Choose file</h4>
+          <div class="form-field">
+            <label for="importFile">{{ importFormat() === 'csv' ? 'CSV file' : 'Excel workbook' }} *</label>
+            <input id="importFile" type="file" [accept]="importAccept()" (change)="onImportFileSelected($event)" />
+            @if (importFileName()) {
+              <div class="field-hint">Selected: {{ importFileName() }}</div>
+            }
+          </div>
+          <p class="muted import-hint">
+            File columns (header): Asset Number, Serial Number, Zone, Directorate, Office,
+            Assigned To, Device Type/Name, Device Model, Device Status.
+          </p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn" (click)="cancelImportForm()" [disabled]="importing()">Cancel</button>
+          <button type="button" class="btn btn-primary" [disabled]="importing() || !selectedImportFile" (click)="submitImport()">
+            {{ importing() ? 'Importing…' : 'Import' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 }
 
 @if (importsResult(); as result) {
@@ -168,6 +214,26 @@
   </div>
 }
 
+@if (pendingDelete(); as item) {
+  <div class="modal-backdrop" (click)="cancelDelete()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Delete Asset</h3>
+        <button type="button" class="modal-close" (click)="cancelDelete()" aria-label="Close">&times;</button>
+      </div>
+      <p>
+        Move "<strong>{{ item.deviceModel }}</strong>"
+        ({{ item.assetNumber ?? item.serialNumber ?? item.id }}) to the recycle bin?
+      </p>
+      <p class="muted">The asset will be hidden from the inventory but can be restored later from the Recycle Bin under Settings.</p>
+      <div class="modal-footer">
+        <button type="button" class="btn" (click)="cancelDelete()">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="remove(item)">Delete</button>
+      </div>
+    </div>
+  </div>
+}
+
 <div class="table-wrap">
   <table class="table">
     <thead>
@@ -209,7 +275,7 @@
             </td>
             <td>
               <button type="button" class="btn btn-sm" (click)="openEditForm(item)">Edit</button>
-              <button type="button" class="btn btn-sm btn-danger" (click)="remove(item)">Delete</button>
+              <button type="button" class="btn btn-sm btn-danger" (click)="confirmDelete(item)">Delete</button>
             </td>
           </tr>
         }

@@ -6,8 +6,9 @@ export const sw = {
     sections: 'Sehemu',
     units: 'Vitengo',
     zones: 'Kanda',
-    offices: 'Ofisi',
     deviceTypes: 'Aina za Vifaa',
+    auditLogs: 'Kumbukumbu za Vitendo',
+    recycleBin: 'Kikapu cha Taka',
     inventory: 'Hesabu ya Vifaa',
     reports: 'Ripoti',
     settings: 'Mipangilio',
@@ -32,9 +33,6 @@ export const sw = {
     no: 'Hapana',
     add: 'Ongeza',
     confirm: 'Thibitisha',
-  },
-  roles: {
-    admin: 'Msimamizi',
   },
   login: {
     title: 'Ingia',

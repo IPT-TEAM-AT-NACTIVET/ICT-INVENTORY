@@ -63,7 +63,7 @@ describe('Login', () => {
     expect(routerMock.navigate).toHaveBeenCalledWith(['/admin/dashboard']);
   });
 
-  it('should navigate to /users/setup when setup is not complete', () => {
+  it('should navigate to /admin/dashboard even when setup is not complete', () => {
     authService.login = vi.fn(() =>
       of({
         token: 'jwt',
@@ -77,7 +77,7 @@ describe('Login', () => {
     component.form.setValue({ email: 'jane@nactvet.go.tz', password: 'secret' });
     component.submit();
 
-    expect(routerMock.navigate).toHaveBeenCalledWith(['/users/setup']);
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/admin/dashboard']);
   });
 
   it('should show an error message on invalid credentials', () => {

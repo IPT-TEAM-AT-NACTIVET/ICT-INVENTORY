@@ -6,8 +6,9 @@ export const en = {
     sections: 'Sections',
     units: 'Units',
     zones: 'Zones',
-    offices: 'Offices',
     deviceTypes: 'Device Types',
+    auditLogs: 'Audit Logs',
+    recycleBin: 'Recycle Bin',
     inventory: 'Inventory',
     reports: 'Reports',
     settings: 'Settings',
@@ -32,9 +33,6 @@ export const en = {
     no: 'No',
     add: 'Add',
     confirm: 'Confirm',
-  },
-  roles: {
-    admin: 'Administrator',
   },
   login: {
     title: 'Sign in',

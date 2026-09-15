@@ -36,6 +36,10 @@ public class AssetResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    private Long deletedById;
+    private String deletedByName;
+    private LocalDateTime deletedAt;
+
     public Long getId() {
         return id;
     }
@@ -186,5 +190,29 @@ public class AssetResponse {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Long getDeletedById() {
+        return deletedById;
+    }
+
+    public void setDeletedById(Long deletedById) {
+        this.deletedById = deletedById;
+    }
+
+    public String getDeletedByName() {
+        return deletedByName;
+    }
+
+    public void setDeletedByName(String deletedByName) {
+        this.deletedByName = deletedByName;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

@@ -1,8 +1,14 @@
 package tz.go.nactvet.ict_inventory_management;
 
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -302,5 +308,166 @@ class TwoRoleWorkflowTest {
         Long id = jdbcTemplate.queryForObject(
                 "SELECT id FROM users WHERE email = ?", Long.class, email);
         return id;
+    }
+
+    @Test
+    void profileUpdatePersistsChangesIncludingFieldClears() throws Exception {
+        // Create a user with a directorate and phone number.
+        String adminToken = loginAndGetToken("admin@nactvet.go.tz", "admin123");
+        mockMvc.perform(post("/users")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createUserBody("john.doe@nactvet.go.tz")))
+                .andExpect(status().isOk());
+
+        String officerToken = loginAndGetToken("john.doe@nactvet.go.tz", "secret123");
+
+        // Verify the initial profile state.
+        mockMvc.perform(get("/profile/me")
+                        .header("Authorization", "Bearer " + officerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fullName").value("John Doe"))
+                .andExpect(jsonPath("$.phoneNumber").value("0712345678"))
+                .andExpect(jsonPath("$.directorateId").value(directorateId));
+
+        // Change name, phone, and directorate in a single update.
+        mockMvc.perform(put("/profile/me")
+                        .header("Authorization", "Bearer " + officerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{"
+                                + "\"fullName\":\"John Updated\","
+                                + "\"email\":\"john.doe@nactvet.go.tz\","
+                                + "\"phoneNumber\":\"+255-777\","
+                                + "\"directorateId\":" + directorateId + ","
+                                + "\"sectionId\":null,"
+                                + "\"unitId\":null"
+                                + "}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fullName").value("John Updated"))
+                .andExpect(jsonPath("$.phoneNumber").value("+255-777"))
+                .andExpect(jsonPath("$.directorateId").value(directorateId));
+
+        // Reload the profile — changes must be persisted, not only shown in-memory.
+        mockMvc.perform(get("/profile/me")
+                        .header("Authorization", "Bearer " + officerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fullName").value("John Updated"))
+                .andExpect(jsonPath("$.phoneNumber").value("+255-777"))
+                .andExpect(jsonPath("$.directorateId").value(directorateId));
+
+        // Clear phone and directorate by sending null — they must be cleared in the DB.
+        mockMvc.perform(put("/profile/me")
+                        .header("Authorization", "Bearer " + officerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{"
+                                + "\"fullName\":\"John Updated\","
+                                + "\"email\":\"john.doe@nactvet.go.tz\","
+                                + "\"phoneNumber\":null,"
+                                + "\"directorateId\":null,"
+                                + "\"sectionId\":null,"
+                                + "\"unitId\":null"
+                                + "}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.phoneNumber").value(nullValue()))
+                .andExpect(jsonPath("$.directorateId").value(nullValue()));
+
+        // Reload again — cleared fields must still be null after reload.
+        mockMvc.perform(get("/profile/me")
+                        .header("Authorization", "Bearer " + officerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fullName").value("John Updated"))
+                .andExpect(jsonPath("$.phoneNumber").value(nullValue()))
+                .andExpect(jsonPath("$.directorateId").value(nullValue()));
+    }
+
+    @Test
+    void loginAndLogoutAreRecordedInAuditLogs() throws Exception {
+        String adminToken = loginAndGetToken("admin@nactvet.go.tz", "admin123");
+
+        mockMvc.perform(get("/admin/audit-logs")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.action == 'LOGIN')]", hasSize(greaterThan(0))));
+
+        mockMvc.perform(post("/auth/logout")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/admin/audit-logs")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.action == 'LOGOUT')]", hasSize(greaterThan(0))));
+    }
+
+    @Test
+    void assetSoftDeleteMovesToRecycleBinAndRestoreReturnsOriginalData() throws Exception {
+        String adminToken = loginAndGetToken("admin@nactvet.go.tz", "admin123");
+
+        String assetBody = "{"
+                + "\"assetNumber\":\"AST-003\","
+                + "\"serialNumber\":\"SN-003\","
+                + "\"deviceModel\":\"ICT Printer\","
+                + "\"deviceTypeId\":" + deviceTypeId + ","
+                + "\"userOfAsset\":\"Grace Mushi\","
+                + "\"deviceStatus\":\"WORKING\","
+                + "\"zoneId\":" + zoneId + ","
+                + "\"office\":\"C12\""
+                + "}";
+
+        MvcResult created = mockMvc.perform(post("/admin/assets")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(assetBody))
+                .andExpect(status().isCreated())
+                .andReturn();
+        long assetId = objectMapper.readTree(created.getResponse().getContentAsString()).get("id").asLong();
+
+        // Soft delete removes it from the normal inventory.
+        mockMvc.perform(delete("/admin/assets/" + assetId)
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get("/admin/assets/" + assetId)
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/admin/assets")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .param("search", "printer"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
+
+        // It now appears in the recycle bin with the deletion details recorded.
+        mockMvc.perform(get("/admin/assets/deleted")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(assetId))
+                .andExpect(jsonPath("$[0].deletedAt", not(nullValue())))
+                .andExpect(jsonPath("$[0].deletedByName", not(nullValue())));
+
+        // Restore returns the asset to the inventory with all original data.
+        mockMvc.perform(post("/admin/assets/" + assetId + "/restore")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.deletedAt").value(nullValue()))
+                .andExpect(jsonPath("$.deviceModel").value("ICT Printer"))
+                .andExpect(jsonPath("$.userOfAsset").value("Grace Mushi"));
+        mockMvc.perform(get("/admin/assets/" + assetId)
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk());
+
+        // Permanent delete is only allowed once the asset is back in the recycle bin.
+        mockMvc.perform(delete("/admin/assets/" + assetId + "/permanent")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(delete("/admin/assets/" + assetId)
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/admin/assets/" + assetId + "/permanent")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get("/admin/assets/deleted")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 }

@@ -11,7 +11,7 @@
 @if (needsSetup) {
   <div class="alert alert-warning">
     Your profile is not complete yet.
-    <a class="btn btn-sm btn-primary" routerLink="/users/setup">Complete your setup</a>
+    <button type="button" class="btn btn-sm btn-primary" (click)="openSetupForm()">Complete your setup</button>
   </div>
 }
 
@@ -61,7 +61,7 @@
     </dl>
   </div>
 
-  <div class="card">
+  <div class="card" id="editAccountForm">
     <h3>Edit Account Details</h3>
 
     @if (success()) {

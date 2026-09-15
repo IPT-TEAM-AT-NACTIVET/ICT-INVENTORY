@@ -46,9 +46,16 @@ export class AuthService {
   }
 
   logout(): void {
+    const token = this.tokenSignal();
+    if (token) {
+      // Fire-and-forget so the server can record the logout before the token is cleared.
+      this.http
+        .post<void>(`${environment.apiUrl}/auth/logout`, {}, { headers: { Authorization: `Bearer ${token}` } })
+        .subscribe({ error: () => {} });
+    }
     this.tokenStorage.clear();
     this.tokenSignal.set(null);
     this.userSignal.set(null);
-    this.router.navigate(['/login']);
+    void this.router.navigate(['/login']);
   }
 }

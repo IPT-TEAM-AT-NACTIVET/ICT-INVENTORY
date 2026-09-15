@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.ss.usermodel.Cell;
@@ -210,14 +211,14 @@ public class AssetService {
             return null;
         }
 
-        DeviceType deviceType = deviceTypeRepository.findByName(deviceTypeName.trim())
+        DeviceType deviceType = deviceTypeRepository.findByNameIgnoreCase(deviceTypeName)
                 .orElse(null);
         if (deviceType == null) {
             result.addError(rowNumber, "Unknown Device Type: " + deviceTypeName);
             return null;
         }
 
-        Zone zone = zoneRepository.findByName(zoneName.trim()).orElse(null);
+        Zone zone = zoneRepository.findByNameIgnoreCase(zoneName).orElse(null);
         if (zone == null) {
             result.addError(rowNumber, "Unknown Zone: " + zoneName);
             return null;
@@ -225,7 +226,7 @@ public class AssetService {
 
         Directorate directorate = null;
         if (directorateName != null && !directorateName.isBlank()) {
-            directorate = directorateRepository.findByName(directorateName.trim()).orElse(null);
+            directorate = directorateRepository.findByNameIgnoreCase(directorateName).orElse(null);
             if (directorate == null) {
                 result.addError(rowNumber, "Unknown Directorate: " + directorateName);
                 return null;
@@ -240,13 +241,13 @@ public class AssetService {
 
         String normAssetNumber = blank(assetNumber);
         String normSerialNumber = blank(serialNumber);
-        String normUser = userOfAsset.trim();
-        String normOffice = office.trim();
-        if (normUser.length() > 255) {
+        String normUser = blank(userOfAsset);
+        String normOffice = blank(office);
+        if (normUser != null && normUser.length() > 255) {
             result.addError(rowNumber, "User of Asset must not exceed 255 characters");
             return null;
         }
-        if (normOffice.length() > 100) {
+        if (normOffice != null && normOffice.length() > 100) {
             result.addError(rowNumber, "Office must not exceed 100 characters");
             return null;
         }
@@ -302,19 +303,63 @@ public class AssetService {
         for (int i = 0; i < headerRow.size(); i++) {
             String col = headerRow.get(i).trim().toLowerCase(Locale.ROOT)
                     .replaceAll("[^a-z0-9]", "");
-            index.putIfAbsent(col, i);
+            if (col.isEmpty()) {
+                continue;
+            }
+            String alias = aliasFor(col);
+            if (alias != null) {
+                index.putIfAbsent(alias, i);
+            }
+            // Combined column like "Device Type/Name" should also count as device name.
+            if (col.contains("type") && (col.contains("name") || col.contains("model"))) {
+                index.putIfAbsent("deviceName", i);
+            }
         }
-        if (!index.containsKey("devicename") && index.containsKey("devicemodel")) {
-            index.put("devicename", index.get("devicemodel"));
+        if (!index.containsKey("deviceName") && index.containsKey("deviceModel")) {
+            index.put("deviceName", index.get("deviceModel"));
         }
-        if (!index.containsKey("devicemodel") && index.containsKey("devicename")) {
-            index.put("devicemodel", index.get("devicename"));
+        if (!index.containsKey("deviceModel") && index.containsKey("deviceName")) {
+            index.put("deviceModel", index.get("deviceName"));
         }
-        Set<String> required = Set.of("devicename", "devicetype", "zone");
-        if (!index.keySet().containsAll(required)) {
+        boolean hasName = index.containsKey("deviceName") || index.containsKey("deviceModel");
+        if (!index.containsKey("zone") || !index.containsKey("deviceType") || !hasName) {
             return Map.of();
         }
         return index;
+    }
+
+    private String aliasFor(String col) {
+        if (col.contains("assetnumber") || col.contains("assetnum") || col.equals("asset") || col.equals("assets")) {
+            return "assetNumber";
+        }
+        if (col.contains("serial")) {
+            return "serialNumber";
+        }
+        if (col.contains("zone")) {
+            return "zone";
+        }
+        if (col.contains("directorate") || col.contains("department")) {
+            return "directorate";
+        }
+        if (col.contains("office") || col.contains("room")) {
+            return "office";
+        }
+        if (col.contains("status") || col.contains("condition")) {
+            return "deviceStatus";
+        }
+        if (col.contains("user") || col.contains("assigned") || col.contains("owner") || col.contains("employee")) {
+            return "userOfAsset";
+        }
+        if (col.contains("type")) {
+            return "deviceType";
+        }
+        if (col.contains("devicename") || col.contains("name")) {
+            return "deviceName";
+        }
+        if (col.contains("devicemodel") || col.contains("model")) {
+            return "deviceModel";
+        }
+        return null;
     }
 
     private String value(List<String> row, Map<String, Integer> header, String key) {
@@ -322,8 +367,20 @@ public class AssetService {
         if (idx == null || idx >= row.size()) {
             return null;
         }
-        String v = row.get(idx);
-        return v == null || v.isBlank() ? null : v.trim();
+        return normalize(row.get(idx));
+    }
+
+    private String normalize(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String s = raw.replace('\u00A0', ' ')
+                .replace('\u202F', ' ')
+                .replace('\u2007', ' ')
+                .replace('\u3000', ' ')
+                .trim()
+                .replaceAll("\\s{2,}", " ");
+        return s.isEmpty() ? null : s;
     }
 
     private List<List<String>> parseExcel(InputStream inputStream) throws IOException {
@@ -400,7 +457,7 @@ public class AssetService {
 
     @Transactional(readOnly = true)
     public PagedResponse<AssetResponse> findAllPaged(int page, int size) {
-        Page<Asset> assetPage = assetRepository.findByOrderByCreatedAtDesc(
+        Page<Asset> assetPage = assetRepository.findByDeletedAtIsNullOrderByCreatedAtDesc(
                 PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         List<AssetResponse> content = assetPage.getContent().stream()
                 .map(assetMapper::toResponse)
@@ -489,7 +546,7 @@ public class AssetService {
 
     @Transactional(readOnly = true)
     public List<AssetResponse> findAll() {
-        return assetRepository.findAllByOrderByCreatedAtDesc()
+        return assetRepository.findAllByDeletedAtIsNullOrderByCreatedAtDesc()
                 .stream()
                 .map(assetMapper::toResponse)
                 .collect(Collectors.toList());
@@ -497,21 +554,21 @@ public class AssetService {
 
     @Transactional(readOnly = true)
     public AssetResponse findById(Long id) {
-        Asset asset = assetRepository.findWithDetailsById(id)
+        Asset asset = assetRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Asset not found with id: " + id));
         return assetMapper.toResponse(asset);
     }
 
     @Transactional(readOnly = true)
     public List<AssetResponse> findByDeviceTypeId(Long deviceTypeId) {
-        return assetRepository.findByDeviceTypeId(deviceTypeId)
+        return assetRepository.findByDeviceTypeIdAndDeletedAtIsNull(deviceTypeId)
                 .stream()
                 .map(assetMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     public AssetResponse updateByAdmin(Long id, AssetUpdateRequest request, Long currentUserId) {
-        Asset asset = assetRepository.findWithDetailsById(id)
+        Asset asset = assetRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Asset not found with id: " + id));
 
         User updatedBy = currentUserId != null
@@ -530,13 +587,94 @@ public class AssetService {
         return assetMapper.toResponse(saved);
     }
 
-    public void delete(Long id) {
-        if (!assetRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Asset not found with id: " + id);
+    /**
+     * Soft deletes an asset: the row is kept but marked with the current user and
+     * timestamp, so it disappears from the inventory and can be restored later
+     * from the Recycle Bin.
+     */
+    public void delete(Long id, Long currentUserId) {
+        Asset asset = assetRepository.findByIdIncludingDeleted(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found with id: " + id));
+        if (asset.getDeletedAt() != null) {
+            throw new BadRequestException("Asset is already in the recycle bin: id=" + id);
         }
-        assetRepository.deleteById(id);
-        auditLogService.log("DELETE", "ASSET", id, "ADMIN", null, "Asset deleted: id=" + id);
-        log.info("Asset deleted: id={}", id);
+
+        User deletedBy = currentUserId != null
+                ? userRepository.findById(currentUserId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + currentUserId))
+                : null;
+        asset.setDeletedBy(deletedBy);
+        asset.setDeletedAt(LocalDateTime.now());
+        asset.setUpdatedBy(deletedBy);
+
+        assetRepository.save(asset);
+        String actor = deletedBy != null ? deletedBy.getUsername() : "admin";
+        auditLogService.log("DELETE", "ASSET", asset.getId(), actor,
+                deletedBy != null ? deletedBy.getId() : null,
+                "Asset moved to recycle bin: " + asset.getDeviceModel() + " (" + asset.getAssetNumber() + ")");
+        log.info("Asset soft deleted: id={}", id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AssetResponse> findDeletedAssets() {
+        return assetRepository.findDeletedAssets()
+                .stream()
+                .map(assetMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns a soft-deleted asset to the inventory with all its original data
+     * unchanged.
+     */
+    public AssetResponse restore(Long id, Long currentUserId) {
+        Asset asset = assetRepository.findByIdIncludingDeleted(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found with id: " + id));
+        if (asset.getDeletedAt() == null) {
+            throw new BadRequestException("Asset is not in the recycle bin: id=" + id);
+        }
+
+        asset.setDeletedAt(null);
+        asset.setDeletedBy(null);
+
+        User restoredBy = currentUserId != null
+                ? userRepository.findById(currentUserId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + currentUserId))
+                : null;
+        asset.setUpdatedBy(restoredBy);
+
+        Asset saved = assetRepository.save(asset);
+        String actor = restoredBy != null ? restoredBy.getUsername() : "admin";
+        auditLogService.log("RESTORE", "ASSET", saved.getId(), actor,
+                restoredBy != null ? restoredBy.getId() : null,
+                "Asset restored from recycle bin: " + saved.getDeviceModel() + " (" + saved.getAssetNumber() + ")");
+        log.info("Asset restored: id={}", id);
+        return assetMapper.toResponse(saved);
+    }
+
+    /**
+     * Permanently removes an asset from the database. Allowed only for assets that
+     * are already in the recycle bin.
+     */
+    public void permanentlyDelete(Long id, Long currentUserId) {
+        Asset asset = assetRepository.findByIdIncludingDeleted(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found with id: " + id));
+        if (asset.getDeletedAt() == null) {
+            throw new BadRequestException("Permanent deletion is only allowed from the recycle bin: id=" + id);
+        }
+
+        User deletedBy = currentUserId != null
+                ? userRepository.findById(currentUserId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + currentUserId))
+                : null;
+        String actor = deletedBy != null ? deletedBy.getUsername() : "admin";
+        String description = "Asset permanently deleted: " + asset.getDeviceModel()
+                + " (" + asset.getAssetNumber() + ")";
+
+        assetRepository.delete(asset);
+        auditLogService.log("PERMANENT_DELETE", "ASSET", asset.getId(), actor,
+                deletedBy != null ? deletedBy.getId() : null, description);
+        log.info("Asset permanently deleted: id={}", id);
     }
 
     private void updateAssetFields(Asset asset, AssetUpdateRequest request) {

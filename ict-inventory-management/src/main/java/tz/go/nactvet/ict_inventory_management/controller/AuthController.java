@@ -19,7 +19,9 @@ import tz.go.nactvet.ict_inventory_management.dto.UserResponse;
 import tz.go.nactvet.ict_inventory_management.entity.User;
 import tz.go.nactvet.ict_inventory_management.exception.ResourceNotFoundException;
 import tz.go.nactvet.ict_inventory_management.repository.UserRepository;
+import tz.go.nactvet.ict_inventory_management.security.CustomUserDetailsService.UserPrincipal;
 import tz.go.nactvet.ict_inventory_management.security.JwtService;
+import tz.go.nactvet.ict_inventory_management.service.AuditLogService;
 
 @RestController
 @RequestMapping("/auth")
@@ -30,14 +32,17 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    private final AuditLogService auditLogService;
 
     public AuthController(
             AuthenticationManager authenticationManager,
             JwtService jwtService,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            AuditLogService auditLogService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.userRepository = userRepository;
+        this.auditLogService = auditLogService;
     }
 
     @PostMapping("/login")
@@ -61,7 +66,21 @@ public class AuthController {
                 user.isSetupCompleted(),
                 user.getRole());
 
+        auditLogService.log("LOGIN", "USER", user.getId(), user.getUsername(), user.getId(),
+                "User logged in: " + user.getEmail());
         log.info("User '{}' logged in successfully", user.getEmail());
         return ResponseEntity.ok(new LoginResponse(token, userResponse));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal principal) {
+            Long userId = principal.getId();
+            String username = principal.getUsername();
+            auditLogService.log("LOGOUT", "USER", userId, username, userId,
+                    "User logged out: " + username);
+            log.info("User '{}' logged out", username);
+        }
+        return ResponseEntity.ok().build();
     }
 }

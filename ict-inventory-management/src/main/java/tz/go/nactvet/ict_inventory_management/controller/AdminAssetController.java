@@ -68,6 +68,11 @@ public class AdminAssetController {
         return ResponseEntity.ok(assetService.searchAll(search));
     }
 
+    @GetMapping("/deleted")
+    public ResponseEntity<List<AssetResponse>> findDeletedAssets() {
+        return ResponseEntity.ok(assetService.findDeletedAssets());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<AssetResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(assetService.findById(id));
@@ -82,8 +87,25 @@ public class AdminAssetController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        assetService.delete(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id,
+                                       Authentication authentication) {
+        CustomUserDetailsService.UserPrincipal principal = (CustomUserDetailsService.UserPrincipal) authentication.getPrincipal();
+        assetService.delete(id, principal.getId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<AssetResponse> restore(@PathVariable Long id,
+                                                 Authentication authentication) {
+        CustomUserDetailsService.UserPrincipal principal = (CustomUserDetailsService.UserPrincipal) authentication.getPrincipal();
+        return ResponseEntity.ok(assetService.restore(id, principal.getId()));
+    }
+
+    @DeleteMapping("/{id}/permanent")
+    public ResponseEntity<Void> permanentlyDelete(@PathVariable Long id,
+                                                  Authentication authentication) {
+        CustomUserDetailsService.UserPrincipal principal = (CustomUserDetailsService.UserPrincipal) authentication.getPrincipal();
+        assetService.permanentlyDelete(id, principal.getId());
         return ResponseEntity.noContent().build();
     }
 }

@@ -13,45 +13,50 @@
 }
 
 @if (showForm) {
-  <div class="card">
-    <h3>{{ editing ? 'Edit Section' : 'New Section' }}</h3>
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <div class="form-grid">
-        <div class="form-field">
-          <label for="name">Name *</label>
-          <input id="name" type="text" formControlName="name" />
-          @if (form.controls.name.touched && form.controls.name.invalid) {
-            <div class="field-error">Name is required.</div>
-          }
-        </div>
-        <div class="form-field">
-          <label for="code">Code</label>
-          <input id="code" type="text" formControlName="code" />
-        </div>
-        <div class="form-field">
-          <label for="directorate">Directorate *</label>
-          <select id="directorate" formControlName="directorateId">
-            <option [ngValue]="0" disabled>Select directorate</option>
-            @for (dir of directorates(); track dir.id) {
-              <option [ngValue]="dir.id">{{ dir.name }}</option>
+  <div class="modal-backdrop" (click)="cancelForm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ editing ? 'Edit Section' : 'New Section' }}</h3>
+        <button type="button" class="modal-close" (click)="cancelForm()" [disabled]="saving()" aria-label="Close">&times;</button>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="name">Name *</label>
+            <input id="name" type="text" formControlName="name" />
+            @if (form.controls.name.touched && form.controls.name.invalid) {
+              <div class="field-error">Name is required.</div>
             }
-          </select>
-          @if (form.controls.directorateId.touched && form.controls.directorateId.invalid) {
-            <div class="field-error">Directorate is required.</div>
-          }
+          </div>
+          <div class="form-field">
+            <label for="code">Code</label>
+            <input id="code" type="text" formControlName="code" />
+          </div>
+          <div class="form-field">
+            <label for="directorate">Directorate *</label>
+            <select id="directorate" formControlName="directorateId">
+              <option [ngValue]="0" disabled>Select directorate</option>
+              @for (dir of directorates(); track dir.id) {
+                <option [ngValue]="dir.id">{{ dir.name }}</option>
+              }
+            </select>
+            @if (form.controls.directorateId.touched && form.controls.directorateId.invalid) {
+              <div class="field-error">Directorate is required.</div>
+            }
+          </div>
+          <div class="form-field">
+            <label for="description">Description</label>
+            <input id="description" type="text" formControlName="description" />
+          </div>
         </div>
-        <div class="form-field">
-          <label for="description">Description</label>
-          <input id="description" type="text" formControlName="description" />
+        <div class="modal-footer">
+          <button type="button" class="btn" (click)="cancelForm()" [disabled]="saving()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : (editing ? 'Save' : 'Create') }}
+          </button>
         </div>
-      </div>
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary" [disabled]="saving()">
-          {{ saving() ? 'Saving…' : 'Save' }}
-        </button>
-        <button type="button" class="btn" (click)="cancelForm()">Cancel</button>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
 }
 
