@@ -1,20 +1,26 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
-export function httpErrorMessage(error: unknown, fallback: string): string {
+export type TranslateFn = (key: string) => string;
+
+export function httpErrorMessage(
+  error: unknown,
+  fallback: string,
+  t: TranslateFn = (key) => key,
+): string {
   if (error instanceof HttpErrorResponse) {
     switch (error.status) {
       case 0:
-        return 'Cannot reach the server. Check that the backend is running at the configured API URL.';
+        return t('httpErrors.serverUnreachable');
       case 401:
-        return 'Your session has expired. Please log in again.';
+        return t('httpErrors.sessionExpired');
       case 403:
-        return 'You do not have permission to view this content.';
+        return t('httpErrors.forbidden');
       case 404:
-        return 'The requested content was not found on the server.';
+        return t('httpErrors.notFound');
       case 500:
       case 502:
       case 503:
-        return 'The server encountered an error. Please try again.';
+        return t('httpErrors.serverError');
     }
   }
   return fallback;

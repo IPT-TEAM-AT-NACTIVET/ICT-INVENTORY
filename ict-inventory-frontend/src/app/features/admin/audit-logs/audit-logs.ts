@@ -41,7 +41,7 @@ export class AuditLogs implements OnInit {
       )
       .subscribe({
         next: (logs) => this.allLogs.set(logs),
-        error: (err) => this.error.set(httpErrorMessage(err, 'Failed to load audit logs.')),
+        error: (err) => this.error.set(httpErrorMessage(err, this.t('auditLogs.loadError'), this.t)),
       });
   }
 
@@ -60,11 +60,6 @@ export class AuditLogs implements OnInit {
   }
 
   formatDateTime(iso: string): string {
-    const d = new Date(iso);
-    return (
-      d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) +
-      ' ' +
-      d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-    );
+    return this.translation.formatDateTime(iso);
   }
 }

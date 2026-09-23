@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { MasterDataService } from '../../../shared/services/master-data.service';
 import { ReferenceService } from '../../../shared/services/reference.service';
+import { TranslationService } from '../../../core/services/translation.service';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
 import { Directorate, Section } from '../../../core/models/master-data.model';
 import { delay, finalize, retry } from 'rxjs';
@@ -16,6 +17,9 @@ export class SectionsComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly service = inject(MasterDataService);
   private readonly reference = inject(ReferenceService);
+  private readonly translation = inject(TranslationService);
+
+  t = (key: string, params?: Record<string, string | number>) => this.translation.t(key, params);
 
   readonly items = signal<Section[]>([]);
   readonly directorates = signal<Directorate[]>([]);
@@ -56,7 +60,7 @@ export class SectionsComponent implements OnInit {
           this.items.set(items);
         },
         error: (err) => {
-          this.error.set(httpErrorMessage(err, 'Failed to load sections.'));
+          this.error.set(httpErrorMessage(err, this.t('master.sections.loadError'), this.t));
         },
       });
   }
@@ -110,27 +114,27 @@ export class SectionsComponent implements OnInit {
         this.saving.set(false);
         this.showForm = false;
         this.editing = null;
-        this.success.set(editing ? 'Section updated.' : 'Section created.');
+        this.success.set(editing ? this.t('master.sections.updated') : this.t('master.sections.created'));
         this.load();
       },
       error: () => {
         this.saving.set(false);
-        this.error.set('Failed to save section.');
+        this.error.set(this.t('master.sections.saveError'));
       },
     });
   }
 
   remove(item: Section): void {
-    if (!window.confirm(`Delete section "${item.name}"?`)) {
+    if (!window.confirm(this.t('master.sections.confirmDelete', { name: item.name }))) {
       return;
     }
     this.service.deleteSection(item.id).subscribe({
       next: () => {
-        this.success.set(`Deleted "${item.name}".`);
+        this.success.set(this.t('master.sections.deleted', { name: item.name }));
         this.load();
       },
       error: () => {
-        this.error.set('Failed to delete section. It may be in use.');
+        this.error.set(this.t('master.sections.deleteError'));
       },
     });
   }

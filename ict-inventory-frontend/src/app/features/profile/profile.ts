@@ -106,7 +106,7 @@ export class ProfilePage implements OnInit {
           }
         },
         error: (err) => {
-          this.error.set(httpErrorMessage(err, 'Failed to load your profile.'));
+          this.error.set(httpErrorMessage(err, this.t('profile.loadError'), this.t));
         },
       });
   }
@@ -133,7 +133,7 @@ export class ProfilePage implements OnInit {
         next: (profile) => {
           this.saving.set(false);
           this.profile.set(profile);
-          this.success.set('Profile updated successfully.');
+          this.success.set(this.t('profile.updated'));
           this.form.patchValue({
             fullName: profile.fullName,
             email: profile.email ?? '',
@@ -154,7 +154,7 @@ export class ProfilePage implements OnInit {
         },
         error: () => {
           this.saving.set(false);
-          this.error.set('Failed to update your profile.');
+          this.error.set(this.t('profile.updateError'));
         },
       });
   }
@@ -178,11 +178,11 @@ export class ProfilePage implements OnInit {
         next: () => {
           this.changingPassword.set(false);
           this.passwordForm.reset();
-          this.passwordSuccess.set('Password changed successfully.');
+          this.passwordSuccess.set(this.t('profile.passwordChanged'));
         },
         error: (err) => {
           this.changingPassword.set(false);
-          this.passwordError.set(httpErrorMessage(err, 'Failed to change your password.'));
+          this.passwordError.set(httpErrorMessage(err, this.t('profile.passwordChangeError'), this.t));
         },
       });
   }

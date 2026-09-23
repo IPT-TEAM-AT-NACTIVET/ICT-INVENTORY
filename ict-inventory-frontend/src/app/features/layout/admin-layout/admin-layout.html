@@ -2,9 +2,9 @@
   <aside class="sidebar" [class.open]="open()">
     <div class="brand">
       <span class="brand-mark">
-        <img src="/logo-nactvet.png" alt="NACTVET Logo" />
+        <img src="/logo-nactvet.png" [attr.alt]="t('layout.logoAlt')" />
       </span>
-      <span class="brand-name">Inventory System</span>
+      <span class="brand-name">{{ t('layout.brand') }}</span>
     </div>
     <nav class="nav">
       @for (item of navItems; track item.path) {
@@ -53,7 +53,7 @@
   <div class="main">
     <header class="topbar">
       <div class="topbar-left">
-        <button type="button" class="icon-toggle hamburger" (click)="toggleSidebar()" aria-label="Menu">
+        <button type="button" class="icon-toggle hamburger" (click)="toggleSidebar()" [attr.aria-label]="t('layout.menu')">
           <span></span><span></span><span></span>
         </button>
       </div>

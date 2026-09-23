@@ -5,7 +5,7 @@ import { TranslationService } from '../../../core/services/translation.service';
   selector: 'app-language-switcher',
   imports: [],
   template: `
-    <div class="lang-switcher" role="group" aria-label="Language">
+    <div class="lang-switcher" role="group" [attr.aria-label]="t('layout.language')">
       <button
         type="button"
         class="lang-btn"
@@ -52,4 +52,6 @@ import { TranslationService } from '../../../core/services/translation.service';
 })
 export class LanguageSwitcherComponent {
   readonly translation = inject(TranslationService);
+
+  t = (key: string) => this.translation.t(key);
 }

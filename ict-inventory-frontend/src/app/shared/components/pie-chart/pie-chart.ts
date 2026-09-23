@@ -1,4 +1,5 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
+import { TranslationService } from '../../../core/services/translation.service';
 
 export interface PieSlice {
   label: string;
@@ -29,8 +30,12 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
   styleUrl: './pie-chart.css',
 })
 export class PieChart {
+  private readonly translation = inject(TranslationService);
+
   readonly slices = input<PieSlice[]>([]);
-  readonly totalLabel = input('Total');
+  readonly totalLabel = input('');
+
+  t = (key: string) => this.translation.t(key);
 
   readonly total = computed(() =>
     this.slices().reduce((sum, slice) => sum + (Number(slice.value) || 0), 0),

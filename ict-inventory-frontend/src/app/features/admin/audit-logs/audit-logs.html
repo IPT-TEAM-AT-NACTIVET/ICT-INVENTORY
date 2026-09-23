@@ -1,18 +1,18 @@
-<app-page-header title="Audit Logs" subtitle="Track all system activity" />
+<app-page-header [title]="t('auditLogs.title')" [subtitle]="t('auditLogs.subtitle')" />
 
 <div class="card">
   <div class="filter-bar">
     <div class="form-field">
-      <label for="logSearch">Search</label>
+      <label for="logSearch">{{ t('common.search') }}</label>
       <input
         id="logSearch"
         type="text"
         [formControl]="search"
-        placeholder="Search by action, entity, user or description..."
+        [placeholder]="t('auditLogs.searchPlaceholder')"
       />
     </div>
     <div class="form-actions">
-      <button type="button" class="btn btn-primary btn-sm" (click)="load()">Refresh</button>
+      <button type="button" class="btn btn-primary btn-sm" (click)="load()">{{ t('common.refresh') }}</button>
     </div>
   </div>
 </div>
@@ -21,18 +21,18 @@
   <table class="table">
     <thead>
       <tr>
-        <th>Date &amp; Time</th>
-        <th>Action</th>
-        <th>Entity Type</th>
-        <th>Entity ID</th>
-        <th>Performed By</th>
-        <th>Description</th>
+        <th>{{ t('auditLogs.dateTime') }}</th>
+        <th>{{ t('auditLogs.action') }}</th>
+        <th>{{ t('auditLogs.entityType') }}</th>
+        <th>{{ t('auditLogs.entityId') }}</th>
+        <th>{{ t('auditLogs.performedBy') }}</th>
+        <th>{{ t('auditLogs.description') }}</th>
       </tr>
     </thead>
     <tbody>
       @if (loading()) {
         <tr>
-          <td colspan="6" class="loading">Loading…</td>
+          <td colspan="6" class="loading">{{ t('common.loading') }}</td>
         </tr>
       } @else if (error()) {
         <tr>
@@ -40,7 +40,7 @@
         </tr>
       } @else if (filteredLogs.length === 0) {
         <tr>
-          <td colspan="6" class="empty">No audit logs found.</td>
+          <td colspan="6" class="empty">{{ t('auditLogs.noLogs') }}</td>
         </tr>
       } @else {
         @for (log of filteredLogs; track log.id) {

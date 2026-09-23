@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { MasterDataService } from '../../../shared/services/master-data.service';
+import { TranslationService } from '../../../core/services/translation.service';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
 import { DeviceType } from '../../../core/models/master-data.model';
 import { delay, finalize, retry } from 'rxjs';
@@ -14,6 +15,9 @@ import { delay, finalize, retry } from 'rxjs';
 export class DeviceTypesComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly service = inject(MasterDataService);
+  private readonly translation = inject(TranslationService);
+
+  t = (key: string, params?: Record<string, string | number>) => this.translation.t(key, params);
 
   readonly items = signal<DeviceType[]>([]);
   readonly loading = signal(true);
@@ -46,7 +50,7 @@ export class DeviceTypesComponent implements OnInit {
           this.items.set(items);
         },
         error: (err) => {
-          this.error.set(httpErrorMessage(err, 'Failed to load device types.'));
+          this.error.set(httpErrorMessage(err, this.t('master.deviceTypes.loadError'), this.t));
         },
       });
   }
@@ -93,27 +97,27 @@ export class DeviceTypesComponent implements OnInit {
         this.saving.set(false);
         this.showForm = false;
         this.editing = null;
-        this.success.set(editing ? 'Device type updated.' : 'Device type created.');
+        this.success.set(editing ? this.t('master.deviceTypes.updated') : this.t('master.deviceTypes.created'));
         this.load();
       },
       error: () => {
         this.saving.set(false);
-        this.error.set('Failed to save device type.');
+        this.error.set(this.t('master.deviceTypes.saveError'));
       },
     });
   }
 
   remove(item: DeviceType): void {
-    if (!window.confirm(`Delete device type "${item.name}"?`)) {
+    if (!window.confirm(this.t('master.deviceTypes.confirmDelete', { name: item.name }))) {
       return;
     }
     this.service.deleteDeviceType(item.id).subscribe({
       next: () => {
-        this.success.set(`Deleted "${item.name}".`);
+        this.success.set(this.t('master.deviceTypes.deleted', { name: item.name }));
         this.load();
       },
       error: () => {
-        this.error.set('Failed to delete device type. It may be in use.');
+        this.error.set(this.t('master.deviceTypes.deleteError'));
       },
     });
   }

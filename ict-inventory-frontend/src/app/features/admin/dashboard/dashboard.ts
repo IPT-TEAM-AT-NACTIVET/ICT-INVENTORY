@@ -2,7 +2,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { DashboardService } from '../../../core/services/dashboard.service';
-import { DEVICE_STATUS_LABELS } from '../../../shared/utils/enum-labels';
+import { TranslationService } from '../../../core/services/translation.service';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
 import { DashboardResponse } from '../../../core/models/dashboard.model';
 import { RouterLink } from '@angular/router';
@@ -17,6 +17,9 @@ import { delay, finalize, retry } from 'rxjs';
 })
 export class AdminDashboard implements OnInit {
   private readonly dashboardService = inject(DashboardService);
+  private readonly translation = inject(TranslationService);
+
+  t = (k: string) => this.translation.t(k);
 
   readonly stats = signal<DashboardResponse | null>(null);
   readonly error = signal('');
@@ -44,13 +47,13 @@ export class AdminDashboard implements OnInit {
           this.stats.set(stats);
         },
         error: (err) => {
-          this.error.set(httpErrorMessage(err, 'Failed to load dashboard data.'));
+          this.error.set(httpErrorMessage(err, this.t('dashboard.loadError'), this.t));
         },
       });
   }
 
   protected statusLabel(key: string): string {
-    return (DEVICE_STATUS_LABELS as Record<string, string>)[key] ?? key;
+    return key === 'WORKING' ? this.t('deviceStatus.working') : key === 'NOT_WORKING' ? this.t('deviceStatus.notWorking') : key;
   }
 
   private toSlices(record: Record<string, number>): PieSlice[] {

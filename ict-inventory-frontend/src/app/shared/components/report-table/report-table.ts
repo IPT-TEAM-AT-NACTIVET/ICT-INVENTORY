@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { StatusBadge } from '../status-badge/status-badge';
 import { TranslationService } from '../../../core/services/translation.service';
 import { Asset } from '../../../core/models/asset.model';
-import { DEVICE_STATUS_LABELS, deviceStatusTone } from '../../utils/enum-labels';
+import { deviceStatusTone } from '../../utils/enum-labels';
 import { DeviceStatus } from '../../../core/models/enums';
 
 @Component({
@@ -18,9 +18,11 @@ export class ReportTable {
 
   t = (k: string) => this.translation.t(k);
 
-  readonly deviceStatusLabels = DEVICE_STATUS_LABELS;
-
   protected deviceTone(status: DeviceStatus): 'success' | 'danger' {
     return deviceStatusTone(status);
+  }
+
+  protected deviceStatusLabel(status: DeviceStatus): string {
+    return status === 'WORKING' ? this.t('deviceStatus.working') : this.t('deviceStatus.notWorking');
   }
 }

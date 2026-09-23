@@ -1,7 +1,7 @@
-<app-page-header [title]="t('profile.title')" subtitle="View and update your account information" />
+<app-page-header [title]="t('profile.title')" [subtitle]="t('profile.subtitle')" />
 
 @if (loading()) {
-  <div class="loading">Loading profile…</div>
+  <div class="loading">{{ t('profile.loading') }}</div>
 }
 
 @if (error()) {
@@ -10,8 +10,8 @@
 
 @if (needsSetup) {
   <div class="alert alert-warning">
-    Your profile is not complete yet.
-    <button type="button" class="btn btn-sm btn-primary" (click)="openSetupForm()">Complete your setup</button>
+    {{ t('profile.notComplete') }}
+    <button type="button" class="btn btn-sm btn-primary" (click)="openSetupForm()">{{ t('profile.completeSetup') }}</button>
   </div>
 }
 
@@ -47,22 +47,22 @@
         </dd>
       </div>
       <div class="detail-item">
-        <dt>Directorate</dt>
+        <dt>{{ t('profile.directorate') }}</dt>
         <dd>{{ profile()!.directorateName ?? '—' }}</dd>
       </div>
       <div class="detail-item">
-        <dt>Section</dt>
+        <dt>{{ t('profile.section') }}</dt>
         <dd>{{ profile()!.sectionName ?? '—' }}</dd>
       </div>
       <div class="detail-item">
-        <dt>Unit</dt>
+        <dt>{{ t('profile.unit') }}</dt>
         <dd>{{ profile()!.unitName ?? '—' }}</dd>
       </div>
     </dl>
   </div>
 
   <div class="card" id="editAccountForm">
-    <h3>Edit Account Details</h3>
+    <h3>{{ t('profile.editDetailsTitle') }}</h3>
 
     @if (success()) {
       <div class="alert alert-success" role="alert">{{ success() }}</div>
@@ -77,7 +77,7 @@
           <label for="fullName">{{ t('profile.fullName') }}</label>
           <input id="fullName" type="text" formControlName="fullName" />
           @if (form.controls.fullName.touched && form.controls.fullName.invalid) {
-            <div class="field-error">Full name is required.</div>
+            <div class="field-error">{{ t('profile.fullNameRequired') }}</div>
           }
         </div>
         <div class="form-field">
@@ -89,27 +89,27 @@
           <input id="phoneNumber" type="text" formControlName="phoneNumber" />
         </div>
         <div class="form-field">
-          <label for="directorate">Directorate</label>
+          <label for="directorate">{{ t('profile.directorate') }}</label>
           <select id="directorate" formControlName="directorateId">
-            <option [ngValue]="0">— None —</option>
+            <option [ngValue]="0">{{ t('common.none') }}</option>
             @for (dir of directorates(); track dir.id) {
               <option [ngValue]="dir.id">{{ dir.name }}</option>
             }
           </select>
         </div>
         <div class="form-field">
-          <label for="section">Section</label>
+          <label for="section">{{ t('profile.section') }}</label>
           <select id="section" formControlName="sectionId">
-            <option [ngValue]="0">— None —</option>
+            <option [ngValue]="0">{{ t('common.none') }}</option>
             @for (section of sections(); track section.id) {
               <option [ngValue]="section.id">{{ section.name }}</option>
             }
           </select>
         </div>
         <div class="form-field">
-          <label for="unit">Unit</label>
+          <label for="unit">{{ t('profile.unit') }}</label>
           <select id="unit" formControlName="unitId">
-            <option [ngValue]="0">— None —</option>
+            <option [ngValue]="0">{{ t('common.none') }}</option>
             @for (unit of units(); track unit.id) {
               <option [ngValue]="unit.id">{{ unit.name }}</option>
             }
@@ -118,14 +118,14 @@
       </div>
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" [disabled]="saving()">
-          {{ saving() ? 'Saving…' : 'Save Changes' }}
+          {{ saving() ? t('common.saving') : t('profile.saveChanges') }}
         </button>
       </div>
     </form>
   </div>
 
   <div class="card">
-    <h3>Change Password</h3>
+    <h3>{{ t('profile.changePassword') }}</h3>
 
     @if (passwordSuccess()) {
       <div class="alert alert-success" role="alert">{{ passwordSuccess() }}</div>
@@ -137,30 +137,30 @@
     <form [formGroup]="passwordForm" (ngSubmit)="submitPassword()">
       <div class="form-grid">
         <div class="form-field">
-          <label for="currentPassword">Current Password</label>
+          <label for="currentPassword">{{ t('profile.currentPassword') }}</label>
           <input id="currentPassword" type="password" formControlName="currentPassword" autocomplete="current-password" />
           @if (passwordForm.controls.currentPassword.touched && passwordForm.controls.currentPassword.invalid) {
-            <div class="field-error">Current password is required.</div>
+            <div class="field-error">{{ t('profile.currentPasswordRequired') }}</div>
           }
         </div>
         <div class="form-field">
-          <label for="newPassword">New Password</label>
+          <label for="newPassword">{{ t('profile.newPassword') }}</label>
           <input id="newPassword" type="password" formControlName="newPassword" autocomplete="new-password" />
           @if (passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.invalid) {
-            <div class="field-error">New password must be at least 6 characters.</div>
+            <div class="field-error">{{ t('profile.newPasswordMinLength') }}</div>
           }
         </div>
         <div class="form-field">
-          <label for="confirmPassword">Confirm New Password</label>
+          <label for="confirmPassword">{{ t('profile.confirmNewPassword') }}</label>
           <input id="confirmPassword" type="password" formControlName="confirmPassword" autocomplete="new-password" />
           @if (passwordForm.controls.confirmPassword.touched && passwordForm.invalid && passwordForm.hasError('mismatch')) {
-            <div class="field-error">Passwords do not match.</div>
+            <div class="field-error">{{ t('profile.passwordsMismatch') }}</div>
           }
         </div>
       </div>
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" [disabled]="changingPassword()">
-          {{ changingPassword() ? 'Updating…' : 'Change Password' }}
+          {{ changingPassword() ? t('profile.updating') : t('profile.changePassword') }}
         </button>
       </div>
     </form>

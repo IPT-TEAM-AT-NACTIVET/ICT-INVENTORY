@@ -7,7 +7,6 @@ import { httpErrorMessage } from '../../../shared/utils/http-errors';
 import { Asset } from '../../../core/models/asset.model';
 import { DeviceStatus } from '../../../core/models/enums';
 import {
-  DEVICE_STATUS_LABELS,
   deviceStatusTone,
 } from '../../../shared/utils/enum-labels';
 
@@ -21,18 +20,16 @@ export class RecycleBin implements OnInit {
   private readonly assetService = inject(AssetService);
   readonly translation = inject(TranslationService);
 
-  t(key: string): string {
-    return this.translation.t(key);
+  t(key: string, params?: Record<string, string | number>): string {
+    return this.translation.t(key, params);
   }
 
   readonly deletedAssets = signal<Asset[]>([]);
   readonly loading = signal(true);
   readonly error = signal('');
   readonly success = signal('');
-  pendingRestore = signal<Asset | null>(null);
-  pendingPermanentDelete = signal<Asset | null>(null);
-
-  readonly deviceStatusLabels = DEVICE_STATUS_LABELS;
+  readonly pendingRestore = signal<Asset | null>(null);
+  readonly pendingPermanentDelete = signal<Asset | null>(null);
 
   ngOnInit(): void {
     this.load();
@@ -47,7 +44,7 @@ export class RecycleBin implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(httpErrorMessage(err, 'Failed to load the recycle bin.'));
+        this.error.set(httpErrorMessage(err, this.t('recycleBin.loadError'), this.t));
         this.loading.set(false);
       },
     });
@@ -65,11 +62,11 @@ export class RecycleBin implements OnInit {
     this.pendingRestore.set(null);
     this.assetService.restore(item.id).subscribe({
       next: () => {
-        this.success.set(`Asset "${item.deviceModel}" restored to the inventory.`);
+        this.success.set(this.t('recycleBin.restored', { device: item.deviceModel }));
         this.load();
       },
       error: () => {
-        this.error.set('Failed to restore the asset.');
+        this.error.set(this.t('recycleBin.restoreFailed'));
       },
     });
   }
@@ -86,13 +83,17 @@ export class RecycleBin implements OnInit {
     this.pendingPermanentDelete.set(null);
     this.assetService.deletePermanent(item.id).subscribe({
       next: () => {
-        this.success.set(`Asset "${item.deviceModel}" permanently deleted.`);
+        this.success.set(this.t('recycleBin.permanentlyDeleted', { device: item.deviceModel }));
         this.load();
       },
       error: () => {
-        this.error.set('Failed to permanently delete the asset.');
+        this.error.set(this.t('recycleBin.permanentDeleteFailed'));
       },
     });
+  }
+
+  protected deviceStatusLabel(status: DeviceStatus): string {
+    return status === 'WORKING' ? this.t('deviceStatus.working') : this.t('deviceStatus.notWorking');
   }
 
   protected deviceTone(status: DeviceStatus): 'success' | 'danger' {
@@ -100,14 +101,6 @@ export class RecycleBin implements OnInit {
   }
 
   formatDateTime(iso: string | null): string {
-    if (!iso) {
-      return '—';
-    }
-    const d = new Date(iso);
-    return (
-      d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) +
-      ' ' +
-      d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-    );
+    return this.translation.formatDateTime(iso);
   }
 }

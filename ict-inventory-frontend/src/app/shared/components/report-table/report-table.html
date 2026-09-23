@@ -33,7 +33,7 @@
             <td>{{ asset.deviceModel }}</td>
             <td>
               <app-status-badge
-                [label]="deviceStatusLabels[asset.deviceStatus]"
+                [label]="deviceStatusLabel(asset.deviceStatus)"
                 [tone]="deviceTone(asset.deviceStatus)"
               />
             </td>

@@ -7,6 +7,8 @@ export type Dict = typeof en;
 
 export type TranslationKey = string;
 
+export type TranslationParams = Record<string, string | number>;
+
 const STORAGE_KEY = 'ict-language';
 const DICTS: Record<Language, Dict> = { en, sw };
 
@@ -14,9 +16,16 @@ const DICTS: Record<Language, Dict> = { en, sw };
 export class TranslationService {
   readonly lang = signal<Language>(this.getInitialLanguage());
 
-  t(key: string): string {
+  t(key: string, params?: TranslationParams): string {
     const dict = DICTS[this.lang()];
-    return getByPath(dict, key) ?? key;
+    const text = getByPath(dict, key) ?? key;
+    if (!params) {
+      return text;
+    }
+    return Object.entries(params).reduce(
+      (acc, [name, value]) => acc.replaceAll(`{${name}}`, String(value)),
+      text,
+    );
   }
 
   setLanguage(lang: Language): void {
@@ -27,6 +36,30 @@ export class TranslationService {
 
   toggle(): void {
     this.setLanguage(this.lang() === 'en' ? 'sw' : 'en');
+  }
+
+  locale(): string {
+    return this.lang() === 'sw' ? 'sw-TZ' : 'en-GB';
+  }
+
+  formatDate(iso: string | null | undefined): string {
+    if (!iso) {
+      return '—';
+    }
+    const d = new Date(iso);
+    return d.toLocaleDateString(this.locale(), { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  formatDateTime(iso: string | null | undefined): string {
+    if (!iso) {
+      return '—';
+    }
+    const d = new Date(iso);
+    return (
+      this.formatDate(iso) +
+      ' ' +
+      d.toLocaleTimeString(this.locale(), { hour: '2-digit', minute: '2-digit' })
+    );
   }
 
   private getInitialLanguage(): Language {

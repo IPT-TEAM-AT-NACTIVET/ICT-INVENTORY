@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { MasterDataService } from '../../../shared/services/master-data.service';
+import { TranslationService } from '../../../core/services/translation.service';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
 import { Unit } from '../../../core/models/master-data.model';
 import { delay, finalize, retry } from 'rxjs';
@@ -14,6 +15,9 @@ import { delay, finalize, retry } from 'rxjs';
 export class UnitsComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly service = inject(MasterDataService);
+  private readonly translation = inject(TranslationService);
+
+  t = (key: string, params?: Record<string, string | number>) => this.translation.t(key, params);
 
   readonly items = signal<Unit[]>([]);
   readonly loading = signal(true);
@@ -47,7 +51,7 @@ export class UnitsComponent implements OnInit {
           this.items.set(items);
         },
         error: (err) => {
-          this.error.set(httpErrorMessage(err, 'Failed to load units.'));
+          this.error.set(httpErrorMessage(err, this.t('master.units.loadError'), this.t));
         },
       });
   }
@@ -95,27 +99,27 @@ export class UnitsComponent implements OnInit {
         this.saving.set(false);
         this.showForm = false;
         this.editing = null;
-        this.success.set(editing ? 'Unit updated.' : 'Unit created.');
+        this.success.set(editing ? this.t('master.units.updated') : this.t('master.units.created'));
         this.load();
       },
       error: () => {
         this.saving.set(false);
-        this.error.set('Failed to save unit.');
+        this.error.set(this.t('master.units.saveError'));
       },
     });
   }
 
   remove(item: Unit): void {
-    if (!window.confirm(`Delete unit "${item.name}"?`)) {
+    if (!window.confirm(this.t('master.units.confirmDelete', { name: item.name }))) {
       return;
     }
     this.service.deleteUnit(item.id).subscribe({
       next: () => {
-        this.success.set(`Deleted "${item.name}".`);
+        this.success.set(this.t('master.units.deleted', { name: item.name }));
         this.load();
       },
       error: () => {
-        this.error.set('Failed to delete unit. It may be in use.');
+        this.error.set(this.t('master.units.deleteError'));
       },
     });
   }

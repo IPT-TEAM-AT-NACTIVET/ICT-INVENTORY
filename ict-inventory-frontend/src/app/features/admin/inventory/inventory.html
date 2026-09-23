@@ -1,13 +1,13 @@
-<app-page-header title="Total Inventory" subtitle="All registered ICT assets" />
+<app-page-header [title]="t('inventory.title')" [subtitle]="t('inventory.subtitle')" />
 
 <div class="toolbar">
   <div>
     <button type="button" class="btn btn-primary" (click)="openCreateForm()">{{ t('nav.new') }}</button>
     <button type="button" class="btn" [disabled]="importing()" (click)="openImportForm()">
-      {{ importing() ? 'Importing…' : 'Import Items' }}
+      {{ importing() ? t('common.importing') : t('common.importItems') }}
     </button>
   </div>
-  <span class="muted">{{ totalElements() }} assets</span>
+  <span class="muted">{{ totalElements() }} {{ t('inventory.assets') }}</span>
 </div>
 
 @if (error()) {
@@ -21,8 +21,8 @@
   <div class="modal-backdrop" (click)="cancelImportForm()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>Import Items</h3>
-        <button type="button" class="modal-close" (click)="cancelImportForm()" [disabled]="importing()" aria-label="Close">&times;</button>
+        <h3>{{ t('inventory.importTitle') }}</h3>
+        <button type="button" class="modal-close" (click)="cancelImportForm()" [disabled]="importing()" [attr.aria-label]="t('common.close')">&times;</button>
       </div>
 
       @if (importError()) {
@@ -31,7 +31,7 @@
 
       <div>
         <div class="form-section">
-          <h4>File format</h4>
+          <h4>{{ t('common.fileFormat') }}</h4>
           <div class="import-format-options">
             <button type="button" class="import-format-option" [class.active]="importFormat() === 'csv'" (click)="selectImportFormat('csv')">
               <strong>CSV</strong>
@@ -45,24 +45,23 @@
         </div>
 
         <div class="form-section">
-          <h4>Choose file</h4>
+          <h4>{{ t('common.chooseFile') }}</h4>
           <div class="form-field">
-            <label for="importFile">{{ importFormat() === 'csv' ? 'CSV file' : 'Excel workbook' }} *</label>
+            <label for="importFile">{{ importFormat() === 'csv' ? t('common.csvFile') : t('common.excelWorkbook') }} *</label>
             <input id="importFile" type="file" [accept]="importAccept()" (change)="onImportFileSelected($event)" />
             @if (importFileName()) {
-              <div class="field-hint">Selected: {{ importFileName() }}</div>
+              <div class="field-hint">{{ t('common.selectedPrefix') }}{{ importFileName() }}</div>
             }
           </div>
           <p class="muted import-hint">
-            File columns (header): Asset Number, Serial Number, Zone, Directorate, Office,
-            Assigned To, Device Type/Name, Device Model, Device Status.
+            {{ t('common.importHint') }}
           </p>
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn" (click)="cancelImportForm()" [disabled]="importing()">Cancel</button>
+          <button type="button" class="btn" (click)="cancelImportForm()" [disabled]="importing()">{{ t('common.cancel') }}</button>
           <button type="button" class="btn btn-primary" [disabled]="importing() || !selectedImportFile" (click)="submitImport()">
-            {{ importing() ? 'Importing…' : 'Import' }}
+            {{ importing() ? t('common.importing') : t('common.import') }}
           </button>
         </div>
       </div>
@@ -72,21 +71,19 @@
 
 @if (importsResult(); as result) {
   <div class="card">
-    <h3>Import Result</h3>
+    <h3>{{ t('inventory.resultTitle') }}</h3>
     <p>
-      Imported <strong>{{ result.imported }}</strong> asset(s),
-      <strong class="{{ result.failed ? 'text-danger' : '' }}">{{ result.failed }}</strong> skipped.
+      {{ t('inventory.importSummary', { imported: result.imported, failed: result.failed }) }}
     </p>
     @if (result.errors.length > 0) {
     <p class="muted">
-      File columns (header): Asset Number, Serial Number, Zone, Directorate, Office,
-      Assigned To, Device Type/Name, Device Model, Device Status.
+      {{ t('common.importHint') }}
     </p>
       <table class="table">
         <thead>
           <tr>
-            <th>Row</th>
-            <th>Issue</th>
+            <th>{{ t('inventory.row') }}</th>
+            <th>{{ t('inventory.issue') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -103,21 +100,21 @@
 }
 
 <div class="card">
-  <h3>Search Inventory</h3>
+  <h3>{{ t('inventory.searchTitle') }}</h3>
   <div class="filter-bar">
     <div class="form-field">
-      <label for="globalSearch">Search</label>
+      <label for="globalSearch">{{ t('common.search') }}</label>
       <input
         id="globalSearch"
         type="text"
         [formControl]="search"
-        placeholder="Search by asset number, serial, zone, directorate, office, user, device or status..."
+        [placeholder]="t('inventory.searchPlaceholder')"
         (keyup.enter)="applyFilters()"
       />
     </div>
     <div class="form-actions">
-      <button type="button" class="btn btn-primary btn-sm" (click)="applyFilters()">Search</button>
-      <button type="button" class="btn btn-sm" (click)="resetFilters()">Reset</button>
+      <button type="button" class="btn btn-primary btn-sm" (click)="applyFilters()">{{ t('common.search') }}</button>
+      <button type="button" class="btn btn-sm" (click)="resetFilters()">{{ t('common.reset') }}</button>
     </div>
   </div>
 </div>
@@ -126,8 +123,8 @@
   <div class="modal-backdrop" (click)="cancelAssetForm()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>{{ editing ? 'Edit Asset' : 'Add New Inventory Item' }}</h3>
-        <button type="button" class="modal-close" (click)="cancelAssetForm()" aria-label="Close">&times;</button>
+        <h3>{{ editing ? t('inventory.editAsset') : t('inventory.addInventoryItem') }}</h3>
+        <button type="button" class="modal-close" (click)="cancelAssetForm()" [attr.aria-label]="t('common.close')">&times;</button>
       </div>
 
       @if (error()) {
@@ -137,77 +134,77 @@
       <form [formGroup]="assetForm" (ngSubmit)="submitAssetForm()">
       <div class="form-grid">
         <div class="form-field">
-          <label for="assetNumber">Asset Number</label>
+          <label for="assetNumber">{{ t('inventory.assetNumber') }}</label>
           <input id="assetNumber" type="text" formControlName="assetNumber" />
         </div>
         <div class="form-field">
-          <label for="serialNumber">Serial Number</label>
+          <label for="serialNumber">{{ t('inventory.serialNumber') }}</label>
           <input id="serialNumber" type="text" formControlName="serialNumber" />
         </div>
         <div class="form-field">
-          <label for="zone">Zone *</label>
+          <label for="zone">{{ t('inventory.zone') }} *</label>
           <select id="zone" formControlName="zoneId">
-            <option [ngValue]="0" disabled>Select zone</option>
+            <option [ngValue]="0" disabled>{{ t('inventory.selectZone') }}</option>
             @for (zone of zones(); track zone.id) {
               <option [ngValue]="zone.id">{{ zone.name }}</option>
             }
           </select>
           @if (assetForm.controls.zoneId.touched && assetForm.controls.zoneId.invalid) {
-            <div class="field-error">Zone is required.</div>
+            <div class="field-error">{{ t('inventory.zoneRequired') }}</div>
           }
         </div>
         <div class="form-field">
-          <label for="directorate">Department/Directorate (Optional)</label>
+          <label for="directorate">{{ t('inventory.departmentDirectorate') }}</label>
           <select id="directorate" formControlName="directorateId">
-            <option [ngValue]="0">None</option>
+            <option [ngValue]="0">{{ t('common.none') }}</option>
             @for (item of directorates(); track item.id) {
               <option [ngValue]="item.id">{{ item.name }}</option>
             }
           </select>
         </div>
         <div class="form-field">
-          <label for="office">Room(Optional)</label>
-          <input id="office" type="text" formControlName="office" placeholder="Optional" maxlength="100" />
+          <label for="office">{{ t('inventory.room') }}</label>
+          <input id="office" type="text" formControlName="office" [placeholder]="t('common.optional')" maxlength="100" />
         </div>
         <div class="form-field">
-          <label for="userOfAsset">Assigned To (Optional)</label>
-          <input id="userOfAsset" type="text" formControlName="userOfAsset" placeholder="Optional" maxlength="255" />
+          <label for="userOfAsset">{{ t('inventory.assignedToOptional') }}</label>
+          <input id="userOfAsset" type="text" formControlName="userOfAsset" [placeholder]="t('common.optional')" maxlength="255" />
         </div>
         <div class="form-field">
-          <label for="deviceTypeId">Device Type *</label>
+          <label for="deviceTypeId">{{ t('inventory.deviceType') }} *</label>
           <select id="deviceTypeId" formControlName="deviceTypeId">
-            <option [ngValue]="0" disabled>Select type</option>
+            <option [ngValue]="0" disabled>{{ t('inventory.selectType') }}</option>
 @for (item of deviceTypes(); track item.id) {
               <option [ngValue]="item.id">{{ item.name }}</option>
             }
           </select>
           @if (assetForm.controls.deviceTypeId.touched && assetForm.controls.deviceTypeId.invalid) {
-            <div class="field-error">Device type is required.</div>
+            <div class="field-error">{{ t('inventory.deviceTypeRequired') }}</div>
           }
         </div>
         <div class="form-field">
-          <label for="deviceModel">Device Model *</label>
+          <label for="deviceModel">{{ t('inventory.deviceModel') }} *</label>
           <input id="deviceModel" type="text" formControlName="deviceModel" />
           @if (assetForm.controls.deviceModel.touched && assetForm.controls.deviceModel.invalid) {
-            <div class="field-error">Device model is required.</div>
+            <div class="field-error">{{ t('inventory.deviceModelRequired') }}</div>
           }
         </div>
         <div class="form-field">
-          <label for="deviceStatus">Device Status *</label>
+          <label for="deviceStatus">{{ t('inventory.deviceStatus') }} *</label>
           <select id="deviceStatus" formControlName="deviceStatus">
-            <option value="" disabled>Select status</option>
-            @for (opt of deviceStatusOptions; track opt.value) {
+            <option value="" disabled>{{ t('inventory.selectStatus') }}</option>
+            @for (opt of deviceStatusOptions(); track opt.value) {
               <option [value]="opt.value">{{ opt.label }}</option>
             }
           </select>
           @if (assetForm.controls.deviceStatus.touched && assetForm.controls.deviceStatus.invalid) {
-            <div class="field-error">Device status is required.</div>
+            <div class="field-error">{{ t('inventory.deviceStatusRequired') }}</div>
           }
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn" (click)="cancelAssetForm()">Cancel</button>
-        <button type="submit" class="btn btn-primary">{{ editing ? 'Save Changes' : 'Add Item' }}</button>
+        <button type="button" class="btn" (click)="cancelAssetForm()">{{ t('common.cancel') }}</button>
+        <button type="submit" class="btn btn-primary">{{ editing ? t('common.saveChanges') : t('common.addItem') }}</button>
       </div>
     </form>
     </div>
@@ -218,17 +215,16 @@
   <div class="modal-backdrop" (click)="cancelDelete()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>Delete Asset</h3>
-        <button type="button" class="modal-close" (click)="cancelDelete()" aria-label="Close">&times;</button>
+        <h3>{{ t('inventory.deleteTitle') }}</h3>
+        <button type="button" class="modal-close" (click)="cancelDelete()" [attr.aria-label]="t('common.close')">&times;</button>
       </div>
       <p>
-        Move "<strong>{{ item.deviceModel }}</strong>"
-        ({{ item.assetNumber ?? item.serialNumber ?? item.id }}) to the recycle bin?
+        {{ t('inventory.deleteConfirm', { device: item.deviceModel, id: item.assetNumber ?? item.serialNumber ?? item.id }) }}
       </p>
-      <p class="muted">The asset will be hidden from the inventory but can be restored later from the Recycle Bin under Settings.</p>
+      <p class="muted">{{ t('inventory.deleteHint') }}</p>
       <div class="modal-footer">
-        <button type="button" class="btn" (click)="cancelDelete()">Cancel</button>
-        <button type="button" class="btn btn-danger" (click)="remove(item)">Delete</button>
+        <button type="button" class="btn" (click)="cancelDelete()">{{ t('common.cancel') }}</button>
+        <button type="button" class="btn btn-danger" (click)="remove(item)">{{ t('common.delete') }}</button>
       </div>
     </div>
   </div>
@@ -238,26 +234,26 @@
   <table class="table">
     <thead>
       <tr>
-        <th>Asset #</th>
-        <th>Serial</th>
-        <th>Zone</th>
-        <th>Directorate</th>
-        <th>Room/Office</th>
-        <th>Assigned To</th>
-        <th>Type</th>
-        <th>Device Model</th>
-        <th>Device Status</th>
-        <th>Actions</th>
+        <th>{{ t('inventory.assetCol') }}</th>
+        <th>{{ t('inventory.serial') }}</th>
+        <th>{{ t('inventory.zone') }}</th>
+        <th>{{ t('inventory.directorate') }}</th>
+        <th>{{ t('inventory.roomOffice') }}</th>
+        <th>{{ t('inventory.assignedTo') }}</th>
+        <th>{{ t('inventory.type') }}</th>
+        <th>{{ t('inventory.deviceModel') }}</th>
+        <th>{{ t('inventory.deviceStatus') }}</th>
+        <th>{{ t('common.actions') }}</th>
       </tr>
     </thead>
     <tbody>
       @if (loading()) {
         <tr>
-          <td colspan="10" class="loading">Loading…</td>
+          <td colspan="10" class="loading">{{ t('common.loading') }}</td>
         </tr>
       } @else if (assets().length === 0) {
         <tr>
-          <td colspan="10" class="empty">No assets found.</td>
+          <td colspan="10" class="empty">{{ t('inventory.noAssets') }}</td>
         </tr>
       } @else {
         @for (item of assets(); track item.id) {
@@ -271,11 +267,11 @@
             <td>{{ item.deviceTypeName }}</td>
             <td>{{ item.deviceModel }}</td>
             <td>
-              <app-status-badge [label]="deviceStatusLabels[item.deviceStatus]" [tone]="deviceTone(item.deviceStatus)" />
+              <app-status-badge [label]="deviceStatusLabel(item.deviceStatus)" [tone]="deviceTone(item.deviceStatus)" />
             </td>
             <td>
-              <button type="button" class="btn btn-sm" (click)="openEditForm(item)">Edit</button>
-              <button type="button" class="btn btn-sm btn-danger" (click)="confirmDelete(item)">Delete</button>
+              <button type="button" class="btn btn-sm" (click)="openEditForm(item)">{{ t('common.edit') }}</button>
+              <button type="button" class="btn btn-sm btn-danger" (click)="confirmDelete(item)">{{ t('common.delete') }}</button>
             </td>
           </tr>
         }

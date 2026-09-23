@@ -1,10 +1,10 @@
-<app-page-header title="Recycle Bin" subtitle="Deleted assets — restore or permanently remove them" />
+<app-page-header [title]="t('recycleBin.title')" [subtitle]="t('recycleBin.subtitle')" />
 
 <div class="toolbar">
   <div>
-    <button type="button" class="btn btn-primary" (click)="load()">Refresh</button>
+    <button type="button" class="btn btn-primary" (click)="load()">{{ t('common.refresh') }}</button>
   </div>
-  <span class="muted">{{ deletedAssets().length }} deleted asset(s)</span>
+  <span class="muted">{{ t('recycleBin.count', { count: deletedAssets().length }) }}</span>
 </div>
 
 @if (error()) {
@@ -18,17 +18,16 @@
   <div class="modal-backdrop" (click)="cancelRestore()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>Restore Asset</h3>
-        <button type="button" class="modal-close" (click)="cancelRestore()" aria-label="Close">&times;</button>
+        <h3>{{ t('recycleBin.restoreTitle') }}</h3>
+        <button type="button" class="modal-close" (click)="cancelRestore()" [attr.aria-label]="t('common.close')">&times;</button>
       </div>
       <p>
-        Restore "<strong>{{ item.deviceModel }}</strong>"
-        ({{ item.assetNumber ?? item.serialNumber ?? item.id }}) to the inventory?
+        {{ t('recycleBin.restoreConfirm', { device: item.deviceModel, id: item.assetNumber ?? item.serialNumber ?? item.id }) }}
       </p>
-      <p class="muted">All its original data will be returned unchanged.</p>
+      <p class="muted">{{ t('recycleBin.restoreHint') }}</p>
       <div class="modal-footer">
-        <button type="button" class="btn" (click)="cancelRestore()">Cancel</button>
-        <button type="button" class="btn btn-primary" (click)="restore(item)">Restore</button>
+        <button type="button" class="btn" (click)="cancelRestore()">{{ t('common.cancel') }}</button>
+        <button type="button" class="btn btn-primary" (click)="restore(item)">{{ t('recycleBin.restore') }}</button>
       </div>
     </div>
   </div>
@@ -38,17 +37,16 @@
   <div class="modal-backdrop" (click)="cancelPermanentDelete()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>Permanently Delete Asset</h3>
-        <button type="button" class="modal-close" (click)="cancelPermanentDelete()" aria-label="Close">&times;</button>
+        <h3>{{ t('recycleBin.permanentDeleteTitle') }}</h3>
+        <button type="button" class="modal-close" (click)="cancelPermanentDelete()" [attr.aria-label]="t('common.close')">&times;</button>
       </div>
       <p>
-        Permanently delete "<strong>{{ item.deviceModel }}</strong>"
-        ({{ item.assetNumber ?? item.serialNumber ?? item.id }})?
+        {{ t('recycleBin.permanentDeleteConfirm', { device: item.deviceModel, id: item.assetNumber ?? item.serialNumber ?? item.id }) }}
       </p>
-      <p class="muted text-danger">This action cannot be undone. The asset will be removed from the database.</p>
+      <p class="muted text-danger">{{ t('recycleBin.permanentDeleteHint') }}</p>
       <div class="modal-footer">
-        <button type="button" class="btn" (click)="cancelPermanentDelete()">Cancel</button>
-        <button type="button" class="btn btn-danger" (click)="permanentlyDelete(item)">Delete Permanently</button>
+        <button type="button" class="btn" (click)="cancelPermanentDelete()">{{ t('common.cancel') }}</button>
+        <button type="button" class="btn btn-danger" (click)="permanentlyDelete(item)">{{ t('recycleBin.deletePermanently') }}</button>
       </div>
     </div>
   </div>
@@ -58,24 +56,24 @@
   <table class="table">
     <thead>
       <tr>
-        <th>Asset #</th>
-        <th>Serial</th>
-        <th>Device Model</th>
-        <th>Type</th>
-        <th>Device Status</th>
-        <th>Deleted By</th>
-        <th>Deleted At</th>
-        <th>Actions</th>
+        <th>{{ t('recycleBin.assetCol') }}</th>
+        <th>{{ t('recycleBin.serial') }}</th>
+        <th>{{ t('recycleBin.deviceModel') }}</th>
+        <th>{{ t('recycleBin.type') }}</th>
+        <th>{{ t('recycleBin.deviceStatus') }}</th>
+        <th>{{ t('recycleBin.deletedBy') }}</th>
+        <th>{{ t('recycleBin.deletedAt') }}</th>
+        <th>{{ t('common.actions') }}</th>
       </tr>
     </thead>
     <tbody>
       @if (loading()) {
         <tr>
-          <td colspan="8" class="loading">Loading…</td>
+          <td colspan="8" class="loading">{{ t('common.loading') }}</td>
         </tr>
       } @else if (deletedAssets().length === 0) {
         <tr>
-          <td colspan="8" class="empty">The recycle bin is empty.</td>
+          <td colspan="8" class="empty">{{ t('recycleBin.empty') }}</td>
         </tr>
       } @else {
         @for (item of deletedAssets(); track item.id) {
@@ -85,14 +83,14 @@
             <td>{{ item.deviceModel }}</td>
             <td>{{ item.deviceTypeName }}</td>
             <td>
-              <app-status-badge [label]="deviceStatusLabels[item.deviceStatus]" [tone]="deviceTone(item.deviceStatus)" />
+              <app-status-badge [label]="deviceStatusLabel(item.deviceStatus)" [tone]="deviceTone(item.deviceStatus)" />
             </td>
             <td>{{ item.deletedByName ?? '—' }}</td>
             <td>{{ formatDateTime(item.deletedAt) }}</td>
             <td>
-              <button type="button" class="btn btn-sm" (click)="confirmRestore(item)">Restore</button>
+              <button type="button" class="btn btn-sm" (click)="confirmRestore(item)">{{ t('recycleBin.restore') }}</button>
               <button type="button" class="btn btn-sm btn-danger" (click)="confirmPermanentDelete(item)">
-                Delete Permanently
+                {{ t('recycleBin.deletePermanently') }}
               </button>
             </td>
           </tr>

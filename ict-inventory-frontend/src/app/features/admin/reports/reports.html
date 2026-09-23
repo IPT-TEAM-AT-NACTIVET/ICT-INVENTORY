@@ -73,7 +73,7 @@
             type="button"
             class="chip-remove"
             (click)="removeFilter(f.criterion)"
-            aria-label="Remove filter"
+            [attr.aria-label]="t('reports.removeFilter')"
           >
             ×
           </button>
@@ -101,7 +101,7 @@
             class="export-option"
             (click)="download(opts.value, opts.file)"
           >
-            {{ opts.label }}
+            {{ exportLabel(opts.value) }}
           </button>
         }
       </div>

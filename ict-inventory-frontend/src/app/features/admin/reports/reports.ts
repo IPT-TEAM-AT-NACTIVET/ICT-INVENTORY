@@ -14,7 +14,6 @@ import {
 } from '../../../core/models/report.model';
 import { DeviceType, Zone } from '../../../core/models/master-data.model';
 import { DeviceStatus } from '../../../core/models/enums';
-import { DEVICE_STATUS_OPTIONS } from '../../../shared/utils/enum-labels';
 import { finalize, retry } from 'rxjs';
 
 interface FilterOption {
@@ -88,7 +87,10 @@ export class Reports implements OnInit {
       case 'by-device-type':
         return this.deviceTypes().map((d) => ({ value: String(d.id), label: d.name }));
       case 'by-status':
-        return DEVICE_STATUS_OPTIONS;
+        return (['WORKING', 'NOT_WORKING'] as DeviceStatus[]).map((status) => ({
+          value: status,
+          label: status === 'WORKING' ? this.t('deviceStatus.working') : this.t('deviceStatus.notWorking'),
+        }));
       case 'by-office':
         return (this.filterOptions()?.offices ?? []).map((o) => ({ value: o, label: o }));
       case 'by-user':
@@ -163,11 +165,19 @@ export class Reports implements OnInit {
 
   readonly exportOpen = signal(false);
 
-  readonly exportFormats: { value: 'csv' | 'xlsx' | 'pdf'; label: string; file: string }[] = [
-    { value: 'xlsx', label: 'Excel (.xlsx)', file: 'ict-inventory-report.xlsx' },
-    { value: 'pdf', label: 'PDF (.pdf)', file: 'ict-inventory-report.pdf' },
-    { value: 'csv', label: 'CSV (.csv)', file: 'ict-inventory-report.csv' },
+  readonly exportFormats: { value: 'csv' | 'xlsx' | 'pdf'; file: string }[] = [
+    { value: 'xlsx', file: 'ict-inventory-report.xlsx' },
+    { value: 'pdf', file: 'ict-inventory-report.pdf' },
+    { value: 'csv', file: 'ict-inventory-report.csv' },
   ];
+
+  protected exportLabel(value: 'csv' | 'xlsx' | 'pdf'): string {
+    return value === 'xlsx'
+      ? this.t('reports.excel')
+      : value === 'pdf'
+        ? this.t('reports.pdf')
+        : this.t('reports.csv');
+  }
 
   toggleExport(): void {
     this.exportOpen.set(!this.exportOpen());

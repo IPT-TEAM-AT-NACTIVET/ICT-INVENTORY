@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
@@ -12,8 +12,6 @@ import { DeviceType, Directorate, Zone } from '../../../core/models/master-data.
 import { DeviceStatus } from '../../../core/models/enums';
 import { delay, finalize, retry } from 'rxjs';
 import {
-  DEVICE_STATUS_LABELS,
-  DEVICE_STATUS_OPTIONS,
   deviceStatusTone,
 } from '../../../shared/utils/enum-labels';
 
@@ -30,9 +28,7 @@ export class Inventory implements OnInit {
   private readonly router = inject(Router);
   readonly translation = inject(TranslationService);
 
-  t(key: string): string {
-    return this.translation.t(key);
-  }
+  t = (key: string, params?: Record<string, string | number>) => this.translation.t(key, params);
 
   readonly assets = signal<Asset[]>([]);
   readonly totalElements = signal(0);
@@ -50,8 +46,12 @@ export class Inventory implements OnInit {
   importError = signal('');
   selectedImportFile: File | null = null;
 
-  readonly deviceStatusLabels = DEVICE_STATUS_LABELS;
-  readonly deviceStatusOptions = DEVICE_STATUS_OPTIONS;
+  readonly deviceStatusOptions = computed(() =>
+    (['WORKING', 'NOT_WORKING'] as DeviceStatus[]).map((status) => ({
+      value: status,
+      label: status === 'WORKING' ? this.t('deviceStatus.working') : this.t('deviceStatus.notWorking'),
+    })),
+  );
 
   readonly search = new FormControl('');
 
@@ -93,7 +93,7 @@ export class Inventory implements OnInit {
           this.totalElements.set(list.length);
         },
         error: (err) => {
-          this.error.set(httpErrorMessage(err, 'Failed to load assets.'));
+          this.error.set(httpErrorMessage(err, this.t('inventory.loadError'), this.t));
         },
       });
   }
@@ -148,7 +148,7 @@ export class Inventory implements OnInit {
     } else if (name.endsWith('.xls') || name.endsWith('.xlsx')) {
       this.importFormat.set('excel');
     } else {
-      this.importError.set('Unsupported file type. Please select a CSV (.csv) or Excel (.xls / .xlsx) file.');
+      this.importError.set(this.t('inventory.unsupportedFile'));
       this.selectedImportFile = null;
       this.importFileName.set('');
       input.value = '';
@@ -176,13 +176,13 @@ export class Inventory implements OnInit {
         this.importFileName.set('');
         this.importsResult.set(result);
         if (result.imported > 0) {
-          this.success.set(`Imported ${result.imported} asset(s).`);
+          this.success.set(this.t('inventory.imported', { count: result.imported }));
           this.load();
         }
       },
       error: () => {
         this.importing.set(false);
-        this.importError.set('Failed to import the file. Check the file and try again.');
+        this.importError.set(this.t('inventory.importFailed'));
       },
     });
   }
@@ -243,11 +243,11 @@ export class Inventory implements OnInit {
       next: () => {
         this.showAssetForm = false;
         this.editing = null;
-        this.success.set(editing ? 'Asset updated.' : 'Asset registered.');
+        this.success.set(editing ? this.t('inventory.updated') : this.t('inventory.registered'));
         this.load();
       },
       error: () => {
-        this.error.set('Failed to save asset. Check the device details.');
+        this.error.set(this.t('inventory.saveError'));
       },
     });
   }
@@ -264,17 +264,21 @@ export class Inventory implements OnInit {
     this.pendingDelete.set(null);
     this.assetService.delete(item.id).subscribe({
       next: () => {
-        this.success.set('Asset moved to the recycle bin.');
+        this.success.set(this.t('inventory.movedToTrash'));
         this.load();
       },
       error: () => {
-        this.error.set('Failed to delete asset.');
+        this.error.set(this.t('inventory.deleteFailed'));
       },
     });
   }
 
   protected deviceTone(status: DeviceStatus): 'success' | 'danger' {
     return deviceStatusTone(status);
+  }
+
+  protected deviceStatusLabel(status: DeviceStatus): string {
+    return status === 'WORKING' ? this.t('deviceStatus.working') : this.t('deviceStatus.notWorking');
   }
 
   private updateRequest(raw: {

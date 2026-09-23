@@ -6,9 +6,9 @@
   <form class="login-card" [formGroup]="form" (ngSubmit)="submit()">
     <div class="login-brand">
       <span class="brand-mark">
-        <img src="/logo-nactvet.png" alt="NACTVET Logo" />
+        <img src="/logo-nactvet.png" [attr.alt]="t('layout.logoAlt')" />
       </span>
-      <h1>ICT Inventory System</h1>
+      <h1>{{ t('login.brand') }}</h1>
       <p class="muted">{{ t('login.subtitle') }}</p>
     </div>
 
@@ -28,7 +28,7 @@
       />
       @if (form.controls.email.touched && form.controls.email.invalid) {
         <div class="field-error">
-          {{ form.controls.email.hasError('email') ? 'Enter a valid email address.' : 'Email is required.' }}
+          {{ form.controls.email.hasError('email') ? t('login.invalidEmail') : t('login.emailRequired') }}
         </div>
       }
     </div>
@@ -41,12 +41,12 @@
         autocomplete="current-password"
       />
       @if (form.controls.password.touched && form.controls.password.invalid) {
-        <div class="field-error">Password is required.</div>
+        <div class="field-error">{{ t('login.passwordRequired') }}</div>
       }
     </div>
 
     <button type="submit" class="btn btn-primary btn-block" [disabled]="loading()">
-      {{ loading() ? 'Signing in…' : t('login.submit') }}
+      {{ loading() ? t('login.signingIn') : t('login.submit') }}
     </button>
   </form>
 </div>

@@ -1,8 +1,8 @@
-<app-page-header title="Device Types" subtitle="Manage categories of ICT devices" />
+<app-page-header [title]="t('nav.deviceTypes')" [subtitle]="t('master.deviceTypes.subtitle')" />
 
 <div class="toolbar">
-  <button type="button" class="btn btn-primary" (click)="openCreate()">Add Device Type</button>
-  <span class="muted">{{ items().length }} device types</span>
+  <button type="button" class="btn btn-primary" (click)="openCreate()">{{ t('master.deviceTypes.add') }}</button>
+  <span class="muted">{{ t('master.deviceTypes.count', { count: items().length }) }}</span>
 </div>
 
 @if (error()) {
@@ -16,27 +16,27 @@
   <div class="modal-backdrop" (click)="cancelForm()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>{{ editing ? 'Edit Device Type' : 'New Device Type' }}</h3>
-        <button type="button" class="modal-close" (click)="cancelForm()" [disabled]="saving()" aria-label="Close">&times;</button>
+        <h3>{{ editing ? t('master.deviceTypes.editTitle') : t('master.deviceTypes.newTitle') }}</h3>
+        <button type="button" class="modal-close" (click)="cancelForm()" [disabled]="saving()" [attr.aria-label]="t('master.common.close')">&times;</button>
       </div>
       <form [formGroup]="form" (ngSubmit)="submit()">
         <div class="form-grid">
           <div class="form-field">
-            <label for="name">Name *</label>
+            <label for="name">{{ t('master.common.name') }} *</label>
             <input id="name" type="text" formControlName="name" />
             @if (form.controls.name.touched && form.controls.name.invalid) {
-              <div class="field-error">Name is required.</div>
+              <div class="field-error">{{ t('master.common.nameRequired') }}</div>
             }
           </div>
           <div class="form-field">
-            <label for="description">Description</label>
+            <label for="description">{{ t('master.common.description') }}</label>
             <input id="description" type="text" formControlName="description" />
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn" (click)="cancelForm()" [disabled]="saving()">Cancel</button>
+          <button type="button" class="btn" (click)="cancelForm()" [disabled]="saving()">{{ t('master.common.cancel') }}</button>
           <button type="submit" class="btn btn-primary" [disabled]="saving()">
-            {{ saving() ? 'Saving…' : (editing ? 'Save' : 'Create') }}
+            {{ saving() ? t('master.common.saving') : (editing ? t('master.common.save') : t('master.common.create')) }}
           </button>
         </div>
       </form>
@@ -45,17 +45,17 @@
 }
 
 @if (loading()) {
-  <div class="loading">Loading…</div>
+  <div class="loading">{{ t('master.common.loading') }}</div>
 } @else if (items().length === 0) {
-  <div class="empty">No device types found.</div>
+  <div class="empty">{{ t('master.deviceTypes.noItems') }}</div>
 } @else {
   <div class="table-wrap">
     <table class="table">
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Description</th>
-          <th>Actions</th>
+          <th>{{ t('master.common.name') }}</th>
+          <th>{{ t('master.common.description') }}</th>
+          <th>{{ t('master.common.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -64,8 +64,8 @@
             <td>{{ item.name }}</td>
             <td>{{ item.description ?? '—' }}</td>
             <td>
-              <button type="button" class="btn btn-sm" (click)="openEdit(item)">Edit</button>
-              <button type="button" class="btn btn-sm btn-danger" (click)="remove(item)">Delete</button>
+              <button type="button" class="btn btn-sm" (click)="openEdit(item)">{{ t('master.common.edit') }}</button>
+              <button type="button" class="btn btn-sm btn-danger" (click)="remove(item)">{{ t('master.common.delete') }}</button>
             </td>
           </tr>
         }

@@ -47,11 +47,11 @@ export class Login {
         this.loading.set(false);
         const message = err.error?.message ?? '';
         if (err.status === 401 && message.toLowerCase().includes('disabled')) {
-          this.errorMessage.set('Your account is disabled. Contact an administrator.');
+          this.errorMessage.set(this.t('login.accountDisabled'));
         } else if (err.status === 401) {
           this.errorMessage.set(this.t('login.invalidCredentials'));
         } else {
-          this.errorMessage.set('Login failed. Please try again.');
+          this.errorMessage.set(this.t('login.failed'));
         }
       },
     });

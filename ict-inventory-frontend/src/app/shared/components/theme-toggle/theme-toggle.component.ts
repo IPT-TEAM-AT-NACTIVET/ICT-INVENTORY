@@ -1,19 +1,20 @@
 import { Component, inject } from '@angular/core';
 import { ThemeService } from '../../../core/services/theme.service';
+import { TranslationService } from '../../../core/services/translation.service';
 
 @Component({
   selector: 'app-theme-toggle',
   imports: [],
   template: `
-    <div class="theme-toggle" role="group" aria-label="Theme">
+    <div class="theme-toggle" role="group" [attr.aria-label]="t('layout.theme')">
       <button
         type="button"
         class="theme-option"
         [class.active]="theme.theme() === 'light'"
         (click)="theme.set('light')"
-        [attr.aria-label]="'Light mode'"
+        [attr.aria-label]="t('layout.lightMode')"
         [attr.aria-pressed]="theme.theme() === 'light'"
-        title="Light mode"
+        [title]="t('layout.lightMode')"
       >
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="4"></circle>
@@ -32,9 +33,9 @@ import { ThemeService } from '../../../core/services/theme.service';
         class="theme-option"
         [class.active]="theme.theme() === 'dark'"
         (click)="theme.set('dark')"
-        [attr.aria-label]="'Dark mode'"
+        [attr.aria-label]="t('layout.darkMode')"
         [attr.aria-pressed]="theme.theme() === 'dark'"
-        title="Dark mode"
+        [title]="t('layout.darkMode')"
       >
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
@@ -91,4 +92,7 @@ import { ThemeService } from '../../../core/services/theme.service';
 })
 export class ThemeToggleComponent {
   readonly theme = inject(ThemeService);
+  private readonly translation = inject(TranslationService);
+
+  t = (key: string) => this.translation.t(key);
 }

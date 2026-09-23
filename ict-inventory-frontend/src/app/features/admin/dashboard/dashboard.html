@@ -1,4 +1,4 @@
-<app-page-header title="Dashboard" subtitle="ICT Inventory Management Overview" />
+<app-page-header [title]="t('dashboard.title')" [subtitle]="t('dashboard.subtitle')" />
 
 @if (error()) {
   <div class="alert alert-error" role="alert">{{ error() }}</div>
@@ -8,57 +8,57 @@
   <div class="stat-grid">
     <div class="stat-card">
       <div class="stat-value stat-accent">{{ stats.totalAssets }}</div>
-      <div class="stat-label">Total Assets</div>
+      <div class="stat-label">{{ t('dashboard.totalAssets') }}</div>
     </div>
     <div class="stat-card">
       <div class="stat-value stat-success">{{ stats.activeAssets }}</div>
-      <div class="stat-label">Working</div>
+      <div class="stat-label">{{ t('dashboard.working') }}</div>
     </div>
     <div class="stat-card">
       <div class="stat-value stat-danger">{{ stats.defectiveAssets }}</div>
-      <div class="stat-label">Not Working</div>
+      <div class="stat-label">{{ t('dashboard.notWorking') }}</div>
     </div>
   </div>
 
   <div class="toolbar">
-    <a class="btn btn-primary" routerLink="/admin/inventory">Manage Inventory</a>
+    <a class="btn btn-primary" routerLink="/admin/inventory">{{ t('dashboard.manageInventory') }}</a>
   </div>
 
   <div class="grid-2">
     <div class="card">
-      <h3>Assets by Device Type</h3>
+      <h3>{{ t('dashboard.byDeviceType') }}</h3>
       <app-pie-chart [slices]="deviceTypeSlices()" />
     </div>
     <div class="card">
-      <h3>Assets by Zone</h3>
+      <h3>{{ t('dashboard.byZone') }}</h3>
       <app-pie-chart [slices]="zoneSlices()" />
     </div>
   </div>
 
   <div class="grid-2">
     <div class="card">
-      <h3>Assets by Device Status</h3>
+      <h3>{{ t('dashboard.byStatus') }}</h3>
       <app-pie-chart [slices]="statusSlices()" />
     </div>
   </div>
 
   <div class="card">
-    <h3>Recent Asset Registered</h3>
+    <h3>{{ t('dashboard.recentAssets') }}</h3>
     @if (stats.recentAssets.length === 0) {
-      <p class="muted">No assets registered yet.</p>
+      <p class="muted">{{ t('dashboard.noRecentAssets') }}</p>
     } @else {
       <div class="table-wrap">
         <table class="table">
           <thead>
             <tr>
-              <th>Asset No</th>
-              <th>Device</th>
-              <th>Type</th>
-              <th>User</th>
-              <th>Zone</th>
-              <th>Office</th>
-              <th>Registered By</th>
-              <th>Registered At</th>
+              <th>{{ t('dashboard.assetNo') }}</th>
+              <th>{{ t('dashboard.device') }}</th>
+              <th>{{ t('dashboard.type') }}</th>
+              <th>{{ t('dashboard.user') }}</th>
+              <th>{{ t('dashboard.zone') }}</th>
+              <th>{{ t('dashboard.office') }}</th>
+              <th>{{ t('dashboard.registeredBy') }}</th>
+              <th>{{ t('dashboard.registeredAt') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -81,8 +81,8 @@
   </div>
 } @else {
   @if (loading()) {
-    <div class="loading">Loading dashboard…</div>
+    <div class="loading">{{ t('dashboard.loading') }}</div>
   } @else if (!error()) {
-    <div class="empty">No data available yet.</div>
+    <div class="empty">{{ t('dashboard.noData') }}</div>
   }
 }

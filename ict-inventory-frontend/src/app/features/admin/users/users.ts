@@ -24,6 +24,8 @@ export class Users implements OnInit {
   private readonly fb = inject(FormBuilder);
   readonly translation = inject(TranslationService);
 
+  t = (key: string) => this.translation.t(key);
+
   readonly search = new FormControl('');
   readonly all = signal<UserAccount[]>([]);
   readonly loading = signal(true);
@@ -47,10 +49,6 @@ export class Users implements OnInit {
     sectionId: [0 as number],
     unitId: [0 as number],
   });
-
-  t(key: string): string {
-    return this.translation.t(key);
-  }
 
   ngOnInit(): void {
     this.load();
@@ -76,7 +74,7 @@ export class Users implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (users) => this.all.set(users),
-        error: (err) => this.error.set(httpErrorMessage(err, 'Failed to load users.')),
+        error: (err) => this.error.set(httpErrorMessage(err, this.t('usersAdmin.loadError'), this.t)),
       });
   }
 
@@ -109,7 +107,7 @@ export class Users implements OnInit {
     }
     const { password, confirmPassword, directorateId, sectionId, unitId, ...rest } = this.newUserForm.getRawValue();
     if (password !== confirmPassword) {
-      this.newUserError.set('Passwords do not match.');
+      this.newUserError.set(this.t('usersAdmin.passwordsMismatch'));
       return;
     }
     this.savingNewUser.set(true);
@@ -130,7 +128,7 @@ export class Users implements OnInit {
       },
       error: (err) => {
         this.savingNewUser.set(false);
-        this.newUserError.set(err.error?.message ?? 'Failed to create user. Please try again.');
+        this.newUserError.set(err.error?.message ?? this.t('usersAdmin.createError'));
       },
     });
   }
@@ -138,20 +136,20 @@ export class Users implements OnInit {
   deactivate(user: UserAccount): void {
     this.usersService.deactivate(user.id).subscribe({
       next: () => {
-        this.notice.set(this.t('common.deactivate'));
+        this.notice.set(this.t('usersAdmin.userDeactivated'));
         this.load();
       },
-      error: (err) => this.error.set(httpErrorMessage(err, 'Failed to deactivate user.')),
+      error: (err) => this.error.set(httpErrorMessage(err, this.t('usersAdmin.deactivateError'), this.t)),
     });
   }
 
   activateUser(user: UserAccount): void {
     this.usersService.activate(user.id).subscribe({
       next: () => {
-        this.notice.set('User activated successfully.');
+        this.notice.set(this.t('usersAdmin.userActivated'));
         this.load();
       },
-      error: (err) => this.error.set(httpErrorMessage(err, 'Failed to activate user.')),
+      error: (err) => this.error.set(httpErrorMessage(err, this.t('usersAdmin.activateError'), this.t)),
     });
   }
 
@@ -160,10 +158,13 @@ export class Users implements OnInit {
       return;
     }
     this.usersService.delete(user.id).subscribe({
-      next: () => this.load(),
+      next: () => {
+        this.notice.set(this.t('usersAdmin.userDeleted'));
+        this.load();
+      },
       error: (err) => {
         this.error.set(
-          err.error?.message ?? httpErrorMessage(err, 'Failed to delete user.'),
+          err.error?.message ?? httpErrorMessage(err, this.t('usersAdmin.deleteError'), this.t),
         );
       },
     });

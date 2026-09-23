@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { MasterDataService } from '../../../shared/services/master-data.service';
+import { TranslationService } from '../../../core/services/translation.service';
 import { httpErrorMessage } from '../../../shared/utils/http-errors';
 import { Directorate } from '../../../core/models/master-data.model';
 import { delay, finalize, retry } from 'rxjs';
@@ -14,6 +15,9 @@ import { delay, finalize, retry } from 'rxjs';
 export class DirectoratesComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly service = inject(MasterDataService);
+  private readonly translation = inject(TranslationService);
+
+  t = (key: string, params?: Record<string, string | number>) => this.translation.t(key, params);
 
   readonly items = signal<Directorate[]>([]);
   readonly loading = signal(true);
@@ -47,7 +51,7 @@ export class DirectoratesComponent implements OnInit {
           this.items.set(items);
         },
         error: (err) => {
-          this.error.set(httpErrorMessage(err, 'Failed to load directorates.'));
+          this.error.set(httpErrorMessage(err, this.t('master.directorates.loadError'), this.t));
         },
       });
   }
@@ -95,27 +99,27 @@ export class DirectoratesComponent implements OnInit {
         this.saving.set(false);
         this.showForm = false;
         this.editing = null;
-        this.success.set(editing ? 'Directorate updated.' : 'Directorate created.');
+        this.success.set(editing ? this.t('master.directorates.updated') : this.t('master.directorates.created'));
         this.load();
       },
       error: () => {
         this.saving.set(false);
-        this.error.set('Failed to save directorate.');
+        this.error.set(this.t('master.directorates.saveError'));
       },
     });
   }
 
   remove(item: Directorate): void {
-    if (!window.confirm(`Delete directorate "${item.name}"?`)) {
+    if (!window.confirm(this.t('master.directorates.confirmDelete', { name: item.name }))) {
       return;
     }
     this.service.deleteDirectorate(item.id).subscribe({
       next: () => {
-        this.success.set(`Deleted "${item.name}".`);
+        this.success.set(this.t('master.directorates.deleted', { name: item.name }));
         this.load();
       },
       error: () => {
-        this.error.set('Failed to delete directorate. It may be in use.');
+        this.error.set(this.t('master.directorates.deleteError'));
       },
     });
   }
