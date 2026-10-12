@@ -5,7 +5,7 @@
 
 .layout {
   display: flex;
-  /* background: whitesmoke; */
+  background: var(--surface);
   min-height: 100vh;
 }
 
